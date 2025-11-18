@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: smart-market-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: smart_market
+      MYSQL_USER: smartmarket
+      MYSQL_PASSWORD: smartmarket123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./migrations:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  backend:
+    build: .
+    container_name: smart-market-backend
+    environment:
+      NODE_ENV: production
+      DB_HOST: mysql
+      DB_USER: smartmarket
+      DB_PASSWORD: smartmarket123
+      DB_NAME: smart_market
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    volumes:
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
