@@ -33,6 +33,12 @@ export const createStockMovement = async (req, res) => {
   try {
     const { material_id, type, quantity, reference } = req.body;
     
+    // Check if material exists
+    const [material] = await pool.execute('SELECT id FROM materials WHERE id = ?', [material_id]);
+    if (material.length === 0) {
+      return res.status(404).json({ error: 'Material not found' });
+    }
+    
     await pool.execute(
       'INSERT INTO stock_movements (material_id, type, quantity, reference, user_id) VALUES (?, ?, ?, ?, ?)',
       [material_id, type, quantity, reference, req.user.id]

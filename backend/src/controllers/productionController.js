@@ -26,6 +26,32 @@ export const createWorkOrder = async (req, res) => {
   }
 };
 
+export const getWorkOrders = async (req, res) => {
+  try {
+    const [workOrders] = await pool.execute('SELECT * FROM work_orders ORDER BY id DESC');
+    res.json(workOrders);
+  } catch (error) {
+    console.error('Get work orders error:', error);
+    res.status(500).json({ error: 'Failed to fetch work orders' });
+  }
+};
+
+export const getWorkOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [workOrder] = await pool.execute('SELECT * FROM work_orders WHERE id = ?', [id]);
+    
+    if (workOrder.length === 0) {
+      return res.status(404).json({ error: 'Work order not found' });
+    }
+    
+    res.json(workOrder[0]);
+  } catch (error) {
+    console.error('Get work order error:', error);
+    res.status(500).json({ error: 'Failed to fetch work order' });
+  }
+};
+
 export const updateWorkOrder = async (req, res) => {
   try {
     const { id } = req.params;
@@ -39,6 +65,16 @@ export const updateWorkOrder = async (req, res) => {
     res.json({ message: 'Work order updated' });
   } catch (error) {
     res.status(500).json({ error: 'Work order update failed' });
+  }
+};
+
+export const getWorkLogs = async (req, res) => {
+  try {
+    const [workLogs] = await pool.execute('SELECT * FROM work_logs ORDER BY id DESC');
+    res.json(workLogs);
+  } catch (error) {
+    console.error('Get work logs error:', error);
+    res.status(500).json({ error: 'Failed to fetch work logs' });
   }
 };
 
