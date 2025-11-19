@@ -3,6 +3,19 @@ import pool from '../config/database.js';
 export const createWorkOrder = async (req, res) => {
   try {
     const { order_id, stage, assigned_to } = req.body;
+    
+    // Check if order exists
+    const [order] = await pool.execute('SELECT id FROM orders WHERE id = ?', [order_id]);
+    if (order.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    
+    // Check if user exists
+    const [user] = await pool.execute('SELECT id FROM users WHERE id = ?', [assigned_to]);
+    if (user.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
     const [result] = await pool.execute(
       'INSERT INTO work_orders (order_id, stage, assigned_to) VALUES (?, ?, ?)',
       [order_id, stage, assigned_to]
@@ -33,6 +46,12 @@ export const logWork = async (req, res) => {
   try {
     const { work_order_id, time_spent_minutes, material_used } = req.body;
     
+    // Check if work order exists
+    const [workOrder] = await pool.execute('SELECT id FROM work_orders WHERE id = ?', [work_order_id]);
+    if (workOrder.length === 0) {
+      return res.status(404).json({ error: 'Work order not found' });
+    }
+    
     await pool.execute(
       'INSERT INTO work_logs (work_order_id, technician_id, time_spent_minutes, material_used) VALUES (?, ?, ?, ?)',
       [work_order_id, req.user.id, time_spent_minutes, material_used]
@@ -48,6 +67,12 @@ export const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    
+    // Check if order exists
+    const [order] = await pool.execute('SELECT id FROM orders WHERE id = ?', [id]);
+    if (order.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
     
     await pool.execute('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
     res.json({ message: 'Order status updated' });

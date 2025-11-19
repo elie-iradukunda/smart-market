@@ -17,7 +17,7 @@ export const createCustomer = async (req, res) => {
       'INSERT INTO customers (name, phone, email, address, source) VALUES (?, ?, ?, ?, ?)',
       [name, phone, email, address, source]
     );
-    res.status(201).json({ id: result.insertId, message: 'Customer created' });
+    res.status(200).json({ id: result.insertId, message: 'Customer created' });
   } catch (error) {
     res.status(500).json({ error: 'Customer creation failed' });
   }
@@ -120,10 +120,11 @@ export const createLead = async (req, res) => {
 export const getLeads = async (req, res) => {
   try {
     const [leads] = await pool.execute(
-      'SELECT l.*, c.name as customer_name FROM leads l JOIN customers c ON l.customer_id = c.id ORDER BY l.created_at DESC'
+      'SELECT l.*, c.name as customer_name FROM leads l JOIN customers c ON l.customer_id = c.id ORDER BY l.id DESC'
     );
     res.json(leads);
   } catch (error) {
+    console.error('Get leads error:', error);
     res.status(500).json({ error: 'Failed to fetch leads' });
   }
 };
