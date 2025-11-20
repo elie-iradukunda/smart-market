@@ -151,3 +151,24 @@ export const getOrders = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 };
+
+export const getOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.execute(`
+      SELECT o.*, c.name as customer_name, q.total_amount 
+      FROM orders o 
+      JOIN customers c ON o.customer_id = c.id 
+      JOIN quotes q ON o.quote_id = q.id
+      WHERE o.id = ?
+    `, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch order' });
+  }
+};

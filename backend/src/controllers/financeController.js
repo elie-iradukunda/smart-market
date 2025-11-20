@@ -207,3 +207,15 @@ export const getJournalEntries = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch journal entries' });
   }
 };
+
+export const getChartOfAccounts = async (req, res) => {
+  try {
+    const [accounts] = await pool.execute(`
+      SELECT id, account_code, name, type FROM chart_of_accounts ORDER BY account_code ASC
+    `);
+    res.json(accounts);
+  } catch (error) {
+    console.error('Chart of accounts error:', error);
+    res.status(500).json({ error: 'Failed to fetch chart of accounts' });
+  }
+};
