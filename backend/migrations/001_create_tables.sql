@@ -270,7 +270,7 @@ CREATE TABLE messages (
 -- AI and Analytics
 CREATE TABLE ai_predictions (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    type ENUM('demand','pricing','churn','reorder'),
+    type ENUM('demand','pricing','churn','reorder','segment'),
     target_id INT,
     predicted_value DECIMAL(12,2),
     confidence DECIMAL(5,2),
