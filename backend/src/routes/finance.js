@@ -3,7 +3,8 @@ import {
   createInvoice, getInvoices, getInvoice, updateInvoice,
   recordPayment, getPayments, 
   createPOSSale, getPOSSales,
-  createJournalEntry, getJournalEntries 
+  createJournalEntry, getJournalEntries,
+  getChartOfAccounts,
 } from '../controllers/financeController.js';
 import { authenticateToken, checkPermission } from '../middleware/auth.js';
 import { auditLog } from '../middleware/audit.js';
@@ -27,5 +28,8 @@ router.get('/pos-sales', authenticateToken, checkPermission('pos.create'), getPO
 // Journal Entries CRUD
 router.post('/journal-entries', authenticateToken, checkPermission('journal.create'), auditLog('CREATE', 'journal_entries'), createJournalEntry);
 router.get('/journal-entries', authenticateToken, checkPermission('journal.create'), getJournalEntries);
+
+// Chart of accounts
+router.get('/chart-of-accounts', authenticateToken, checkPermission('journal.create'), getChartOfAccounts);
 
 export default router;

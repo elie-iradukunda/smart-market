@@ -16,7 +16,13 @@ export const createRole = async (req, res) => {
 
 export const getRoles = async (req, res) => {
   try {
-    const [roles] = await pool.execute('SELECT * FROM roles ORDER BY name');
+    const [roles] = await pool.execute(`
+      SELECT r.*, COUNT(u.id) AS usersCount
+      FROM roles r
+      LEFT JOIN users u ON u.role_id = r.id
+      GROUP BY r.id, r.name, r.description
+      ORDER BY r.name
+    `);
     res.json(roles);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch roles' });

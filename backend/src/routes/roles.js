@@ -6,6 +6,7 @@ import {
 } from '../controllers/roleController.js';
 import { authenticateToken, checkPermission } from '../middleware/auth.js';
 import { auditLog } from '../middleware/audit.js';
+import pool from '../config/database.js';
 
 const router = express.Router();
 
@@ -29,5 +30,21 @@ router.get('/role-permissions', authenticateToken, checkPermission('user.view'),
 router.get('/roles/:role_id/permissions', authenticateToken, checkPermission('user.view'), getRolePermissions);
 router.put('/roles/:role_id/permissions', authenticateToken, checkPermission('user.create'), auditLog('UPDATE', 'role_permissions'), updateRolePermissions);
 router.delete('/roles/:role_id/permissions/:permission_id', authenticateToken, checkPermission('user.create'), auditLog('DELETE', 'role_permissions'), deleteRolePermission);
+
+// AUDIT LOGS
+router.get('/audit-logs', authenticateToken, checkPermission('audit.view'), async (req, res) => {
+  try {
+    const [logs] = await pool.execute(`
+      SELECT al.id, u.name as user_name, al.action, al.table_name, al.timestamp
+      FROM audit_logs al
+      LEFT JOIN users u ON al.user_id = u.id
+      ORDER BY al.timestamp DESC
+      LIMIT 200
+    `);
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch audit logs' });
+  }
+});
 
 export default router;

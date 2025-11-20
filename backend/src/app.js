@@ -27,12 +27,15 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 app.use(cors());
 
-// Rate limiting
+// Rate limiting – keep it for production, disable for local development
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
 });
-app.use(limiter);
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(limiter);
+}
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
