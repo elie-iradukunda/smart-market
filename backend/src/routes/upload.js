@@ -8,6 +8,11 @@ const router = express.Router();
 router.post('/upload/artwork', authenticateToken, checkPermission('file.upload'), upload.single('artwork'), async (req, res) => {
   try {
     const { quote_id, order_id } = req.body;
+    
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
     const file_url = req.file.path;
     
     const [result] = await pool.execute(
@@ -17,7 +22,8 @@ router.post('/upload/artwork', authenticateToken, checkPermission('file.upload')
     
     res.json({ id: result.insertId, file_url, message: 'File uploaded successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'File upload failed' });
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'File upload failed', details: error.message });
   }
 });
 

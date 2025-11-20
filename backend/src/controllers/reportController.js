@@ -3,21 +3,28 @@ import pool from '../config/database.js';
 export const getSalesReport = async (req, res) => {
   try {
     const { start_date, end_date } = req.query;
+    
+    // If no date range provided, use last 30 days
+    const endDate = end_date || new Date().toISOString().split('T')[0];
+    const startDate = start_date || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
     const [sales] = await pool.execute(`
       SELECT 
         DATE(o.created_at) as date,
         COUNT(o.id) as orders_count,
-        SUM(q.total_amount) as total_sales,
-        AVG(q.total_amount) as avg_order_value
+        COALESCE(SUM(q.total_amount), 0) as total_sales,
+        COALESCE(AVG(q.total_amount), 0) as avg_order_value
       FROM orders o
-      JOIN quotes q ON o.quote_id = q.id
+      LEFT JOIN quotes q ON o.quote_id = q.id
       WHERE DATE(o.created_at) BETWEEN ? AND ?
       GROUP BY DATE(o.created_at)
       ORDER BY date DESC
-    `, [start_date, end_date]);
+    `, [startDate, endDate]);
+    
     res.json(sales);
   } catch (error) {
-    res.status(500).json({ error: 'Sales report failed' });
+    console.error('Sales report error:', error);
+    res.status(500).json({ error: 'Sales report failed', details: error.message });
   }
 };
 
@@ -36,7 +43,8 @@ export const getInventoryReport = async (req, res) => {
     `);
     res.json(inventory);
   } catch (error) {
-    res.status(500).json({ error: 'Inventory report failed' });
+    console.error('Inventory report error:', error);
+    res.status(500).json({ error: 'Inventory report failed', details: error.message });
   }
 };
 
@@ -44,14 +52,18 @@ export const getFinancialReport = async (req, res) => {
   try {
     const { start_date, end_date } = req.query;
     
+    // If no date range provided, use last 30 days
+    const endDate = end_date || new Date().toISOString().split('T')[0];
+    const startDate = start_date || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
     const [revenue] = await pool.execute(`
-      SELECT SUM(amount) as total_revenue 
+      SELECT COALESCE(SUM(amount), 0) as total_revenue 
       FROM payments 
       WHERE DATE(created_at) BETWEEN ? AND ?
-    `, [start_date, end_date]);
+    `, [startDate, endDate]);
 
     const [outstanding] = await pool.execute(`
-      SELECT SUM(amount) as outstanding_amount 
+      SELECT COALESCE(SUM(amount), 0) as outstanding_amount 
       FROM invoices 
       WHERE status IN ('unpaid', 'partial')
     `);
@@ -61,7 +73,8 @@ export const getFinancialReport = async (req, res) => {
       outstanding_amount: outstanding[0].outstanding_amount || 0
     });
   } catch (error) {
-    res.status(500).json({ error: 'Financial report failed' });
+    console.error('Financial report error:', error);
+    res.status(500).json({ error: 'Financial report failed', details: error.message });
   }
 };
 
@@ -76,6 +89,7 @@ export const getProductionReport = async (req, res) => {
     `);
     res.json(production);
   } catch (error) {
-    res.status(500).json({ error: 'Production report failed' });
+    console.error('Production report error:', error);
+    res.status(500).json({ error: 'Production report failed', details: error.message });
   }
 };

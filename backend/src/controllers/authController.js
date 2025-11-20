@@ -76,13 +76,13 @@ export const createUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   try {
-    const [users] = await pool.execute(
-      'SELECT id, name, email, phone, status, role_id FROM users ORDER BY name'
-    );
+    console.log('Attempting to fetch users...');
+    const [users] = await pool.execute('SELECT * FROM users ORDER BY name');
+    console.log('Users fetched successfully:', users.length, 'records');
     res.json(users);
   } catch (error) {
     console.error('Get users error:', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    res.status(500).json({ error: 'Failed to fetch users', details: error.message });
   }
 };
 

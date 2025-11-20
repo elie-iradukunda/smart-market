@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import pool from '../config/database.js';
 import emailService from '../services/emailService.js';
+import { runAllPredictions } from '../controllers/aiController.js';
 
 // Daily reorder suggestions at 9 AM
 cron.schedule('0 9 * * *', async () => {
@@ -64,5 +65,26 @@ cron.schedule('0 10 * * *', async () => {
     console.error('Overdue reminder failed:', error);
   }
 });
+
+// AI predictions generation every 6 hours
+cron.schedule('0 */6 * * *', async () => {
+  try {
+    console.log('Running AI predictions generation...');
+    await runAllPredictions();
+    console.log('AI predictions completed');
+  } catch (error) {
+    console.error('AI predictions failed:', error);
+  }
+});
+
+// Generate initial predictions on startup
+setTimeout(async () => {
+  try {
+    console.log('Generating initial AI predictions...');
+    await runAllPredictions();
+  } catch (error) {
+    console.error('Initial AI predictions failed:', error);
+  }
+}, 5000);
 
 console.log('Scheduled jobs initialized');
