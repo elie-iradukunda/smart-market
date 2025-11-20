@@ -1,13 +1,9 @@
 import React from 'react';
 import PosPaymentDialog from './PosPaymentDialog';
 
-export default function PosCart() {
-  const items = [
-    { id: 1, name: 'PVC Banner 3m x 1m', qty: 1, price: 45 },
-    { id: 2, name: 'T-Shirt Vinyl Print', qty: 5, price: 7 },
-  ];
-
-  const subtotal = items.reduce((sum, it) => sum + it.qty * it.price, 0);
+export default function PosCart({ items }) {
+  const safeItems = Array.isArray(items) ? items : [];
+  const subtotal = safeItems.reduce((sum, it) => sum + (it.qty || 1) * (it.price || 0), 0);
   const tax = Math.round(subtotal * 0.18 * 100) / 100;
   const total = subtotal + tax;
 
@@ -15,7 +11,7 @@ export default function PosCart() {
     <div className="rounded border border-gray-200 bg-white p-4 text-sm">
       <h2 className="text-lg font-medium">Cart</h2>
       <div className="mt-2 space-y-2">
-        {items.map(item => (
+        {safeItems.map(item => (
           <div key={item.id} className="flex items-center justify-between">
             <div>
               <p className="text-gray-800">{item.name}</p>
@@ -23,7 +19,7 @@ export default function PosCart() {
                 Qty {item.qty} × ${item.price}
               </p>
             </div>
-            <p className="text-gray-800">${item.qty * item.price}</p>
+            <p className="text-gray-800">${(item.qty || 1) * (item.price || 0)}</p>
           </div>
         ))}
       </div>

@@ -22,6 +22,19 @@ export const getCampaigns = async (req, res) => {
   }
 };
 
+export const getCampaignById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.execute('SELECT * FROM campaigns WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch campaign' });
+  }
+};
+
 export const recordAdPerformance = async (req, res) => {
   try {
     const { campaign_id, impressions, clicks, conversions, cost_spent, date } = req.body;

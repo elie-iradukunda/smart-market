@@ -118,3 +118,25 @@ export const getMessages = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch messages' });
   }
 };
+
+export const updateConversationStatus = async (req, res) => {
+  try {
+    const { conversation_id } = req.params;
+    const { status } = req.body;
+
+    if (!['open', 'closed'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const [conversation] = await pool.execute('SELECT id FROM conversations WHERE id = ?', [conversation_id]);
+    if (conversation.length === 0) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    await pool.execute('UPDATE conversations SET status = ? WHERE id = ?', [status, conversation_id]);
+
+    res.json({ message: 'Conversation status updated', status });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update conversation status' });
+  }
+};
