@@ -1,142 +1,233 @@
-import pool from '../config/database.js';
+import { 
+  sendNotification, 
+  sendBusinessAlert,
+  sendFreeEmail,
+  sendFreeSMS,
+  sendSlackNotification,
+  sendDiscordNotification
+} from '../services/freeCommunicationService.js';
 
-export const createConversation = async (req, res) => {
+// Send email notification
+export const sendEmail = async (req, res) => {
   try {
-    const { customer_id, channel } = req.body;
+    const { to, subject, message } = req.body;
     
-    // Check if customer exists
-    const [customer] = await pool.execute('SELECT id FROM customers WHERE id = ?', [customer_id]);
-    if (customer.length === 0) {
-      return res.status(404).json({ error: 'Customer not found' });
+    if (!to || !subject || !message) {
+      return res.status(400).json({ error: 'Missing required fields: to, subject, message' });
     }
     
-    // Check for existing conversation with same customer and channel
-    const [existing] = await pool.execute(
-      'SELECT id FROM conversations WHERE customer_id = ? AND channel = ? AND status = "open"',
-      [customer_id, channel]
-    );
-    if (existing.length > 0) {
-      return res.status(409).json({ error: 'Active conversation already exists for this customer and channel' });
-    }
+    const result = await sendFreeEmail(to, subject, message);
     
-    const [result] = await pool.execute(
-      'INSERT INTO conversations (customer_id, channel) VALUES (?, ?)',
-      [customer_id, channel]
-    );
-    res.status(201).json({ id: result.insertId, message: 'Conversation created' });
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Email sent successfully',
+        messageId: result.messageId,
+        service: 'Gmail SMTP (Free)'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error
+      });
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Conversation creation failed' });
+    console.error('Email controller error:', error);
+    res.status(500).json({ error: 'Failed to send email' });
   }
 };
 
-export const getConversations = async (req, res) => {
+// Send SMS notification
+export const sendSMS = async (req, res) => {
   try {
-    const [conversations] = await pool.execute(`
-      SELECT c.*, cu.name as customer_name 
-      FROM conversations c 
-      JOIN customers cu ON c.customer_id = cu.id 
-      WHERE c.status = 'open' 
-      ORDER BY c.id DESC
-    `);
-    res.json(conversations);
+    const { phone, message } = req.body;
+    
+    if (!phone || !message) {
+      return res.status(400).json({ error: 'Missing required fields: phone, message' });
+    }
+    
+    const result = await sendFreeSMS(phone, message);
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'SMS sent successfully',
+        quotaRemaining: result.quotaRemaining,
+        service: 'Textbelt (Free)'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error
+      });
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch conversations' });
+    console.error('SMS controller error:', error);
+    res.status(500).json({ error: 'Failed to send SMS' });
   }
 };
 
-export const sendMessage = async (req, res) => {
+// Send Slack notification
+export const sendSlack = async (req, res) => {
   try {
-    const { conversation_id, message, attachments } = req.body;
+    const { message, channel } = req.body;
     
-    // Check if conversation exists
-    const [conversation] = await pool.execute('SELECT id FROM conversations WHERE id = ?', [conversation_id]);
-    if (conversation.length === 0) {
-      return res.status(404).json({ error: 'Conversation not found' });
+    if (!message) {
+      return res.status(400).json({ error: 'Missing required field: message' });
     }
     
-    // Convert attachments array to JSON string
-    const attachmentsStr = attachments ? JSON.stringify(attachments) : null;
+    const result = await sendSlackNotification(message, channel);
     
-    await pool.execute(
-      'INSERT INTO messages (conversation_id, sender, message, attachments) VALUES (?, "staff", ?, ?)',
-      [conversation_id, message, attachmentsStr]
-    );
-    
-    res.json({ message: 'Message sent' });
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Slack notification sent successfully',
+        service: 'Slack Webhook (Free)'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error
+      });
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Message sending failed' });
+    console.error('Slack controller error:', error);
+    res.status(500).json({ error: 'Failed to send Slack notification' });
   }
 };
 
-export const receiveMessage = async (req, res) => {
+// Send Discord notification
+export const sendDiscord = async (req, res) => {
   try {
-    const { conversation_id, message, attachments } = req.body;
+    const { message, title } = req.body;
     
-    // Check if conversation exists
-    const [conversation] = await pool.execute('SELECT id FROM conversations WHERE id = ?', [conversation_id]);
-    if (conversation.length === 0) {
-      return res.status(404).json({ error: 'Conversation not found' });
+    if (!message) {
+      return res.status(400).json({ error: 'Missing required field: message' });
     }
     
-    // Convert attachments array to JSON string
-    const attachmentsStr = attachments ? JSON.stringify(attachments) : null;
+    const result = await sendDiscordNotification(message, title);
     
-    await pool.execute(
-      'INSERT INTO messages (conversation_id, sender, message, attachments) VALUES (?, "customer", ?, ?)',
-      [conversation_id, message, attachmentsStr]
-    );
-    
-    res.json({ message: 'Message received' });
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Discord notification sent successfully',
+        service: 'Discord Webhook (Free)'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error
+      });
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Message receiving failed' });
+    console.error('Discord controller error:', error);
+    res.status(500).json({ error: 'Failed to send Discord notification' });
   }
 };
 
-export const getMessages = async (req, res) => {
+// Send unified notification
+export const sendUnifiedNotification = async (req, res) => {
   try {
-    const { conversation_id } = req.params;
+    const { type, recipient, subject, message, options } = req.body;
     
-    // Check if conversation exists
-    const [conversation] = await pool.execute('SELECT id FROM conversations WHERE id = ?', [conversation_id]);
-    if (conversation.length === 0) {
-      return res.status(404).json({ error: 'Conversation not found' });
+    if (!type || !recipient || !message) {
+      return res.status(400).json({ error: 'Missing required fields: type, recipient, message' });
     }
     
-    const [messages] = await pool.execute(
-      'SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC',
-      [conversation_id]
-    );
+    const result = await sendNotification(type, recipient, subject, message, options);
     
-    // Parse attachments JSON string back to array
-    const parsedMessages = messages.map(msg => ({
-      ...msg,
-      attachments: msg.attachments ? JSON.parse(msg.attachments) : null
-    }));
-    
-    res.json(parsedMessages);
+    res.json({
+      success: result.success,
+      results: result.results,
+      timestamp: result.timestamp,
+      error: result.error
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch messages' });
+    console.error('Unified notification error:', error);
+    res.status(500).json({ error: 'Failed to send notification' });
   }
 };
 
-export const updateConversationStatus = async (req, res) => {
+// Send business alert
+export const sendAlert = async (req, res) => {
   try {
-    const { conversation_id } = req.params;
-    const { status } = req.body;
-
-    if (!['open', 'closed'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status' });
+    const { alertType, data } = req.body;
+    
+    if (!alertType || !data) {
+      return res.status(400).json({ error: 'Missing required fields: alertType, data' });
     }
-
-    const [conversation] = await pool.execute('SELECT id FROM conversations WHERE id = ?', [conversation_id]);
-    if (conversation.length === 0) {
-      return res.status(404).json({ error: 'Conversation not found' });
-    }
-
-    await pool.execute('UPDATE conversations SET status = ? WHERE id = ?', [status, conversation_id]);
-
-    res.json({ message: 'Conversation status updated', status });
+    
+    const result = await sendBusinessAlert(alertType, data);
+    
+    res.json({
+      success: result.success,
+      message: 'Business alert sent',
+      results: result.results,
+      error: result.error
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update conversation status' });
+    console.error('Business alert error:', error);
+    res.status(500).json({ error: 'Failed to send business alert' });
+  }
+};
+
+// Test all communication services
+export const testCommunications = async (req, res) => {
+  try {
+    const testResults = [];
+    
+    // Test email
+    try {
+      const emailResult = await sendFreeEmail(
+        process.env.ADMIN_EMAIL || 'test@example.com',
+        '📧 Communication Test - Email',
+        '<h3>✅ Email service is working!</h3><p>This is a test message from Smart Market system.</p>'
+      );
+      testResults.push({ service: 'Email (Gmail)', success: emailResult.success, error: emailResult.error });
+    } catch (error) {
+      testResults.push({ service: 'Email (Gmail)', success: false, error: error.message });
+    }
+    
+    // Test SMS (if enabled)
+    if (process.env.TEST_PHONE) {
+      try {
+        const smsResult = await sendFreeSMS(process.env.TEST_PHONE, 'Communication test - SMS service working!');
+        testResults.push({ service: 'SMS (Textbelt)', success: smsResult.success, error: smsResult.error });
+      } catch (error) {
+        testResults.push({ service: 'SMS (Textbelt)', success: false, error: error.message });
+      }
+    }
+    
+    // Test Slack (if configured)
+    if (process.env.SLACK_WEBHOOK_URL) {
+      try {
+        const slackResult = await sendSlackNotification('📱 Communication test - Slack service working!');
+        testResults.push({ service: 'Slack', success: slackResult.success, error: slackResult.error });
+      } catch (error) {
+        testResults.push({ service: 'Slack', success: false, error: error.message });
+      }
+    }
+    
+    // Test Discord (if configured)
+    if (process.env.DISCORD_WEBHOOK_URL) {
+      try {
+        const discordResult = await sendDiscordNotification('Communication test - Discord service working!', '📱 Test Alert');
+        testResults.push({ service: 'Discord', success: discordResult.success, error: discordResult.error });
+      } catch (error) {
+        testResults.push({ service: 'Discord', success: false, error: error.message });
+      }
+    }
+    
+    res.json({
+      message: 'Communication services tested',
+      results: testResults,
+      timestamp: new Date().toISOString(),
+      totalServices: testResults.length,
+      workingServices: testResults.filter(r => r.success).length
+    });
+    
+  } catch (error) {
+    console.error('Communication test error:', error);
+    res.status(500).json({ error: 'Failed to test communication services' });
   }
 };
