@@ -1,101 +1,254 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
-import { fetchDemandPredictions, fetchReorderSuggestions, fetchDemoAiInsights } from '../../api/apiClient'
+import { Zap, TrendingUp, DollarSign, Package, Users, Activity, Loader, AlertTriangle, BarChart2, ShieldAlert, Target } from 'lucide-react'
+
+// --- IMPORTANT: DO NOT REMOVE / EXTERNAL API IMPORTS ---
+// These are assumed to be implemented in your project and are necessary for the component to function.
+import { fetchDemandPredictions, fetchReorderSuggestions, fetchPricingPredictions, fetchCustomerInsights, fetchChurnPredictions, fetchSegmentPredictions, fetchDemoAiInsights } from '../../api/apiClient'
 import DemandForecastChart from '../../modules/ai/components/DemandForecastChart'
 import PriceRecommendationWidget from '../../modules/ai/components/PriceRecommendationWidget'
 import ReorderSuggestionList from '../../modules/ai/components/ReorderSuggestionList'
+// --------------------------------------------------------
+
+// Helper Component for Loading/Error States
+const StateFeedback = ({ loading, error, children }) => {
+    if (error) {
+        return (
+            <div role="alert" className="p-6 text-red-700 bg-red-50 border border-red-300 rounded-xl flex items-center justify-center">
+                <AlertTriangle className="h-5 w-5 mr-3" aria-hidden="true" />
+                <p className="text-sm font-medium">Data Loading Error: {error}</p>
+            </div>
+        )
+    }
+
+    if (loading) {
+        return (
+            <div role="status" className="p-8 flex flex-col items-center justify-center">
+                <Loader className="h-6 w-6 text-blue-500 animate-spin" aria-hidden="true" />
+                <p className="text-sm text-gray-500 mt-2">Fetching predictive insights...</p>
+            </div>
+        )
+    }
+
+    return children;
+}
+
+const InsightCard = ({ title, icon: Icon, children, theme = 'default' }) => {
+    let baseStyles = "rounded-xl p-5 border shadow-sm";
+    let titleStyles = "text-md font-semibold mb-3 flex items-center";
+    let iconColor = "text-gray-500";
+
+    if (theme === 'blue') {
+        baseStyles = "rounded-xl p-5 border border-blue-200 bg-blue-50/50 shadow-md";
+        titleStyles = "text-md font-semibold mb-3 flex items-center text-blue-700";
+        iconColor = "text-blue-500";
+    } else if (theme === 'purple') {
+        baseStyles = "rounded-xl p-5 border border-purple-200 bg-purple-50/50 shadow-md";
+        titleStyles = "text-md font-semibold mb-3 flex items-center text-purple-700";
+        iconColor = "text-purple-500";
+    }
+
+    return (
+        <div className={baseStyles}>
+            <h3 className={titleStyles}>
+                <Icon className={`h-5 w-5 mr-2 ${iconColor}`} aria-hidden="true" />
+                {title}
+            </h3>
+            {children}
+        </div>
+    );
+};
 
 export default function AiOverviewPage() {
-  const [demandData, setDemandData] = useState([])
-  const [reorderData, setReorderData] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+    const [demandData, setDemandData] = useState([])
+    const [reorderData, setReorderData] = useState([])
+    const [priceData, setPriceData] = useState([])
+    const [customerInsights, setCustomerInsights] = useState([])
+    const [churnData, setChurnData] = useState([])
+    const [segmentData, setSegmentData] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
 
-  // Until there is a backend endpoint for price recommendations, keep them from demo helper
-  const demoInsights = fetchDemoAiInsights()
-  const priceRecommendations = demoInsights.priceRecommendations || []
+    // Until there is a backend endpoint for price recommendations, keep them from demo helper
+    // --- API LOGIC PRESERVED ---
+    const demoInsights = fetchDemoAiInsights()
+    const demoPriceRecommendations = demoInsights.priceRecommendations || []
 
-  useEffect(() => {
-    let isMounted = true
-    setLoading(true)
-    setError(null)
+    useEffect(() => {
+        let isMounted = true
+        setLoading(true)
+        setError(null)
 
-    Promise.all([fetchDemandPredictions(), fetchReorderSuggestions()])
-      .then(([predictions, reorder]) => {
-        if (!isMounted) return
+        Promise.all([
+            fetchDemandPredictions(),
+            fetchReorderSuggestions(),
+            fetchPricingPredictions(),
+            fetchCustomerInsights(),
+            fetchChurnPredictions(),
+            fetchSegmentPredictions(),
+        ])
+            .then(([predictions, reorder, pricing, insights, churn, segments]) => {
+                if (!isMounted) return
 
-        const mappedDemand = (predictions || []).map(p => ({
-          category: p.target_id || p.type || 'Item',
-          month: (p.created_at || '').slice(0, 10),
-          expectedJobs: Number(p.predicted_value) || 0,
-        }))
+                const mappedDemand = (predictions || []).map(p => ({
+                    category: p.target_id || p.type || 'Item',
+                    month: (p.created_at || '').slice(0, 10),
+                    expectedJobs: Number(p.predicted_value) || 0,
+                }))
 
-        setDemandData(mappedDemand)
-        setReorderData(reorder || [])
-      })
-      .catch(err => {
-        if (!isMounted) return
-        setError(err.message || 'Failed to load AI insights')
-      })
-      .finally(() => {
-        if (!isMounted) return
-        setLoading(false)
-      })
+                const mappedPricing = (pricing || []).map(p => ({
+                    item: `Price range ${p.target_id}`,
+                    currentPrice: Number(p.target_id) || 0,
+                    suggestedPrice: Number(p.predicted_value) || 0,
+                    reason: `Acceptance ${(Number(p.confidence || 0) * 100).toFixed(0)}%`,
+                }))
 
-    return () => {
-      isMounted = false
-    }
-  }, [])
+                setDemandData(mappedDemand)
+                setReorderData(reorder || [])
+                setPriceData(mappedPricing.length > 0 ? mappedPricing : demoPriceRecommendations)
+                setCustomerInsights(insights || [])
+                setChurnData(churn || [])
+                setSegmentData(segments || [])
 
-  return (
-    // 1. Apply the light gradient background
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+            })
+            .catch(err => {
+                if (!isMounted) return
+                setError(err.message || 'Failed to load AI insights')
+            })
+            .finally(() => {
+                if (!isMounted) return
+                setLoading(false)
+            })
 
-      {/* Header Card - Using the new, cleaner card style */}
-      <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-8 shadow-xl">
-        <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">AI &amp; Business Intelligence</p>
-        <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
-          Predictive <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Insights</span>
-        </h1>
-        <p className="mt-3 text-base text-gray-600 max-w-xl">
-          Demand forecasts, price recommendations, and predictive stock suggestions for TOP Design. Use these
-          insights to make better operational and commercial decisions.
-        </p>
-        {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 font-medium border border-red-200">{error}</p>}
-      </div>
+        return () => {
+            isMounted = false
+        }
+    }, [])
+    // --- END API LOGIC PRESERVED ---
 
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3 items-start">
-        
-        {/* Demand Forecast Chart - Larger section for the main visualization */}
-        <div className="lg:col-span-2 rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-6 shadow-xl">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Job Demand Forecast</h2>
-          {loading ? (
-            <p className="text-sm text-gray-500 py-6">Loading demand forecast...</p>
-          ) : (
-            <DemandForecastChart data={demandData} />
-          )}
-        </div>
-        
-        {/* Price Recommendations Widget */}
-        <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-6 shadow-xl">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Price Recommendations</h2>
-          <PriceRecommendationWidget data={priceRecommendations} />
-        </div>
+    return (
+        // Blue/Purple light gradient background
+        <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-4 py-8 sm:px-6 lg:px-8 space-y-8 font-sans">
+            <div className="max-w-7xl mx-auto">
 
-      </div>
+                {/* HEADER CARD - Strong Blue Theme */}
+                <div className="rounded-3xl border border-blue-200 bg-white/95 backdrop-blur-xl p-8 shadow-2xl shadow-blue-300/50">
+                    <p className="text-sm font-semibold uppercase tracking-wider text-blue-700 flex items-center">
+                        <Zap className="h-4 w-4 mr-2 text-blue-500" aria-hidden="true" />
+                        AI & Business Intelligence
+                    </p>
+                    <h1 className="mt-2 text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
+                        Predictive <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Insights</span>
+                    </h1>
+                    <p className="mt-3 text-base text-gray-600 max-w-xl">
+                        Harness the power of machine learning for demand forecasting, price optimization, and smart inventory management.
+                    </p>
+                    {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 font-medium border border-red-200">{error}</p>}
+                </div>
 
-      {/* Reorder Suggestions List - Full width at the bottom */}
-      <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-6 shadow-xl">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <span className="mr-2 text-xl text-green-600">📦</span> Predictive Reorder Suggestions
-        </h2>
-        {loading ? (
-          <p className="text-sm text-gray-500 py-6">Loading reorder suggestions...</p>
-        ) : (
-          <ReorderSuggestionList data={reorderData} />
-        )}
-      </div>
-    </div>
-  )
+                {/* Main Content Grid */}
+                <div className="mt-8 grid gap-6 lg:grid-cols-3 items-stretch">
+
+                    {/* DEMAND FORECAST CHART - Primary Visualization (2/3 width) */}
+                    <div className="lg:col-span-2 rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-6 shadow-xl">
+                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                            <BarChart2 className="h-5 w-5 mr-2 text-blue-500" aria-hidden="true" />
+                            Job Demand Forecast
+                        </h2>
+                        <StateFeedback loading={loading} error={error}>
+                            <DemandForecastChart data={demandData} />
+                            <p className="mt-4 text-xs text-gray-500">
+                                Projected job volume over the next three months, categorized by service type.
+                            </p>
+                        </StateFeedback>
+                    </div>
+
+                    {/* PRICE RECOMMENDATIONS WIDGET (1/3 width) */}
+                    <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-6 shadow-xl flex flex-col justify-between">
+                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                            <DollarSign className="h-5 w-5 mr-2 text-purple-500" aria-hidden="true" />
+                            Dynamic Pricing
+                        </h2>
+                        <StateFeedback loading={loading} error={error}>
+                            <PriceRecommendationWidget data={priceData} />
+                            <p className="mt-4 text-xs text-gray-500 text-center">
+                                Suggested prices based on market competition and historical acceptance rates.
+                            </p>
+                        </StateFeedback>
+                    </div>
+
+                </div>
+
+                {/* REORDER SUGGESTIONS AND CUSTOMER INSIGHTS - Full Width Section */}
+                <div className="mt-8 rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-6 shadow-xl space-y-8">
+                    
+                    {/* Reorder Suggestions */}
+                    <div className="border-b border-gray-100 pb-6">
+                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                            <Package className="h-5 w-5 mr-2 text-green-500" aria-hidden="true" />
+                            Predictive Reorder Suggestions
+                        </h2>
+                        <StateFeedback loading={loading} error={error}>
+                            <ReorderSuggestionList data={reorderData} />
+                        </StateFeedback>
+                    </div>
+
+                    {/* Customer Predictions Grid */}
+                    <div className="grid gap-6 md:grid-cols-3">
+                        
+                        {/* Top Customers (AI Insights) */}
+                        <InsightCard title="Top Customer Value" icon={Users} theme="blue">
+                            <StateFeedback loading={loading} error={error}>
+                                <ul className="space-y-3 text-sm text-gray-700">
+                                    {(customerInsights || []).slice(0, 5).map((c, index) => (
+                                        <li key={c.id || index} className="flex justify-between items-center p-2 rounded-lg bg-white hover:bg-blue-50 transition duration-150 border border-blue-100">
+                                            <span className="font-medium truncate">{c.name || `Customer ${index + 1}`}</span>
+                                            <span className="text-xs font-semibold text-blue-600 flex-shrink-0">
+                                                {c.total_orders} orders · ${Math.round(Number(c.total_spent) || 0).toLocaleString()}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </StateFeedback>
+                        </InsightCard>
+
+                        {/* Churn Risk (Top 5) */}
+                        <InsightCard title="High Churn Risk" icon={ShieldAlert} theme="purple">
+                            <StateFeedback loading={loading} error={error}>
+                                <ul className="space-y-3 text-sm text-gray-700">
+                                    {(churnData || []).slice(0, 5).map((c, index) => (
+                                        <li key={c.id || index} className="flex justify-between items-center p-2 rounded-lg bg-white hover:bg-purple-50 transition duration-150 border border-purple-100">
+                                            <span className="font-medium truncate">{c.customer_name || c.name || `User ${index + 1}`}</span>
+                                            <span className={`text-xs font-semibold flex-shrink-0 ${((Number(c.predicted_value) || 0) * 100) > 50 ? 'text-red-600' : 'text-purple-600'}`}>
+                                                {Math.min(99, (Number(c.predicted_value) * 100).toFixed(0))}% risk
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </StateFeedback>
+                        </InsightCard>
+
+                        {/* Customer Segments */}
+                        <InsightCard title="Key Customer Segments" icon={Target} theme="default">
+                            <StateFeedback loading={loading} error={error}>
+                                <ul className="space-y-3 text-sm text-gray-700">
+                                    {(segmentData || []).slice(0, 5).map((s, index) => (
+                                        <li key={s.id || index} className="flex justify-between items-center p-2 rounded-lg bg-white hover:bg-gray-50 transition duration-150 border border-gray-100">
+                                            <span className="font-medium truncate">{s.customer_name || s.name || `User ${index + 1}`}</span>
+                                            <span className="text-xs font-semibold text-gray-600 flex-shrink-0">
+                                                Segment {s.predicted_value}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </StateFeedback>
+                        </InsightCard>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    )
 }

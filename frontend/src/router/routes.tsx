@@ -15,6 +15,7 @@ import SupportDashboard from '../pages/SupportDashboard';
 
 import LeadsPage from '../pages/CRM/LeadsPage';
 import LeadDetailPage from '../pages/CRM/LeadDetailPage';
+import CustomersPage from '../pages/CRM/CustomersPage';
 import CustomerDetailPage from '../pages/CRM/CustomerDetailPage';
 import QuotesPage from '../pages/CRM/QuotesPage';
 
@@ -29,6 +30,9 @@ import MaterialDetailPage from '../pages/Inventory/MaterialDetailPage';
 import PurchaseOrdersPage from '../pages/Inventory/PurchaseOrdersPage';
 import PurchaseOrderDetailPage from '../pages/Inventory/PurchaseOrderDetailPage';
 import BomTemplatesPage from '../pages/Inventory/BomTemplatesPage';
+import SuppliersPage from '../pages/Inventory/SuppliersPage';
+import StockMovementsPage from '../pages/Inventory/StockMovementsPage';
+import InventoryReportsPage from '../pages/Inventory/InventoryReportsPage';
 
 import PosTerminalPage from '../pages/POS/PosTerminalPage';
 import PosSalesHistoryPage from '../pages/POS/PosSalesHistoryPage';
@@ -56,6 +60,7 @@ import RolesPage from '../pages/Admin/RolesPage';
 import RoleDetailPage from '../pages/Admin/RoleDetailPage';
 import AuditLogsPage from '../pages/Admin/AuditLogsPage';
 import SystemSettingsPage from '../pages/Admin/SystemSettingsPage';
+import ChangePasswordPage from '../pages/Account/ChangePasswordPage';
 
 export const routes = [
   { path: '/', element: <AdminDashboard /> },
@@ -75,6 +80,7 @@ export const routes = [
 
   { path: '/crm/leads', element: <LeadsPage /> },
   { path: '/crm/leads/:id', element: <LeadDetailPage /> },
+  { path: '/crm/customers', element: <CustomersPage /> },
   { path: '/crm/customers/:id', element: <CustomerDetailPage /> },
   { path: '/crm/quotes', element: <QuotesPage /> },
 
@@ -89,6 +95,9 @@ export const routes = [
   { path: '/inventory/purchase-orders', element: <PurchaseOrdersPage /> },
   { path: '/inventory/purchase-orders/:id', element: <PurchaseOrderDetailPage /> },
   { path: '/inventory/bom-templates', element: <BomTemplatesPage /> },
+  { path: '/inventory/suppliers', element: <SuppliersPage /> },
+  { path: '/inventory/stock-movements', element: <StockMovementsPage /> },
+  { path: '/inventory/reports', element: <InventoryReportsPage /> },
 
   { path: '/pos/terminal', element: <PosTerminalPage /> },
   { path: '/pos/sales-history', element: <PosSalesHistoryPage /> },
@@ -116,4 +125,5 @@ export const routes = [
   { path: '/admin/roles/:id', element: <RoleDetailPage /> },
   { path: '/admin/audit-logs', element: <AuditLogsPage /> },
   { path: '/admin/system-settings', element: <SystemSettingsPage /> },
+  { path: '/account/change-password', element: <ChangePasswordPage /> },
 ]

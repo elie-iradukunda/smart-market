@@ -1,29 +1,14 @@
 // @ts-nocheck
 import React from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { clearAuth } from '@/utils/apiClient'
+import { Link } from 'react-router-dom'
+import InventoryTopNav from '@/components/layout/InventoryTopNav'
 import StockAlerts from '../modules/dashboards/components/StockAlerts'
 
 export default function InventoryDashboard() {
-  const navigate = useNavigate()
-
-  const handleLogout = () => {
-    clearAuth()
-    navigate('/login')
-  }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50/50 via-white to-lime-50/50 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        {/* Top bar with logout */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm font-semibold text-gray-500">Inventory</h2>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-red-600 hover:text-red-700 rounded-full px-3 py-1 border border-red-100 bg-red-50/60 hover:bg-red-100 transition"
-          >
-            Logout
-          </button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50/50 via-white to-lime-50/50">
+      <InventoryTopNav />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
 
         {/* Header section */}
         <div className="grid gap-6 lg:grid-cols-[2fr,1.3fr] items-stretch">
@@ -47,16 +32,28 @@ export default function InventoryDashboard() {
                 Materials
               </Link>
               <Link
+                to="/inventory/suppliers"
+                className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
+              >
+                Suppliers
+              </Link>
+              <Link
+                to="/inventory/stock-movements"
+                className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
+              >
+                Stock movements
+              </Link>
+              <Link
                 to="/inventory/purchase-orders"
                 className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
               >
                 Purchase orders
               </Link>
               <Link
-                to="/finance/reports"
+                to="/inventory/reports"
                 className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
               >
-                Inventory report
+                Inventory reports
               </Link>
             </div>
           </div>

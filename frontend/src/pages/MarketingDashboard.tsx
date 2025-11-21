@@ -98,6 +98,12 @@ export default function MarketingDashboard() {
               >
                 Marketing ROI
               </Link>
+              <Link
+                to="/ai/overview"
+                className="inline-flex items-center rounded-full bg-purple-50 px-3 py-1 font-medium text-purple-800 border border-purple-100 hover:bg-purple-100"
+              >
+                <span className="mr-1.5 text-xs">✨</span> AI insights
+              </Link>
             </div>
           </div>
         </div>

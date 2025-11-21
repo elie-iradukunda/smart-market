@@ -29,6 +29,38 @@ export async function loginRequest(email: string, password: string): Promise<Log
   return res.json()
 }
 
+export async function forgotPasswordRequest(email: string): Promise<{ message: string }> {
+  const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error((data as any).error || 'Failed to send reset email')
+  }
+  return data as { message: string }
+}
+
+export async function resetPasswordRequest(token: string, newPassword: string): Promise<{ message: string }> {
+  const res = await fetch(`${API_BASE}/auth/reset-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ token, newPassword }),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error((data as any).error || 'Failed to reset password')
+  }
+  return data as { message: string }
+}
+
 export function setAuthToken(token: string) {
   localStorage.setItem('auth_token', token)
 }
@@ -66,9 +98,28 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
     case 3: // Accountant
       return ['invoice.create', 'payment.create', 'journal.create', 'pos.create', 'report.view']
     case 4: // Controller
-      return ['report.view', 'inventory.manage', 'material.view']
-    case 5: // Reception
-      return ['customer.manage', 'lead.manage', 'quote.manage', 'material.view']
+      return [
+        'customer.view',
+        'order.view',
+        'order.update',
+        'material.view',
+        'stock.move',
+        'invoice.create',
+        'payment.create',
+      ]
+    case 5: // Reception / Cashier – front desk + cash handling
+      return [
+        'customer.create',
+        'customer.view',
+        'lead.create',
+        'quote.create',
+        'order.view',
+        'invoice.create',
+        'payment.create',
+        'pos.create',
+        'journal.create',
+        'report.view',
+      ]
     case 6: // Technician
       return ['worklog.create', 'workorder.update', 'order.update', 'material.view']
     case 7: // Production Manager
@@ -107,8 +158,8 @@ export function getDashboardPathForRole(roleId: number | null | undefined): stri
       return '/dashboard/accountant'
     case 4: // Controller
       return '/dashboard/controller'
-    case 5: // Reception
-      return '/dashboard/reception'
+    case 5: // Reception / Cashier
+      return '/dashboard/pos'
     case 6: // Technician
       return '/dashboard/technician'
     case 7: // Production Manager

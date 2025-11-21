@@ -2,31 +2,68 @@
 import React from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { clearAuth, currentUserHasPermission } from '@/utils/apiClient'
-import JobPipelineOverview from '../modules/dashboards/components/JobPipelineOverview'
-import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
 
 export default function ReceptionDashboard() {
   const navigate = useNavigate()
-
-  const canViewReports = currentUserHasPermission('report.view')
 
   const handleLogout = () => {
     clearAuth()
     navigate('/login')
   }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-emerald-50/50 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        {/* Top bar with logout */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm font-semibold text-gray-500">Reception</h2>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-emerald-50/50 px-0 pb-10">
+      {/* Role-specific top navbar for Reception */}
+      <header className="bg-slate-900 text-slate-100 shadow-md">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-6">
+          {/* Role label */}
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-400 text-xs font-bold text-slate-900">
+              RE
+            </span>
+            <div className="leading-tight">
+              <p className="text-xs uppercase tracking-[0.18em] text-emerald-200/80">Role</p>
+              <p className="text-sm font-semibold">Reception</p>
+            </div>
+          </div>
+
+          {/* Nav links for reception */}
+          <nav className="hidden md:flex items-center gap-4 text-xs font-medium">
+            <Link to="/dashboard/reception" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
+              Overview
+            </Link>
+            {currentUserHasPermission('lead.create') && (
+              <Link to="/crm/leads" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
+                Leads
+              </Link>
+            )}
+            {currentUserHasPermission('customer.view') && (
+              <Link to="/crm/customers" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
+                Customers
+              </Link>
+            )}
+            {currentUserHasPermission('quote.create') && (
+              <Link to="/crm/quotes" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
+                Quotes
+              </Link>
+            )}
+            {currentUserHasPermission('order.view') && (
+              <Link to="/orders" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
+                Orders
+              </Link>
+            )}
+          </nav>
+
+          {/* Logout */}
           <button
             onClick={handleLogout}
-            className="text-sm font-medium text-red-600 hover:text-red-700 rounded-full px-3 py-1 border border-red-100 bg-red-50/60 hover:bg-red-100 transition"
+            className="text-xs font-medium text-red-200 hover:text-white border border-red-400/60 bg-red-500/10 hover:bg-red-500/80 rounded-full px-3 py-1 transition"
           >
             Logout
           </button>
         </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-8">
 
         {/* Header section */}
         <div className="grid gap-6 lg:grid-cols-[2fr,1.3fr] items-stretch">
@@ -103,21 +140,64 @@ export default function ReceptionDashboard() {
           </div>
         </div>
 
-        {/* Main widgets area */}
-        {canViewReports && (
-          <div className="grid gap-6 lg:grid-cols-3 items-start">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="rounded-2xl border border-gray-100 bg-white/95 shadow-md">
-                <JobPipelineOverview />
+        {/* Quick access row based on reception permissions */}
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {currentUserHasPermission('lead.create') && (
+            <button
+              type="button"
+              onClick={() => navigate('/crm/leads')}
+              className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between"
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Leads</p>
+                <p className="mt-1 text-sm font-bold text-slate-900 group-hover:text-emerald-700">Capture new walk-in & phone leads</p>
               </div>
-            </div>
-            <div className="space-y-6">
-              <div className="rounded-2xl border border-gray-100 bg-white/95 shadow-md">
-                <RevenueOverview />
+              <span className="mt-3 text-xs text-emerald-600 font-semibold">Go to leads →</span>
+            </button>
+          )}
+
+          {currentUserHasPermission('customer.view') && (
+            <button
+              type="button"
+              onClick={() => navigate('/crm/customers')}
+              className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between"
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Customers</p>
+                <p className="mt-1 text-sm font-bold text-slate-900 group-hover:text-emerald-700">Look up customer contacts & history</p>
               </div>
-            </div>
-          </div>
-        )}
+              <span className="mt-3 text-xs text-emerald-600 font-semibold">Go to customers →</span>
+            </button>
+          )}
+
+          {currentUserHasPermission('quote.create') && (
+            <button
+              type="button"
+              onClick={() => navigate('/crm/quotes')}
+              className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between"
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Quotes</p>
+                <p className="mt-1 text-sm font-bold text-slate-900 group-hover:text-emerald-700">Prepare front-desk price quotes</p>
+              </div>
+              <span className="mt-3 text-xs text-emerald-600 font-semibold">Go to quotes →</span>
+            </button>
+          )}
+
+          {currentUserHasPermission('order.view') && (
+            <button
+              type="button"
+              onClick={() => navigate('/orders')}
+              className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between"
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Orders</p>
+                <p className="mt-1 text-sm font-bold text-slate-900 group-hover:text-emerald-700">Check order status while customer waits</p>
+              </div>
+              <span className="mt-3 text-xs text-emerald-600 font-semibold">Go to orders →</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
