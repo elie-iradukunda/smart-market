@@ -32,6 +32,25 @@ export async function fetchDemoLeads() {
   }))
 }
 
+// CRM: single lead detail
+export async function fetchLead(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/leads/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch lead')
+  }
+
+  return res.json()
+}
+
 // CRM: customers list
 export async function fetchCustomers() {
   const token = getAuthToken()
@@ -51,6 +70,168 @@ export async function fetchCustomers() {
   return res.json()
 }
 
+// Inventory: suppliers list
+export async function fetchSuppliers() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/suppliers`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch suppliers')
+  }
+
+  return res.json()
+}
+
+// Inventory: single supplier
+export async function fetchSupplier(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/suppliers/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch supplier')
+  }
+
+  return res.json()
+}
+
+// Inventory: create supplier
+export async function createSupplier(payload: any) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/suppliers`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to create supplier')
+  }
+
+  return data
+}
+
+// CRM: approve quote and create order
+export async function approveQuote(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/quotes/${id}/approve`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to approve quote')
+  }
+
+  return data
+}
+
+// Inventory: update supplier
+export async function updateSupplier(id: number | string, payload: any) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/suppliers/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to update supplier')
+  }
+
+  return data
+}
+
+// Inventory: delete supplier
+export async function deleteSupplier(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/suppliers/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to delete supplier')
+  }
+
+  return data
+}
+
+// Inventory: stock movements
+export async function fetchStockMovements() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/stock-movements`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch stock movements')
+  }
+
+  return res.json()
+}
+
+export async function createStockMovement(payload: any) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/stock-movements`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to record stock movement')
+  }
+
+  return data
+}
+
 // Production: update order status
 export async function updateOrderStatus(id: number | string, status: string) {
   const token = getAuthToken()
@@ -58,7 +239,9 @@ export async function updateOrderStatus(id: number | string, status: string) {
     throw new Error('Not authenticated')
   }
 
-  const res = await fetch(`${API_BASE}/production/orders/${id}/status`, {
+  // Backend mounts productionRoutes at /api, and the route there is router.put('/orders/:id/status', ...)
+  // So the correct URL is /api/orders/:id/status
+  const res = await fetch(`${API_BASE}/orders/${id}/status`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -910,6 +1093,30 @@ export async function fetchCampaign(id: number | string) {
   return res.json()
 }
 
+// Production: create work order (owner/controller assigns work to a user)
+export async function createWorkOrder(payload: { order_id: number | string; stage: string; assigned_to: number | string }) {
+  const token = getAuthToken()
+  if (!token) {
+    throw new Error('Not authenticated')
+  }
+
+  const res = await fetch(`${API_BASE}/work-orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to create work order')
+  }
+
+  return data
+}
+
 export function fetchDemoConversations() {
   return [
     { id: 'CONV-IG-001', customer: 'Jane (IG)', channel: 'Instagram', subject: 'Polo branding', slaStatus: 'On Track' },
@@ -1039,8 +1246,28 @@ export async function fetchPOSSales() {
     const data = await res.json().catch(() => ({}))
     throw new Error(data.error || 'Failed to fetch POS sales')
   }
-
   return res.json()
+}
+
+// Auth: change password for current user
+export async function changeUserPassword(id: number | string, currentPassword: string, newPassword: string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/auth/users/${id}/password`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error((data as any).error || (data as any).message || 'Failed to change password')
+  }
+  return data
 }
 
 // AI: demand predictions
@@ -1076,6 +1303,82 @@ export async function fetchReorderSuggestions() {
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     throw new Error(data.error || 'Failed to fetch reorder suggestions')
+  }
+
+  return res.json()
+}
+
+// AI: customer insights
+export async function fetchCustomerInsights() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/customer-insights`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch customer insights')
+  }
+
+  return res.json()
+}
+
+// AI: churn predictions
+export async function fetchChurnPredictions() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/predictions/churn`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch churn predictions')
+  }
+
+  return res.json()
+}
+
+// AI: customer segment predictions
+export async function fetchSegmentPredictions() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/predictions/segments`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch customer segments')
+  }
+
+  return res.json()
+}
+
+// AI: pricing predictions
+export async function fetchPricingPredictions() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/predictions/pricing`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch pricing predictions')
   }
 
   return res.json()

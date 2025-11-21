@@ -1,7 +1,9 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
+import InventoryTopNav from '@/components/layout/InventoryTopNav'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fetchMaterial, createMaterial, updateMaterial, deleteMaterial } from '../../api/apiClient'
+import OwnerTopNav from '@/components/layout/OwnerTopNav'
 
 export default function MaterialDetailPage() {
   const { sku } = useParams()
@@ -87,16 +89,18 @@ export default function MaterialDetailPage() {
   }
 
   return (
-    <div className="px-4 py-6 sm:px-6 lg:px-8 space-y-6">
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="min-h-screen bg-gray-50">
+      <InventoryTopNav />
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Material</p>
-          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-gray-900">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Material</p>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900">
             {isNew ? 'New material' : loading ? 'Loading...' : material?.name || 'Material'}
           </h1>
         </div>
       </div>
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
         {error && (
           <p className="mb-3 rounded-lg bg-red-50 p-2 text-xs text-red-700 border border-red-200">{error}</p>
         )}
@@ -173,6 +177,7 @@ export default function MaterialDetailPage() {
             )}
           </div>
         </form>
+      </div>
       </div>
     </div>
   )

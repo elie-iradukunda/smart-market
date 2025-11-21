@@ -90,26 +90,50 @@ export const deleteCustomer = async (req, res) => {
 
 export const createLead = async (req, res) => {
   try {
-    const { customer_id, channel } = req.body;
-    
-    // Check if customer exists
-    const [customer] = await pool.execute('SELECT id FROM customers WHERE id = ?', [customer_id]);
-    if (customer.length === 0) {
-      return res.status(404).json({ error: 'Customer not found' });
+    // Support both direct customer_id and UI payload with customer_name/phone/email
+    const { customer_id, customer_name, name, phone, email, channel } = req.body;
+
+    let resolvedCustomerId = customer_id;
+
+    if (!resolvedCustomerId) {
+      const effectiveName = customer_name || name;
+      if (!effectiveName) {
+        return res.status(400).json({ error: 'Customer name is required to create a lead' });
+      }
+
+      // Try to find existing customer by email or phone first (if provided)
+      if (email || phone) {
+        const [existingCustomer] = await pool.execute(
+          'SELECT id FROM customers WHERE email = ? OR phone = ? LIMIT 1',
+          [email || null, phone || null]
+        );
+        if (existingCustomer.length > 0) {
+          resolvedCustomerId = existingCustomer[0].id;
+        }
+      }
+
+      // If still not resolved, create a minimal customer record
+      if (!resolvedCustomerId) {
+        const [created] = await pool.execute(
+          'INSERT INTO customers (name, phone, email, address, source) VALUES (?, ?, ?, ?, ?)',
+          [effectiveName, phone || null, email || null, null, 'Lead']
+        );
+        resolvedCustomerId = created.insertId;
+      }
     }
-    
+
     // Check for duplicate lead (same customer and channel)
     const [existing] = await pool.execute(
       'SELECT id FROM leads WHERE customer_id = ? AND channel = ?',
-      [customer_id, channel]
+      [resolvedCustomerId, channel]
     );
     if (existing.length > 0) {
       return res.status(409).json({ error: 'Lead already exists for this customer and channel' });
     }
-    
+
     const [result] = await pool.execute(
       'INSERT INTO leads (customer_id, channel) VALUES (?, ?)',
-      [customer_id, channel]
+      [resolvedCustomerId, channel]
     );
     res.status(201).json({ id: result.insertId, message: 'Lead created' });
   } catch (error) {

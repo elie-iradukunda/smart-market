@@ -2,6 +2,7 @@
 import React from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { clearAuth } from '@/utils/apiClient'
+import SalesTopNav from '@/components/layout/SalesTopNav'
 import CampaignPerformanceWidget from '../modules/dashboards/components/CampaignPerformanceWidget'
 import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
 
@@ -25,6 +26,9 @@ export default function SalesDashboard() {
             Logout
           </button>
         </div>
+
+        {/* Shared sales navbar */}
+        <SalesTopNav />
 
         {/* Header section */}
         <div className="grid gap-6 lg:grid-cols-[2fr,1.3fr] items-stretch">
@@ -85,6 +89,69 @@ export default function SalesDashboard() {
               <p className="mt-2 text-base text-gray-100 max-w-sm">
                 Quickly see which initiatives are driving quotes and orders this week.
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Key sales actions for accountants */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-emerald-100 bg-white/95 p-4 shadow-sm flex flex-col justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">1. Capture interest</p>
+              <h3 className="mt-1 text-sm font-bold text-gray-900">Create leads</h3>
+              <p className="mt-1 text-xs text-gray-600">
+                When a company or person asks for prices, add them as a lead so you don&apos;t lose the opportunity.
+              </p>
+            </div>
+            <div className="mt-3">
+              <Link
+                to="/crm/leads"
+                className="inline-flex items-center rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+              >
+                Go to Leads
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-indigo-100 bg-white/95 p-4 shadow-sm flex flex-col justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">2. Send prices</p>
+              <h3 className="mt-1 text-sm font-bold text-gray-900">Create & manage quotes</h3>
+              <p className="mt-1 text-xs text-gray-600">
+                Prepare price offers for leads and customers. Keep them as Draft or Sent until the customer decides.
+              </p>
+            </div>
+            <div className="mt-3 flex gap-2 flex-wrap">
+              <Link
+                to="/crm/quotes"
+                className="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
+              >
+                Go to Quotes
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-amber-100 bg-white/95 p-4 shadow-sm flex flex-col justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">3. Customer says &quot;Yes&quot;</p>
+              <h3 className="mt-1 text-sm font-bold text-gray-900">Approve quote → Order</h3>
+              <p className="mt-1 text-xs text-gray-600">
+                When a customer accepts a quote, approve it in the quotes screen so the system creates an order.
+              </p>
+            </div>
+            <div className="mt-3 flex gap-2 flex-wrap">
+              <Link
+                to="/crm/quotes"
+                className="inline-flex items-center rounded-full bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
+              >
+                Review Quotes
+              </Link>
+              <Link
+                to="/orders"
+                className="inline-flex items-center rounded-full bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-black"
+              >
+                View Orders
+              </Link>
             </div>
           </div>
         </div>
