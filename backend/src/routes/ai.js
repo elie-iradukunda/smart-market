@@ -50,4 +50,6 @@ router.get('/predictions/pricing', authenticateToken, checkPermission('ai.view')
   }
 });
 
+
+
 export default router;

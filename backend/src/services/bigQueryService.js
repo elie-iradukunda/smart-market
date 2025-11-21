@@ -1,285 +1,303 @@
 import { BigQuery } from '@google-cloud/bigquery';
+import pool from '../config/database.js';
 
 const bigquery = new BigQuery({
-  projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
+  projectId: process.env.GOOGLE_CLOUD_PROJECT_ID || 'smart-market-local',
   keyFilename: process.env.GOOGLE_CLOUD_KEY_FILE
 });
 
 const dataset = bigquery.dataset(process.env.BIGQUERY_DATASET || 'smart_market');
 
+// Sync MySQL data to BigQuery for advanced analytics
 export const syncDataToBigQuery = async () => {
   try {
-    // Sync customers data
-    await syncCustomersData();
+    console.log('Syncing data to BigQuery...');
     
-    // Sync orders data
-    await syncOrdersData();
+    // Sync customers
+    await syncCustomers();
     
-    // Sync materials data
-    await syncMaterialsData();
+    // Sync orders
+    await syncOrders();
+    
+    // Sync materials
+    await syncMaterials();
     
     // Sync stock movements
     await syncStockMovements();
     
-    console.log('Data synced to BigQuery successfully');
+    console.log('Data sync to BigQuery completed');
+    return { success: true, message: 'Data synced successfully' };
   } catch (error) {
-    console.error('BigQuery sync failed:', error);
+    console.error('BigQuery sync error:', error);
+    return { success: false, error: error.message };
   }
 };
 
-const syncCustomersData = async () => {
-  const query = `
-    CREATE OR REPLACE TABLE \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.customers\` AS
+const syncCustomers = async () => {
+  const [customers] = await pool.execute(`
     SELECT 
-      id,
-      name,
-      phone,
-      email,
-      address,
-      source,
-      CURRENT_TIMESTAMP() as synced_at
-    FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.mysql_customers\`
-  `;
+      c.id,
+      c.name,
+      c.email,
+      c.phone,
+      c.source,
+      c.created_at,
+      COUNT(o.id) as total_orders,
+      COALESCE(SUM(q.total_amount), 0) as total_spent,
+      COALESCE(MAX(o.created_at), c.created_at) as last_order_date
+    FROM customers c
+    LEFT JOIN orders o ON c.id = o.customer_id
+    LEFT JOIN quotes q ON o.quote_id = q.id
+    GROUP BY c.id, c.name, c.email, c.phone, c.source, c.created_at
+  `);
   
-  await bigquery.query(query);
+  if (customers.length > 0) {
+    const table = dataset.table('customers');
+    await table.insert(customers.map(customer => ({
+      customer_id: customer.id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      source: customer.source,
+      created_at: customer.created_at,
+      total_orders: customer.total_orders,
+      total_spent: parseFloat(customer.total_spent),
+      last_order_date: customer.last_order_date,
+      sync_timestamp: new Date()
+    })));
+    console.log(`Synced ${customers.length} customers to BigQuery`);
+  }
 };
 
-const syncOrdersData = async () => {
-  const query = `
-    CREATE OR REPLACE TABLE \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.orders_analysis\` AS
+const syncOrders = async () => {
+  const [orders] = await pool.execute(`
     SELECT 
       o.id,
       o.customer_id,
+      o.quote_id,
       o.status,
       o.created_at,
       q.total_amount,
-      c.name as customer_name,
-      c.source as customer_source,
-      DATE_DIFF(CURRENT_DATE(), DATE(o.created_at), DAY) as days_since_order,
-      EXTRACT(MONTH FROM o.created_at) as order_month,
-      EXTRACT(DAYOFWEEK FROM o.created_at) as order_day_of_week
-    FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.mysql_orders\` o
-    LEFT JOIN \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.mysql_quotes\` q ON o.quote_id = q.id
-    LEFT JOIN \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.mysql_customers\` c ON o.customer_id = c.id
-  `;
+      c.name as customer_name
+    FROM orders o
+    LEFT JOIN quotes q ON o.quote_id = q.id
+    LEFT JOIN customers c ON o.customer_id = c.id
+  `);
   
-  await bigquery.query(query);
+  if (orders.length > 0) {
+    const table = dataset.table('orders');
+    await table.insert(orders.map(order => ({
+      order_id: order.id,
+      customer_id: order.customer_id,
+      quote_id: order.quote_id,
+      status: order.status,
+      created_at: order.created_at,
+      total_amount: parseFloat(order.total_amount || 0),
+      customer_name: order.customer_name,
+      sync_timestamp: new Date()
+    })));
+    console.log(`Synced ${orders.length} orders to BigQuery`);
+  }
 };
 
-const syncMaterialsData = async () => {
-  const query = `
-    CREATE OR REPLACE TABLE \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.materials_analysis\` AS
+const syncMaterials = async () => {
+  const [materials] = await pool.execute(`
     SELECT 
       m.id,
       m.name,
-      m.unit,
       m.category,
+      m.unit,
       m.current_stock,
       m.reorder_level,
-      CASE 
-        WHEN m.current_stock <= 0 THEN 'OUT_OF_STOCK'
-        WHEN m.current_stock <= m.reorder_level THEN 'LOW_STOCK'
-        WHEN m.current_stock <= m.reorder_level * 1.5 THEN 'MEDIUM_STOCK'
-        ELSE 'HIGH_STOCK'
-      END as stock_status
-    FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.mysql_materials\` m
-  `;
+      m.created_at
+    FROM materials m
+  `);
   
-  await bigquery.query(query);
+  if (materials.length > 0) {
+    const table = dataset.table('materials');
+    await table.insert(materials.map(material => ({
+      material_id: material.id,
+      name: material.name,
+      category: material.category,
+      unit: material.unit,
+      current_stock: parseFloat(material.current_stock),
+      reorder_level: material.reorder_level,
+      created_at: material.created_at,
+      sync_timestamp: new Date()
+    })));
+    console.log(`Synced ${materials.length} materials to BigQuery`);
+  }
 };
 
 const syncStockMovements = async () => {
-  const query = `
-    CREATE OR REPLACE TABLE \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.stock_analysis\` AS
+  const [movements] = await pool.execute(`
     SELECT 
       sm.id,
       sm.material_id,
       sm.type,
       sm.quantity,
+      sm.reference,
       sm.created_at,
-      m.name as material_name,
-      m.category,
-      DATE_DIFF(CURRENT_DATE(), DATE(sm.created_at), DAY) as days_ago,
-      EXTRACT(MONTH FROM sm.created_at) as movement_month
-    FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.mysql_stock_movements\` sm
-    LEFT JOIN \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.mysql_materials\` m ON sm.material_id = m.id
-    WHERE sm.created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
-  `;
+      m.name as material_name
+    FROM stock_movements sm
+    LEFT JOIN materials m ON sm.material_id = m.id
+  `);
   
-  await bigquery.query(query);
+  if (movements.length > 0) {
+    const table = dataset.table('stock_movements');
+    await table.insert(movements.map(movement => ({
+      movement_id: movement.id,
+      material_id: movement.material_id,
+      type: movement.type,
+      quantity: parseFloat(movement.quantity),
+      reference: movement.reference,
+      created_at: movement.created_at,
+      material_name: movement.material_name,
+      sync_timestamp: new Date()
+    })));
+    console.log(`Synced ${movements.length} stock movements to BigQuery`);
+  }
 };
 
-export const getDemandForecast = async () => {
-  const query = `
-    SELECT 
-      material_id,
-      material_name,
-      category,
-      AVG(ABS(quantity)) as avg_daily_usage,
-      STDDEV(ABS(quantity)) as usage_variance,
-      COUNT(*) as usage_frequency,
-      -- Linear regression prediction
-      ROUND(AVG(ABS(quantity)) * 1.2) as predicted_demand,
-      -- Confidence based on data consistency
-      CASE 
-        WHEN COUNT(*) >= 20 AND STDDEV(ABS(quantity)) / AVG(ABS(quantity)) < 0.5 THEN 0.9
-        WHEN COUNT(*) >= 10 AND STDDEV(ABS(quantity)) / AVG(ABS(quantity)) < 0.7 THEN 0.7
-        WHEN COUNT(*) >= 5 THEN 0.5
-        ELSE 0.3
-      END as confidence
-    FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.stock_analysis\`
-    WHERE type = 'issue' AND days_ago <= 30
-    GROUP BY material_id, material_name, category
-    HAVING COUNT(*) >= 3
-    ORDER BY predicted_demand DESC
-  `;
-  
-  const [rows] = await bigquery.query(query);
-  return rows;
+// Query BigQuery for advanced analytics
+export const queryBigQueryAnalytics = async (analysisType) => {
+  try {
+    let query;
+    
+    switch (analysisType) {
+      case 'customer_lifetime_value':
+        query = `
+          SELECT 
+            customer_id,
+            name,
+            total_orders,
+            total_spent,
+            total_spent / total_orders as avg_order_value,
+            DATE_DIFF(CURRENT_DATE(), DATE(last_order_date), DAY) as days_since_last_order
+          FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.customers\`
+          WHERE total_orders > 0
+          ORDER BY total_spent DESC
+          LIMIT 100
+        `;
+        break;
+        
+      case 'inventory_trends':
+        query = `
+          SELECT 
+            material_name,
+            type,
+            SUM(quantity) as total_quantity,
+            COUNT(*) as movement_count,
+            DATE(created_at) as movement_date
+          FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.stock_movements\`
+          WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+          GROUP BY material_name, type, DATE(created_at)
+          ORDER BY movement_date DESC
+        `;
+        break;
+        
+      case 'sales_trends':
+        query = `
+          SELECT 
+            DATE(created_at) as order_date,
+            COUNT(*) as order_count,
+            SUM(total_amount) as daily_revenue,
+            AVG(total_amount) as avg_order_value
+          FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.orders\`
+          WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
+          GROUP BY DATE(created_at)
+          ORDER BY order_date DESC
+        `;
+        break;
+        
+      default:
+        throw new Error('Unknown analysis type');
+    }
+    
+    const [rows] = await bigquery.query({ query });
+    return rows;
+  } catch (error) {
+    console.error('BigQuery analytics error:', error);
+    throw error;
+  }
 };
 
-export const getCustomerSegmentation = async () => {
-  const query = `
-    WITH customer_metrics AS (
-      SELECT 
-        customer_id,
-        customer_name,
-        customer_source,
-        COUNT(*) as frequency,
-        SUM(total_amount) as monetary,
-        MIN(days_since_order) as recency,
-        AVG(total_amount) as avg_order_value
-      FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.orders_analysis\`
-      WHERE total_amount IS NOT NULL
-      GROUP BY customer_id, customer_name, customer_source
-    ),
-    rfm_scores AS (
-      SELECT *,
-        CASE 
-          WHEN recency <= 30 THEN 5
-          WHEN recency <= 60 THEN 4
-          WHEN recency <= 90 THEN 3
-          WHEN recency <= 180 THEN 2
-          ELSE 1
-        END as recency_score,
-        CASE 
-          WHEN frequency >= 10 THEN 5
-          WHEN frequency >= 5 THEN 4
-          WHEN frequency >= 3 THEN 3
-          WHEN frequency >= 2 THEN 2
-          ELSE 1
-        END as frequency_score,
-        CASE 
-          WHEN monetary >= 5000 THEN 5
-          WHEN monetary >= 2000 THEN 4
-          WHEN monetary >= 1000 THEN 3
-          WHEN monetary >= 500 THEN 2
-          ELSE 1
-        END as monetary_score
-      FROM customer_metrics
-    )
-    SELECT *,
-      CASE 
-        WHEN recency_score >= 4 AND frequency_score >= 4 AND monetary_score >= 4 THEN 'Champions'
-        WHEN recency_score >= 3 AND frequency_score >= 3 THEN 'Loyal Customers'
-        WHEN recency_score <= 2 AND frequency_score >= 3 THEN 'At Risk'
-        WHEN recency_score <= 2 AND frequency_score <= 2 THEN 'Lost Customers'
-        ELSE 'New Customers'
-      END as segment
-    FROM rfm_scores
-    ORDER BY monetary DESC
-  `;
-  
-  const [rows] = await bigquery.query(query);
-  return rows;
-};
-
-export const getChurnPrediction = async () => {
-  const query = `
-    WITH customer_behavior AS (
-      SELECT 
-        customer_id,
-        customer_name,
-        COUNT(*) as total_orders,
-        AVG(total_amount) as avg_order_value,
-        MIN(days_since_order) as days_since_last_order,
-        STDDEV(days_since_order) as order_consistency
-      FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.orders_analysis\`
-      WHERE total_amount IS NOT NULL
-      GROUP BY customer_id, customer_name
-      HAVING COUNT(*) > 1
-    )
-    SELECT *,
-      -- Churn probability calculation
-      CASE 
-        WHEN days_since_last_order > 180 THEN 0.9
-        WHEN days_since_last_order > 90 THEN 0.7
-        WHEN days_since_last_order > 60 THEN 0.5
-        WHEN days_since_last_order > 30 THEN 0.3
-        ELSE 0.1
-      END as churn_probability,
-      -- Confidence based on order history
-      CASE 
-        WHEN total_orders >= 10 THEN 0.9
-        WHEN total_orders >= 5 THEN 0.7
-        WHEN total_orders >= 3 THEN 0.5
-        ELSE 0.3
-      END as confidence
-    FROM customer_behavior
-    ORDER BY churn_probability DESC, total_orders DESC
-  `;
-  
-  const [rows] = await bigquery.query(query);
-  return rows;
-};
-
-export const getInventoryOptimization = async () => {
-  const query = `
-    WITH usage_stats AS (
-      SELECT 
-        material_id,
-        material_name,
-        category,
-        AVG(ABS(quantity)) as avg_daily_usage,
-        STDDEV(ABS(quantity)) as usage_stddev,
-        COUNT(*) as usage_days
-      FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.stock_analysis\`
-      WHERE type = 'issue' AND days_ago <= 90
-      GROUP BY material_id, material_name, category
-      HAVING COUNT(*) >= 5
-    ),
-    current_stock AS (
-      SELECT 
-        id as material_id,
-        current_stock,
-        reorder_level
-      FROM \`${process.env.GOOGLE_CLOUD_PROJECT_ID}.${process.env.BIGQUERY_DATASET}.materials_analysis\`
-    )
-    SELECT 
-      u.material_id,
-      u.material_name,
-      u.category,
-      c.current_stock,
-      c.reorder_level,
-      u.avg_daily_usage,
-      -- EOQ calculation (simplified)
-      ROUND(SQRT(2 * (u.avg_daily_usage * 365) * 50 / 0.2)) as economic_order_quantity,
-      -- Safety stock (7-day lead time, 95% service level)
-      ROUND(1.65 * SQRT(7) * u.usage_stddev) as safety_stock,
-      -- Reorder point
-      ROUND((u.avg_daily_usage * 7) + (1.65 * SQRT(7) * u.usage_stddev)) as reorder_point,
-      -- Days until reorder
-      CASE 
-        WHEN u.avg_daily_usage > 0 THEN 
-          ROUND((c.current_stock - ((u.avg_daily_usage * 7) + (1.65 * SQRT(7) * u.usage_stddev))) / u.avg_daily_usage)
-        ELSE 999
-      END as days_until_reorder
-    FROM usage_stats u
-    JOIN current_stock c ON u.material_id = c.material_id
-    WHERE c.current_stock > 0
-    ORDER BY days_until_reorder ASC
-  `;
-  
-  const [rows] = await bigquery.query(query);
-  return rows;
+// Create BigQuery tables if they don't exist
+export const createBigQueryTables = async () => {
+  try {
+    const tables = [
+      {
+        name: 'customers',
+        schema: [
+          { name: 'customer_id', type: 'INTEGER' },
+          { name: 'name', type: 'STRING' },
+          { name: 'email', type: 'STRING' },
+          { name: 'phone', type: 'STRING' },
+          { name: 'source', type: 'STRING' },
+          { name: 'created_at', type: 'TIMESTAMP' },
+          { name: 'total_orders', type: 'INTEGER' },
+          { name: 'total_spent', type: 'FLOAT' },
+          { name: 'last_order_date', type: 'TIMESTAMP' },
+          { name: 'sync_timestamp', type: 'TIMESTAMP' }
+        ]
+      },
+      {
+        name: 'orders',
+        schema: [
+          { name: 'order_id', type: 'INTEGER' },
+          { name: 'customer_id', type: 'INTEGER' },
+          { name: 'quote_id', type: 'INTEGER' },
+          { name: 'status', type: 'STRING' },
+          { name: 'created_at', type: 'TIMESTAMP' },
+          { name: 'total_amount', type: 'FLOAT' },
+          { name: 'customer_name', type: 'STRING' },
+          { name: 'sync_timestamp', type: 'TIMESTAMP' }
+        ]
+      },
+      {
+        name: 'materials',
+        schema: [
+          { name: 'material_id', type: 'INTEGER' },
+          { name: 'name', type: 'STRING' },
+          { name: 'category', type: 'STRING' },
+          { name: 'unit', type: 'STRING' },
+          { name: 'current_stock', type: 'FLOAT' },
+          { name: 'reorder_level', type: 'INTEGER' },
+          { name: 'created_at', type: 'TIMESTAMP' },
+          { name: 'sync_timestamp', type: 'TIMESTAMP' }
+        ]
+      },
+      {
+        name: 'stock_movements',
+        schema: [
+          { name: 'movement_id', type: 'INTEGER' },
+          { name: 'material_id', type: 'INTEGER' },
+          { name: 'type', type: 'STRING' },
+          { name: 'quantity', type: 'FLOAT' },
+          { name: 'reference', type: 'STRING' },
+          { name: 'created_at', type: 'TIMESTAMP' },
+          { name: 'material_name', type: 'STRING' },
+          { name: 'sync_timestamp', type: 'TIMESTAMP' }
+        ]
+      }
+    ];
+    
+    for (const tableConfig of tables) {
+      const table = dataset.table(tableConfig.name);
+      const [exists] = await table.exists();
+      
+      if (!exists) {
+        await table.create({
+          schema: tableConfig.schema,
+          location: 'US'
+        });
+        console.log(`Created BigQuery table: ${tableConfig.name}`);
+      }
+    }
+    
+    return { success: true, message: 'BigQuery tables ready' };
+  } catch (error) {
+    console.error('BigQuery table creation error:', error);
+    return { success: false, error: error.message };
+  }
 };
