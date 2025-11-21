@@ -19,6 +19,7 @@ import reportRoutes from './routes/reports.js';
 import uploadRoutes from './routes/upload.js';
 import roleRoutes from './routes/roles.js';
 import messageRoutes from './routes/messages.js';
+import testAiRoutes from './routes/testAi.js';
 import './jobs/scheduler.js';
 
 dotenv.config();
@@ -63,6 +64,7 @@ app.use('/api', reportRoutes);
 app.use('/api', uploadRoutes);
 app.use('/api', roleRoutes);
 app.use('/api', messageRoutes);
+app.use('/api', testAiRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
