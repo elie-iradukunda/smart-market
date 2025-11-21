@@ -1,9 +1,8 @@
 // @ts-nocheck
 import React from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { clearAuth } from '@/utils/apiClient'
-import StockAlerts from '../modules/dashboards/components/StockAlerts'
-import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
+import { useNavigate,Link } from 'react-router-dom'
+import { clearAuth, currentUserHasPermission } from '@/utils/apiClient'
+import ControllerTopNav from '@/components/layout/ControllerTopNav'
 
 export default function ControllerDashboard() {
   const navigate = useNavigate()
@@ -13,18 +12,10 @@ export default function ControllerDashboard() {
     navigate('/login')
   }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-white to-amber-50/50 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        {/* Top bar with logout */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm font-semibold text-gray-500">Controller</h2>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-red-600 hover:text-red-700 rounded-full px-3 py-1 border border-red-100 bg-red-50/60 hover:bg-red-100 transition"
-          >
-            Logout
-          </button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-white to-amber-50/50 px-0 pb-10">
+      <ControllerTopNav />
+
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-8">
 
         {/* Header section */}
         <div className="grid gap-6 lg:grid-cols-[2fr,1.3fr] items-stretch">
@@ -73,53 +64,110 @@ export default function ControllerDashboard() {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-2 text-xs">
-              <Link
-                to="/finance/reports"
-                className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
-              >
-                Finance reports
-              </Link>
-              <Link
-                to="/finance/invoices"
-                className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
-              >
-                Invoices
-              </Link>
-              <Link
-                to="/finance/payments"
-                className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
-              >
-                Payments
-              </Link>
-              <Link
-                to="/inventory/materials"
-                className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
-              >
-                Materials
-              </Link>
-              <Link
-                to="/inventory/purchase-orders"
-                className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
-              >
-                Purchase orders
-              </Link>
+              {currentUserHasPermission('report.view') && (
+                <Link
+                  to="/finance/reports"
+                  className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
+                >
+                  Finance reports
+                </Link>
+              )}
+              {currentUserHasPermission('invoice.create') && (
+                <Link
+                  to="/finance/invoices"
+                  className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
+                >
+                  Invoices
+                </Link>
+              )}
+              {currentUserHasPermission('payment.create') && (
+                <Link
+                  to="/finance/payments"
+                  className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
+                >
+                  Payments
+                </Link>
+              )}
+              {currentUserHasPermission('material.view') && (
+                <Link
+                  to="/inventory/materials"
+                  className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
+                >
+                  Materials
+                </Link>
+              )}
+              {(currentUserHasPermission('stock.move') || currentUserHasPermission('inventory.manage')) && (
+                <Link
+                  to="/inventory/purchase-orders"
+                  className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
+                >
+                  Purchase orders
+                </Link>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Main widgets area */}
-        <div className="grid gap-6 lg:grid-cols-3 items-start">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-2xl border border-gray-100 bg-white/95 shadow-md">
-              <RevenueOverview />
-            </div>
-          </div>
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-gray-100 bg-white/95 shadow-md">
-              <StockAlerts />
-            </div>
-          </div>
+        {/* Quick access row based on controller permissions */}
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {currentUserHasPermission('customer.view') && (
+            <button
+              type="button"
+              onClick={() => navigate('/crm/customers')}
+              className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm hover:shadow-md hover:border-blue-300 transition flex flex-col justify-between"
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Customers</p>
+                <p className="mt-1 text-sm font-bold text-slate-900 group-hover:text-blue-700">View &amp; manage customers</p>
+              </div>
+              <span className="mt-3 text-xs text-blue-600 font-semibold">Go to customers →</span>
+            </button>
+          )}
+
+          {currentUserHasPermission('order.view') && (
+            <button
+              type="button"
+              onClick={() => navigate('/orders')}
+              className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm hover:shadow-md hover:border-blue-300 transition flex flex-col justify-between"
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Orders</p>
+                <p className="mt-1 text-sm font-bold text-slate-900 group-hover:text-blue-700">Track &amp; update production orders</p>
+              </div>
+              <span className="mt-3 text-xs text-blue-600 font-semibold">Go to orders →</span>
+            </button>
+          )}
+
+          {currentUserHasPermission('material.view') && (
+            <button
+              type="button"
+              onClick={() => navigate('/inventory/materials')}
+              className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm hover:shadow-md hover:border-blue-300 transition flex flex-col justify-between"
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Materials &amp; stock</p>
+                <p className="mt-1 text-sm font-bold text-slate-900 group-hover:text-blue-700">Check stock &amp; movements</p>
+              </div>
+              <span className="mt-3 text-xs text-blue-600 font-semibold">Go to inventory →</span>
+            </button>
+          )}
+
+          {(currentUserHasPermission('invoice.create') || currentUserHasPermission('payment.create')) && (
+            <button
+              type="button"
+              onClick={() => navigate('/finance/invoices')}
+              className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm hover:shadow-md hover:border-blue-300 transition flex flex-col justify-between"
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Finance</p>
+                <p className="mt-1 text-sm font-bold text-slate-900 group-hover:text-blue-700">Invoices &amp; payments overview</p>
+              </div>
+              <span className="mt-3 text-xs text-blue-600 font-semibold">Open finance workspace →</span>
+            </button>
+          )}
         </div>
+
+        {/* Main widgets area intentionally kept minimal for controller (no owner-level revenue/stock widgets) */}
       </div>
     </div>
   )

@@ -1,12 +1,14 @@
 // @ts-nocheck
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { fetchJournalEntries } from '../../api/apiClient'
+import OwnerTopNav from '@/components/layout/OwnerTopNav'
 
 export default function JournalEntryDetailPage() {
-  const journal = {
-    id: 'JE-3001',
-    date: '2025-11-18',
-    description: 'Invoice INV-2025-001',
-  }
+  const { id } = useParams()
+  const [journal, setJournal] = useState<any | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const lines = [
     { id: 1, account: 'Accounts Receivable', debit: 450, credit: 0 },
@@ -14,11 +16,68 @@ export default function JournalEntryDetailPage() {
     { id: 3, account: 'VAT Payable', debit: 0, credit: 68.64 },
   ]
 
+  useEffect(() => {
+    if (!id) return
+
+    let isMounted = true
+    setLoading(true)
+    setError(null)
+
+    fetchJournalEntries()
+      .then(entries => {
+        if (!isMounted) return
+        const found = (Array.isArray(entries) ? entries : []).find(
+          (e: any) => String(e.id) === String(id)
+        )
+        if (!found) {
+          setError('Journal entry not found')
+        } else {
+          setJournal(found)
+        }
+      })
+      .catch(err => {
+        if (!isMounted) return
+        setError(err.message || 'Failed to load journal entry')
+      })
+      .finally(() => {
+        if (!isMounted) return
+        setLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [id])
+
   const totalDebit = lines.reduce((sum, l) => sum + l.debit, 0)
   const totalCredit = lines.reduce((sum, l) => sum + l.credit, 0)
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <OwnerTopNav />
+        <div className="px-4 py-6 sm:px-6 lg:px-8">
+          <p className="text-sm text-gray-500">Loading journal entry...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !journal) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <OwnerTopNav />
+        <div className="px-4 py-6 sm:px-6 lg:px-8">
+          <p className="text-sm text-red-600">{error || 'Journal entry not found'}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <div className="min-h-screen bg-slate-50">
+      <OwnerTopNav />
+      <div className="px-4 py-6 sm:px-6 lg:px-8 space-y-6">
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Journal entry</p>
@@ -66,6 +125,7 @@ export default function JournalEntryDetailPage() {
           <p className="text-gray-700">Total Credit: {totalCredit}</p>
         </div>
       </section>
+      </div>
     </div>
   )
 }

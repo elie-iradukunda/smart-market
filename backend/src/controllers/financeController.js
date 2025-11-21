@@ -64,7 +64,7 @@ export const createPOSSale = async (req, res) => {
     
     const [result] = await pool.execute(
       'INSERT INTO pos_sales (customer_id, cashier_id, total) VALUES (?, ?, ?)',
-      [customer_id, req.user.id, total]
+      [customer_id || null, req.user.id, total]
     );
 
     const pos_id = result.insertId;
@@ -76,7 +76,17 @@ export const createPOSSale = async (req, res) => {
       );
     }
 
-    res.status(201).json({ id: pos_id, message: 'POS sale recorded' });
+    // Also create an order so the sale appears in production/finance flows
+    let order_id = null;
+    if (customer_id) {
+      const [orderResult] = await pool.execute(
+        'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
+        [customer_id, 'ready', total]
+      );
+      order_id = orderResult.insertId;
+    }
+
+    res.status(201).json({ id: pos_id, order_id, message: 'POS sale recorded' });
   } catch (error) {
     res.status(500).json({ error: 'POS sale failed' });
   }

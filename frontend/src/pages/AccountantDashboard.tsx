@@ -1,33 +1,18 @@
 // @ts-nocheck
 import React from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { clearAuth } from '@/utils/apiClient'
+import { Link } from 'react-router-dom'
 import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
+import OwnerTopNav from '@/components/layout/OwnerTopNav'
 
 export default function AccountantDashboard() {
-  const navigate = useNavigate()
-
-  const handleLogout = () => {
-    clearAuth()
-    navigate('/login')
-  }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 via-white to-sky-50/50 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        {/* Top bar with logout */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm font-semibold text-gray-500">Accountant</h2>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-red-600 hover:text-red-700 rounded-full px-3 py-1 border border-red-100 bg-red-50/60 hover:bg-red-100 transition"
-          >
-            Logout
-          </button>
-        </div>
+    <div className="min-h-screen bg-slate-50">
+      <OwnerTopNav />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
 
         {/* Header section */}
         <div className="grid gap-6 lg:grid-cols-[2fr,1.3fr] items-stretch">
-          <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-8 sm:p-10 shadow-xl flex flex-col justify-between">
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-2xl flex flex-col justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wider text-indigo-700">Finance &amp; accounting</p>
               <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight">
@@ -57,7 +42,7 @@ export default function AccountantDashboard() {
           </div>
 
           {/* Side card with finance context */}
-          <div className="rounded-3xl overflow-hidden border border-gray-900/10 bg-gray-900 shadow-2xl relative">
+          <div className="rounded-3xl overflow-hidden border border-slate-200 bg-slate-900 shadow-2xl relative">
             <img
               src="https://images.pexels.com/photos/6476587/pexels-photo-6476587.jpeg?auto=compress&cs=tinysrgb&w=1200"
               alt="Accountant reviewing financial reports"

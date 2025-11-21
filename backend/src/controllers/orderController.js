@@ -142,7 +142,7 @@ export const getOrders = async (req, res) => {
       SELECT o.*, c.name as customer_name, q.total_amount 
       FROM orders o 
       JOIN customers c ON o.customer_id = c.id 
-      JOIN quotes q ON o.quote_id = q.id
+      LEFT JOIN quotes q ON o.quote_id = q.id
       ORDER BY o.created_at DESC
     `);
 
@@ -159,7 +159,7 @@ export const getOrder = async (req, res) => {
       SELECT o.*, c.name as customer_name, q.total_amount 
       FROM orders o 
       JOIN customers c ON o.customer_id = c.id 
-      JOIN quotes q ON o.quote_id = q.id
+      LEFT JOIN quotes q ON o.quote_id = q.id
       WHERE o.id = ?
     `, [id]);
 

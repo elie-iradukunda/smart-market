@@ -45,14 +45,29 @@ export default function TechnicianDashboard() {
               <div className="rounded-xl bg-white/80 px-4 py-3 border border-gray-100 shadow-lg">
                 <dt className="text-xs font-medium text-gray-500">Active jobs</dt>
                 <dd className="mt-1 text-2xl font-bold text-gray-900">--</dd>
+                <dd className="mt-2 text-[11px] text-sky-700">
+                  <Link to="/production/work-orders" className="underline underline-offset-2 hover:text-sky-800">
+                    View work orders
+                  </Link>
+                </dd>
               </div>
               <div className="rounded-xl bg-white/80 px-4 py-3 border border-gray-100 shadow-lg">
                 <dt className="text-xs font-medium text-gray-500">Due today</dt>
                 <dd className="mt-1 text-2xl font-bold text-gray-900">--</dd>
+                <dd className="mt-2 text-[11px] text-sky-700">
+                  <Link to="/production/work-orders" className="underline underline-offset-2 hover:text-sky-800">
+                    See today’s jobs
+                  </Link>
+                </dd>
               </div>
               <div className="rounded-xl bg-sky-50/90 px-4 py-3 border border-sky-200 shadow-lg ring-1 ring-sky-500/10">
                 <dt className="text-xs font-medium text-sky-700">Materials at risk</dt>
                 <dd className="mt-1 text-2xl font-bold text-sky-800">--</dd>
+                <dd className="mt-2 text-[11px] text-sky-700">
+                  <Link to="/inventory/materials" className="underline underline-offset-2 hover:text-sky-800">
+                    Check materials
+                  </Link>
+                </dd>
               </div>
             </dl>
           </div>

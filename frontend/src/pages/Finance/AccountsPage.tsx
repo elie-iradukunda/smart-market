@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { fetchAccounts } from '../../api/apiClient'
+import OwnerTopNav from '@/components/layout/OwnerTopNav'
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState([])
@@ -42,16 +43,18 @@ export default function AccountsPage() {
   })
 
   return (
-    <div className="px-4 py-6 sm:px-6 lg:px-8 space-y-6">
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Finance</p>
-        <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-gray-900">Chart of accounts</h1>
+    <div className="min-h-screen bg-slate-50">
+      <OwnerTopNav />
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Finance</p>
+        <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900">Chart of accounts</h1>
         <p className="mt-2 text-sm text-gray-600 max-w-xl">
           Base accounts used for postings and reports. This structure underpins all financial statements.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-xl">
         <div className="flex items-center justify-between gap-3 mb-3">
           <p className="text-sm font-medium text-gray-900">Accounts</p>
           <input
@@ -70,30 +73,31 @@ export default function AccountsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-xs sm:text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-indigo-50/80 border-b border-indigo-200">
                 <tr>
-                  <th className="px-3 py-2 font-medium text-gray-700">Code</th>
-                  <th className="px-3 py-2 font-medium text-gray-700">Name</th>
-                  <th className="px-3 py-2 font-medium text-gray-700">Type</th>
+                  <th className="px-3 py-2 font-semibold text-indigo-700 uppercase tracking-wider">Code</th>
+                  <th className="px-3 py-2 font-semibold text-indigo-700 uppercase tracking-wider">Name</th>
+                  <th className="px-3 py-2 font-semibold text-indigo-700 uppercase tracking-wider">Type</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {filtered.map((acc: any) => (
-                  <tr key={acc.id} className="border-t border-gray-100 hover:bg-gray-50">
-                    <td className="px-3 py-2 text-gray-800">{acc.account_code}</td>
-                    <td className="px-3 py-2 text-gray-800">{acc.name}</td>
-                    <td className="px-3 py-2 text-gray-800">{acc.type}</td>
+                  <tr key={acc.id} className="bg-white hover:bg-blue-50/50">
+                    <td className="px-3 py-2 text-slate-800 font-mono">{acc.account_code}</td>
+                    <td className="px-3 py-2 text-slate-900 font-medium">{acc.name}</td>
+                    <td className="px-3 py-2 text-slate-700">{acc.type}</td>
                   </tr>
                 ))}
                 {filtered.length === 0 && !loading && (
                   <tr>
-                    <td colSpan={3} className="px-3 py-4 text-center text-xs text-gray-500">No accounts found.</td>
+                    <td colSpan={3} className="px-3 py-4 text-center text-xs text-slate-500">No accounts found.</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
         )}
+      </div>
       </div>
     </div>
   )

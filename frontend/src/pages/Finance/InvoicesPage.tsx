@@ -1,6 +1,95 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
+import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import ControllerTopNav from '@/components/layout/ControllerTopNav'
+import PosTopNav from '@/components/layout/PosTopNav'
+import { getAuthUser } from '@/utils/apiClient'
+
+import {
+  DollarSign,
+  Search,
+  Users,
+  AlertTriangle,
+  FileText,
+  Clock,
+  CheckCircle,
+  Send,
+  Loader,
+  XCircle,
+} from 'lucide-react'
+
+// RESTORED EXTERNAL API CLIENT IMPORT
 import { fetchInvoices } from '../../api/apiClient'
+
+// --- Utility Functions and Components for Design ---
+
+// Helper to format currency
+const formatCurrency = (amount) => {
+  if (typeof amount !== 'number' || isNaN(amount)) return 'N/A'
+  // Use a strong color for financial figures
+  return <span className="font-extrabold text-blue-700">{`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
+}
+
+// Helper to style the Invoice Status pill
+const getInvoiceStatusClasses = (status) => {
+  if (!status) return 'bg-gray-100 text-gray-800 ring-gray-500/20'
+  
+  switch (status.toLowerCase()) {
+    case 'paid':
+      return 'bg-green-100 text-green-800 ring-green-500/20 font-bold'
+    case 'sent':
+      return 'bg-blue-100 text-blue-800 ring-blue-500/20'
+    case 'draft':
+      return 'bg-gray-100 text-gray-800 ring-gray-500/20'
+    case 'overdue':
+      // Strong, noticeable red for overdue status
+      return 'bg-red-100 text-red-800 ring-red-500/20 font-bold animate-pulse' 
+    default:
+      return 'bg-amber-100 text-amber-800 ring-amber-500/20'
+  }
+}
+
+// Component to render the status pill with an icon
+const InvoiceStatusPill = ({ status }) => {
+  const statusText = status || 'Draft'
+  const Icon = ({ className }) => {
+    switch (statusText.toLowerCase()) {
+      case 'paid':
+        return <CheckCircle className={className} />;
+      case 'sent':
+        return <Send className={className} />;
+      case 'draft':
+        return <FileText className={className} />;
+      case 'overdue':
+        return <XCircle className={className} />;
+      default:
+        return <Clock className={className} />;
+    }
+  }
+
+  return (
+    <span 
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset transition duration-300 ${getInvoiceStatusClasses(statusText)}`}
+    >
+      <Icon className="h-3 w-3 mr-1.5" />
+      {statusText}
+    </span>
+  )
+}
+
+// Metric Card Component for statistics summary
+const MetricCard = ({ title, value, icon: Icon, colorClass, description }) => (
+  <div className={`rounded-xl px-4 py-3 border shadow-md transition duration-300 hover:shadow-lg hover:scale-[1.01] ${colorClass}`}>
+    <div className="flex items-center justify-between">
+      <p className="text-sm font-medium text-gray-700">{title}</p>
+      <Icon className={`h-5 w-5 ${colorClass.includes('red') ? 'text-red-500' : 'text-gray-500'}`} />
+    </div>
+    <p className={`mt-1 text-2xl font-extrabold ${colorClass.includes('red') ? 'text-red-700' : 'text-gray-900'}`}>{value}</p>
+    {description && <p className="text-xs text-gray-500 mt-1">{description}</p>}
+  </div>
+)
+
+// --- InvoicesPage Component ---
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([])
@@ -9,6 +98,7 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Fetching data from the external API client
   useEffect(() => {
     let isMounted = true
     setLoading(true)
@@ -17,11 +107,18 @@ export default function InvoicesPage() {
     fetchInvoices()
       .then((data) => {
         if (!isMounted) return
-        setInvoices(Array.isArray(data) ? data : [])
+        // Ensure data is an array before setting state
+        const processedData = Array.isArray(data) ? data.map(inv => ({
+          ...inv,
+          status: inv.status || 'Draft', // Ensure status is always set
+          // Add a simple default due_date if not provided by API for better visual fidelity
+          due_date: inv.due_date || 'N/A' 
+        })) : []
+        setInvoices(processedData)
       })
       .catch((err) => {
         if (!isMounted) return
-        setError(err.message || 'Failed to load invoices')
+        setError(err.message || 'Failed to load invoices from API')
       })
       .finally(() => {
         if (!isMounted) return
@@ -33,102 +130,230 @@ export default function InvoicesPage() {
     }
   }, [])
 
-  const openCount = invoices.filter((i: any) => (i.status || '').toLowerCase() !== 'paid').length
-  const filtered = invoices.filter((inv: any) => {
+  // Calculate metrics
+  const openCount = invoices.filter((i) => (i.status || '').toLowerCase() !== 'paid').length
+  const overdueCount = invoices.filter((i) => (i.status || '').toLowerCase() === 'overdue').length
+  const totalAmountOpen = invoices
+    .filter((i) => (i.status || '').toLowerCase() !== 'paid')
+    .reduce((sum, inv) => sum + (inv.amount || 0), 0);
+
+  // Filtered list based on state
+  const filtered = invoices.filter((inv) => {
+    const status = (inv.status || '').toLowerCase()
     const matchesStatus =
-      statusFilter === 'All' ||
-      (inv.status || '').toLowerCase() === statusFilter.toLowerCase()
+      statusFilter === 'All' || status === statusFilter.toLowerCase()
+      
     const term = (search || '').toLowerCase()
     const matchesSearch =
       !term ||
       (inv.customer_name || '').toLowerCase().includes(term) ||
-      String(inv.id).toLowerCase().includes(term)
+      String(inv.id).toLowerCase().includes(term) ||
+      String(inv.order_number).toLowerCase().includes(term)
+      
     return matchesStatus && matchesSearch
   })
 
-  return (
-    <div className="px-4 py-6 sm:px-6 lg:px-8 space-y-6">
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Finance</p>
-        <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-gray-900">Invoices</h1>
-        <p className="mt-2 text-sm text-gray-600 max-w-xl">
-          Accounts receivable for TOP Design customers. See which customers owe money and how much is overdue.
-        </p>
-        <div className="mt-4 grid gap-4 md:grid-cols-3 text-sm">
-          <div className="rounded-lg bg-gray-50 px-3 py-2 border border-gray-100">
-            <p className="text-gray-600">Open invoices</p>
-            <p className="mt-1 text-xl font-semibold text-gray-900">{openCount}</p>
-          </div>
-          <div className="rounded-lg bg-gray-50 px-3 py-2 border border-gray-100">
-            <p className="text-gray-600">Total invoices</p>
-            <p className="mt-1 text-xl font-semibold text-gray-900">{invoices.length}</p>
-          </div>
-          <div className="rounded-lg bg-gray-50 px-3 py-2 border border-gray-100">
-            <p className="text-gray-600">Overdue</p>
-            <p className="mt-1 text-xl font-semibold text-amber-700">2</p>
-          </div>
+  // State Feedback Component for UX
+  const StateFeedback = () => {
+    if (error) {
+      return (
+        <div className="p-10 text-red-700 bg-red-50 border border-red-300 rounded-b-2xl flex items-center justify-center">
+          <AlertTriangle className="h-6 w-6 mr-3" />
+          <p className="text-base font-medium">{error}</p>
         </div>
-      </div>
+      )
+    }
+    
+    if (loading) {
+      return (
+        <div className="p-10 flex items-center justify-center">
+          <Loader className="h-6 w-6 mr-3 text-indigo-500 animate-spin" />
+          <p className="text-base text-gray-500">Loading invoice data...</p>
+        </div>
+      )
+    }
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3 text-xs">
-          <p className="text-sm font-medium text-gray-900">Invoice list</p>
-          <div className="flex flex-wrap gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            >
-              <option value="All">All statuses</option>
-              <option value="Draft">Draft</option>
-              <option value="Sent">Sent</option>
-              <option value="Paid">Paid</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Search by customer or invoice"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full max-w-xs rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+    if (filtered.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center p-10 text-gray-500">
+                <FileText className="h-10 w-10 mb-4 text-gray-400" />
+                <p className="text-lg font-semibold">No matching invoices found.</p>
+                <p className="text-sm mt-1">Try adjusting your filters or search term.</p>
+            </div>
+        )
+    }
+
+    return null
+  }
+  
+  const user = getAuthUser()
+  const isController = user?.role_id === 4
+  const isPosRole = user?.role_id === 5 || user?.role_id === 11
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Top navigation */}
+      {isController ? <ControllerTopNav /> : isPosRole ? <PosTopNav /> : <OwnerTopNav />}
+      
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+        
+        {/* Header Section - Light card with blue gradient top */}
+        <div className="rounded-3xl shadow-2xl overflow-hidden bg-white border border-slate-200">
+            <div className="bg-gradient-to-r from-indigo-700 via-blue-600 to-cyan-500 text-white p-6 transition duration-500">
+                <p className="text-sm font-bold uppercase tracking-widest text-indigo-200">
+                    <DollarSign className="inline h-4 w-4 mr-2" />
+                    Accounts Receivable
+                </p>
+                <h1 className="mt-1 text-4xl font-extrabold leading-tight">
+                    Financial Invoices
+                </h1>
+                <p className="mt-2 text-base text-indigo-300 max-w-xl">
+                    Track all billing records. Monitor open, paid, and overdue invoices to maintain a healthy cash flow.
+                </p>
+            </div>
+          
+            {/* Metrics Grid (light background for contrast and readability) */}
+            <div className="bg-white p-6 pt-3">
+                <p className="text-lg font-semibold text-gray-800 mb-4">Overview Metrics</p>
+                <div className="grid gap-4 md:grid-cols-4 text-sm">
+                    <MetricCard
+                      title="Open Invoices"
+                      value={openCount}
+                      icon={Clock}
+                      colorClass="bg-blue-50 border-blue-200"
+                      description="Total number pending payment."
+                    />
+                    <MetricCard
+                      title="Total Open Amount"
+                      value={formatCurrency(totalAmountOpen)}
+                      icon={DollarSign}
+                      colorClass="bg-indigo-50 border-indigo-200"
+                      description="Total revenue outstanding."
+                    />
+                    <MetricCard
+                      title="Overdue Invoices"
+                      value={overdueCount}
+                      icon={AlertTriangle}
+                      colorClass="bg-red-50 border-red-300"
+                      description="Immediate action required."
+                    />
+                    <MetricCard
+                      title="Total Records"
+                      value={invoices.length}
+                      icon={FileText}
+                      colorClass="bg-gray-50 border-gray-200"
+                      description="All invoices generated to date."
+                    />
+                </div>
+            </div>
         </div>
-        {error && (
-          <p className="mb-3 rounded-lg bg-red-50 p-2 text-xs text-red-700 border border-red-200">{error}</p>
-        )}
-        {loading ? (
-          <p className="text-xs text-gray-500 py-4">Loading invoices...</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-xs sm:text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-3 py-2 font-medium text-gray-700">Invoice</th>
-                  <th className="px-3 py-2 font-medium text-gray-700">Customer</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-700">Amount</th>
-                  <th className="px-3 py-2 font-medium text-gray-700">Status</th>
-                  <th className="px-3 py-2 font-medium text-gray-700">Order</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((inv: any) => (
-                  <tr key={inv.id} className="border-t border-gray-100 hover:bg-gray-50">
-                    <td className="px-3 py-2 text-gray-800">{inv.id}</td>
-                    <td className="px-3 py-2 text-gray-800">{inv.customer_name}</td>
-                    <td className="px-3 py-2 text-right text-gray-800">${inv.amount}</td>
-                    <td className="px-3 py-2 text-gray-800">{inv.status}</td>
-                    <td className="px-3 py-2 text-gray-800">{inv.order_number}</td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && !loading && (
-                  <tr>
-                    <td colSpan={5} className="px-3 py-4 text-center text-xs text-gray-500">No invoices found.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+
+        {/* Invoice List and Filters */}
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              
+              <p className="text-xl font-semibold text-gray-900">Invoice List ({filtered.length})</p>
+              
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Status Filter */}
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-200"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="Draft">Draft</option>
+                  <option value="Sent">Sent</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Overdue">Overdue</option>
+                </select>
+                
+                {/* Search Input */}
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search customer, ID, or Order..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-2 text-sm text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition duration-200"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+          
+          {/* Table Container */}
+          {loading || error || filtered.length === 0 ? (
+            <StateFeedback />
+          ) : (
+            <div className="flow-root">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-indigo-50/70 border-b border-indigo-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        Invoice #
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        <Users className="inline h-4 w-4 mr-2" />
+                        Customer
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        Due Date
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        Amount
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        Order #
+                      </th>
+                    </tr>
+                  </thead>
+                  
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {filtered.map((inv) => (
+                      <tr
+                        key={inv.id}
+                        // Mock action: onClick={() => console.log(`Viewing invoice ${inv.id}`)}
+                        className="group hover:bg-blue-50/50 transition duration-300 ease-in-out cursor-pointer"
+                      >
+                        {/* Invoice ID/Number */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 group-hover:text-indigo-700">
+                          #{String(inv.id).toUpperCase()}
+                        </td>
+                        {/* Customer */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {inv.customer_name}
+                        </td>
+                        {/* Due Date (Assuming API provides due_date or using default) */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {inv.due_date}
+                        </td>
+                        {/* Amount */}
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                          {formatCurrency(inv.amount)}
+                        </td>
+                        {/* Status */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <InvoiceStatusPill status={inv.status} />
+                        </td>
+                        {/* Order Number */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-500 font-medium hover:text-indigo-700">
+                            #{inv.order_number || 'N/A'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
