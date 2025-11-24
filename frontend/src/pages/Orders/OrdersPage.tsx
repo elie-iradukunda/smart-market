@@ -46,6 +46,23 @@ const getStatusClasses = (status) => {
   }
 }
 
+// Helper to style the Payment Status pill (for accountants)
+const getPaymentStatusClasses = (paymentStatus) => {
+  const s = (paymentStatus || '').toLowerCase()
+  switch (s) {
+    case 'unbilled':
+      return 'bg-slate-100 text-slate-700 ring-slate-400/30'
+    case 'unpaid':
+      return 'bg-red-100 text-red-800 ring-red-500/20'
+    case 'partial':
+      return 'bg-amber-100 text-amber-800 ring-amber-500/20'
+    case 'paid':
+      return 'bg-emerald-100 text-emerald-800 ring-emerald-500/20'
+    default:
+      return 'bg-gray-100 text-gray-700 ring-gray-400/30'
+  }
+}
+
 // --- OrdersPage Component ---
 
 export default function OrdersPage() {
@@ -98,6 +115,14 @@ export default function OrdersPage() {
       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset transition duration-300 ${getStatusClasses(status)}`}
     >
       {status}
+    </span>
+  )
+
+  const PaymentStatusPill = ({ paymentStatus }) => (
+    <span
+      className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ring-1 ring-inset transition duration-300 ${getPaymentStatusClasses(paymentStatus)}`}
+    >
+      {paymentStatus === 'unbilled' ? 'Unbilled' : paymentStatus?.charAt(0).toUpperCase() + paymentStatus?.slice(1)}
     </span>
   )
 
@@ -226,6 +251,9 @@ export default function OrdersPage() {
                       <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
                         Status
                       </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        Payment
+                      </th>
                       <th className="px-6 py-4"></th>
                     </tr>
                   </thead>
@@ -260,6 +288,10 @@ export default function OrdersPage() {
                         {/* Status */}
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <StatusPill status={order.status} />
+                        </td>
+                        {/* Payment Status */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <PaymentStatusPill paymentStatus={order.paymentStatus} />
                         </td>
                         {/* Action/View Link with animation */}
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

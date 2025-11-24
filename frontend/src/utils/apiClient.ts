@@ -91,23 +91,22 @@ export function clearAuth() {
 // Simple permission mapping per role_id for UI visibility (must stay in sync with backend seeds)
 export function getPermissionsForRole(roleId: number | null | undefined): string[] {
   switch (roleId) {
-    case 1: // Owner – all permissions
+    case 7: // Super Admin – all permissions
       return ['*']
-    case 2: // Sys Admin
-      return ['user.manage', 'role.manage', 'audit.view', 'settings.manage', 'report.view']
-    case 3: // Accountant
-      return ['invoice.create', 'payment.create', 'journal.create', 'pos.create', 'report.view']
-    case 4: // Controller
+    case 1: // Admin – broad management access
       return [
-        'customer.view',
-        'order.view',
-        'order.update',
-        'material.view',
-        'stock.move',
-        'invoice.create',
-        'payment.create',
+        'user.manage',
+        'role.manage',
+        'audit.view',
+        'settings.manage',
+        'report.view',
+        'material.create',
+        // Purchase orders
+        'po.create',
+        'po.view',
+        'po.approve',
       ]
-    case 5: // Reception / Cashier – front desk + cash handling
+    case 2: // Receptionist – front desk and basic sales
       return [
         'customer.create',
         'customer.view',
@@ -117,23 +116,33 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
         'invoice.create',
         'payment.create',
         'pos.create',
-        'journal.create',
         'report.view',
       ]
-    case 6: // Technician
+    case 3: // Accountant
+      return ['invoice.create', 'payment.create', 'journal.create', 'pos.view', 'report.view']
+    case 4: // Marketing Officer
+      return ['campaign.view', 'campaign.create', 'campaign.update', 'marketing.analytics', 'lead.view', 'report.view', 'ai.view']
+    case 5: // Technician Officer – production work
       return ['worklog.create', 'workorder.update', 'order.update', 'material.view']
-    case 7: // Production Manager
-      return ['order.update', 'workorder.create', 'workorder.update', 'worklog.create', 'inventory.manage', 'material.view', 'report.view']
-    case 8: // Inventory Manager
-      return ['inventory.manage', 'material.view', 'report.view']
+    case 6: // Controller – inventory and stock
+      return [
+        'inventory.manage',
+        'material.view',
+        'material.create',
+        'stock.move',
+        'stock.adjust',
+        // Purchase orders
+        'po.create',
+        'po.view',
+        'po.approve',
+        'report.view',
+      ]
+    case 8: // Manager – overview and approvals
+      return ['customer.view', 'order.view', 'quote.approve', 'quote.reject', 'report.view']
     case 9: // Sales Rep
-      return ['customer.manage', 'lead.manage', 'quote.manage']
-    case 10: // Marketing Manager
-      return ['campaign.view', 'campaign.create', 'campaign.update', 'adperformance.view', 'lead.manage', 'report.view', 'ai.view']
-    case 11: // POS Cashier
-      return ['pos.create', 'payment.create']
-    case 12: // Support Agent
-      return ['conversation.view', 'message.send', 'customer.manage']
+      return ['customer.manage', 'lead.manage', 'quote.manage', 'order.view', 'report.view']
+    case 10: // Viewer – read-only
+      return ['report.view']
     default:
       return []
   }
@@ -150,30 +159,26 @@ export function currentUserHasPermission(code: string): boolean {
 // Map backend role_id to the correct dashboard route inside the business app
 export function getDashboardPathForRole(roleId: number | null | undefined): string {
   switch (roleId) {
-    case 1: // Owner
+    case 7: // Super Admin
       return '/dashboard/owner'
-    case 2: // Sys Admin
+    case 1: // Admin
       return '/dashboard/admin'
+    case 2: // Receptionist
+      return '/dashboard/reception'
     case 3: // Accountant
       return '/dashboard/accountant'
-    case 4: // Controller
-      return '/dashboard/controller'
-    case 5: // Reception / Cashier
-      return '/dashboard/pos'
-    case 6: // Technician
+    case 4: // Marketing Officer
+      return '/dashboard/marketing'
+    case 5: // Technician Officer
       return '/dashboard/technician'
-    case 7: // Production Manager
-      return '/dashboard/production'
-    case 8: // Inventory Manager (Storekeeper)
+    case 6: // Controller / Inventory Controller
       return '/dashboard/inventory'
+    case 8: // Manager
+      return '/dashboard/admin'
     case 9: // Sales Rep
       return '/dashboard/sales'
-    case 10: // Marketing Manager
-      return '/dashboard/marketing'
-    case 11: // POS Cashier
-      return '/dashboard/pos'
-    case 12: // Support Agent
-      return '/dashboard/support'
+    case 10: // Viewer – send to admin overview as read-only user
+      return '/dashboard/admin'
     default:
       // Fallback to admin overview if something is missing
       return '/dashboard/admin'

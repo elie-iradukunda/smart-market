@@ -9,6 +9,12 @@ export const createInvoice = async (req, res) => {
     if (order.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
     }
+
+    // Prevent duplicate invoices for the same order
+    const [existing] = await pool.execute('SELECT id FROM invoices WHERE order_id = ? LIMIT 1', [order_id]);
+    if (existing.length > 0) {
+      return res.status(400).json({ error: 'An invoice already exists for this order' });
+    }
     
     const [result] = await pool.execute(
       'INSERT INTO invoices (order_id, amount) VALUES (?, ?)',
@@ -68,11 +74,25 @@ export const createPOSSale = async (req, res) => {
     );
 
     const pos_id = result.insertId;
-    
+
+    // Record POS line items and update inventory/stock movements for each material sold
     for (const item of items) {
+      // Save the POS item row
       await pool.execute(
         'INSERT INTO pos_items (pos_id, item_id, quantity, price) VALUES (?, ?, ?, ?)',
         [pos_id, item.item_id, item.quantity, item.price]
+      );
+
+      // Decrement material stock based on quantity sold
+      await pool.execute(
+        'UPDATE materials SET current_stock = current_stock - ? WHERE id = ?',
+        [item.quantity, item.item_id]
+      );
+
+      // Log a stock movement of type "issue" so inventory history stays consistent
+      await pool.execute(
+        'INSERT INTO stock_movements (material_id, type, quantity, reference, user_id) VALUES (?, ?, ?, ?, ?)',
+        [item.item_id, 'issue', item.quantity, `POS-${pos_id}`, req.user.id]
       );
     }
 

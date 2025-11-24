@@ -90,8 +90,22 @@ export const deleteCustomer = async (req, res) => {
 
 export const createLead = async (req, res) => {
   try {
-    // Support both direct customer_id and UI payload with customer_name/phone/email
-    const { customer_id, customer_name, name, phone, email, channel } = req.body;
+    // Support both direct customer_id and UI payload with full customer details
+    const { customer_id, customer_name, name, phone, email, address, source, channel, items } = req.body;
+
+    // Normalise source and channel codes to match ENUM values
+    const allowedSources = ['walkin', 'whatsapp', 'instagram', 'facebook', 'web', 'phone'];
+    let normalizedSource = (source || '').toLowerCase();
+    if (!allowedSources.includes(normalizedSource)) {
+      normalizedSource = null;
+    }
+
+    const allowedChannels = ['whatsapp', 'instagram', 'facebook', 'web'];
+    let normalizedChannel = (channel || '').toLowerCase();
+    if (!allowedChannels.includes(normalizedChannel)) {
+      // Fallback to a generic web channel if the UI sends something like walkin/phone
+      normalizedChannel = 'web';
+    }
 
     let resolvedCustomerId = customer_id;
 
@@ -112,11 +126,17 @@ export const createLead = async (req, res) => {
         }
       }
 
-      // If still not resolved, create a minimal customer record
+      // If still not resolved, create a full customer record using lead details
       if (!resolvedCustomerId) {
         const [created] = await pool.execute(
           'INSERT INTO customers (name, phone, email, address, source) VALUES (?, ?, ?, ?, ?)',
-          [effectiveName, phone || null, email || null, null, 'Lead']
+          [
+            effectiveName,
+            phone || null,
+            email || null,
+            address || null,
+            normalizedSource,
+          ]
         );
         resolvedCustomerId = created.insertId;
       }
@@ -125,7 +145,7 @@ export const createLead = async (req, res) => {
     // Check for duplicate lead (same customer and channel)
     const [existing] = await pool.execute(
       'SELECT id FROM leads WHERE customer_id = ? AND channel = ?',
-      [resolvedCustomerId, channel]
+      [resolvedCustomerId, normalizedChannel]
     );
     if (existing.length > 0) {
       return res.status(409).json({ error: 'Lead already exists for this customer and channel' });
@@ -133,9 +153,27 @@ export const createLead = async (req, res) => {
 
     const [result] = await pool.execute(
       'INSERT INTO leads (customer_id, channel) VALUES (?, ?)',
-      [resolvedCustomerId, channel]
+      [resolvedCustomerId, normalizedChannel]
     );
-    res.status(201).json({ id: result.insertId, message: 'Lead created' });
+
+    const leadId = result.insertId;
+
+    // If the UI sent requested materials/products, persist them in lead_items
+    if (Array.isArray(items) && items.length > 0) {
+      for (const row of items) {
+        if (!row) continue;
+        const materialId = Number(row.material_id || row.materialId);
+        const qty = Number(row.quantity || row.qty || 0);
+        if (!materialId || !Number.isFinite(qty) || qty <= 0) continue;
+
+        await pool.execute(
+          'INSERT INTO lead_items (lead_id, material_id, quantity, notes) VALUES (?, ?, ?, ?)',
+          [leadId, materialId, qty, null]
+        );
+      }
+    }
+
+    res.status(201).json({ id: leadId, message: 'Lead created' });
   } catch (error) {
     res.status(500).json({ error: 'Lead creation failed' });
   }
@@ -163,7 +201,17 @@ export const getLead = async (req, res) => {
     if (lead.length === 0) {
       return res.status(404).json({ error: 'Lead not found' });
     }
-    res.json(lead[0]);
+
+    // Load any requested materials/products captured on this lead
+    const [items] = await pool.execute(
+      `SELECT li.id, li.material_id, li.quantity, li.notes, m.name as material_name
+         FROM lead_items li
+         JOIN materials m ON li.material_id = m.id
+        WHERE li.lead_id = ?`,
+      [id]
+    );
+
+    res.json({ ...lead[0], items });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch lead' });
   }

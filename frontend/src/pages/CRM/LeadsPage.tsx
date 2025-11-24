@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { fetchDemoLeads, createLead } from '../../api/apiClient'
+import { fetchDemoLeads, createLead, fetchMaterials } from '../../api/apiClient'
 
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
@@ -13,13 +13,22 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [creating, setCreating] = useState(false)
+
   const [newLead, setNewLead] = useState({
     name: '',
     company: '',
     phone: '',
     email: '',
+    address: '',
     channel: 'Walk-in',
   })
+
+  const [materials, setMaterials] = useState<any[]>([])
+  const [materialsError, setMaterialsError] = useState<string | null>(null)
+  const [loadingMaterials, setLoadingMaterials] = useState(false)
+  const [leadItems, setLeadItems] = useState(
+    Array.from({ length: 3 }).map(() => ({ material_id: '', quantity: '1' }))
+  )
 
   useEffect(() => {
     let isMounted = true
@@ -45,23 +54,96 @@ export default function LeadsPage() {
     }
   }, [])
 
+  useEffect(() => {
+    let mounted = true
+    const loadMaterials = async () => {
+      try {
+        setLoadingMaterials(true)
+        setMaterialsError(null)
+        const mats = await fetchMaterials()
+        if (!mounted) return
+        setMaterials(mats || [])
+      } catch (err: any) {
+        if (!mounted) return
+        setMaterialsError(err.message || 'Failed to load materials for lead items')
+      } finally {
+        if (!mounted) return
+        setLoadingMaterials(false)
+      }
+    }
+
+    loadMaterials()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
   const handleCreateLead = async (e: React.FormEvent) => {
     e.preventDefault()
     setCreating(true)
     setError(null)
+    setMaterialsError(null)
     try {
+      const uiChannel = newLead.channel || 'Walk-in'
+
+      // Map UI dropdown label to backend source/channel enums
+      let source = 'web'
+      let channel = 'web'
+      switch (uiChannel) {
+        case 'Walk-in':
+          source = 'walkin'
+          channel = 'web'
+          break
+        case 'Phone':
+          source = 'phone'
+          channel = 'web'
+          break
+        case 'WhatsApp':
+          source = 'whatsapp'
+          channel = 'whatsapp'
+          break
+        case 'Facebook':
+          source = 'facebook'
+          channel = 'facebook'
+          break
+        case 'Email':
+          source = 'web'
+          channel = 'web'
+          break
+        default:
+          source = 'web'
+          channel = 'web'
+      }
+
+      const items = leadItems
+        .map((row) => ({
+          material_id: row.material_id ? Number(row.material_id) : null,
+          quantity: Number(row.quantity || '0'),
+        }))
+        .filter((row) => row.material_id && row.quantity > 0)
+
+      if (items.length === 0) {
+        setMaterialsError('Please select at least one material/product and quantity for this lead.')
+        setCreating(false)
+        return
+      }
+
       await createLead({
         customer_name: newLead.name || newLead.company,
-        company: newLead.company || null,
         phone: newLead.phone || null,
         email: newLead.email || null,
-        channel: newLead.channel || 'Walk-in',
+        address: newLead.address || null,
+        source,
+        channel,
         status: 'New',
+        items,
       })
+
       // refresh list
       const refreshed = await fetchDemoLeads()
       setLeads(refreshed || [])
-      setNewLead({ name: '', company: '', phone: '', email: '', channel: 'Walk-in' })
+      setNewLead({ name: '', company: '', phone: '', email: '', address: '', channel: 'Walk-in' })
+      setLeadItems(Array.from({ length: 3 }).map(() => ({ material_id: '', quantity: '1' })))
     } catch (err: any) {
       setError(err.message || 'Failed to create lead')
     } finally {
@@ -154,6 +236,13 @@ export default function LeadsPage() {
                   onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
                   className="min-w-[150px] rounded-full border border-blue-200/70 bg-white/95 px-3 py-1.5 text-[11px] text-slate-900 placeholder-blue-300 focus:outline-none focus:ring-1 focus:ring-cyan-400"
                 />
+                <input
+                  type="text"
+                  placeholder="Address (optional)"
+                  value={newLead.address}
+                  onChange={(e) => setNewLead({ ...newLead, address: e.target.value })}
+                  className="min-w-[150px] rounded-full border border-blue-200/70 bg-white/95 px-3 py-1.5 text-[11px] text-slate-900 placeholder-blue-300 focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                />
                 <select
                   value={newLead.channel}
                   onChange={(e) => setNewLead({ ...newLead, channel: e.target.value })}
@@ -173,6 +262,59 @@ export default function LeadsPage() {
                   {creating ? 'Saving...' : 'Add Lead'}
                 </button>
               </form>
+
+              {/* Simple requested materials section for this lead */}
+              <div className="mt-3 rounded-2xl border border-blue-200/40 bg-blue-900/10 px-3 py-3 text-[11px] text-blue-50">
+                <p className="font-semibold mb-1">Requested materials (optional)</p>
+                {materialsError && (
+                  <p className="mb-2 rounded-md bg-red-50/80 px-2 py-1 text-[10px] text-red-800 border border-red-200">
+                    {materialsError}
+                  </p>
+                )}
+                {loadingMaterials && (
+                  <p className="mb-2 text-[10px] text-blue-100">Loading materials list…</p>
+                )}
+                <div className="space-y-1">
+                  {leadItems.map((row, index) => (
+                    <div
+                      key={index}
+                      className="grid gap-1 sm:grid-cols-[minmax(0,2.2fr)_minmax(0,0.8fr)] items-center"
+                    >
+                      <select
+                        className="rounded-full border border-blue-200/60 bg-white/95 px-2 py-1.5 text-[11px] text-slate-900"
+                        value={row.material_id}
+                        onChange={(e) => {
+                          const next = [...leadItems]
+                          next[index] = { ...next[index], material_id: e.target.value }
+                          setLeadItems(next)
+                        }}
+                      >
+                        <option value="">Select material / product</option>
+                        {materials.map((m: any) => (
+                          <option key={m.id} value={String(m.id)}>
+                            {m.name || m.material_name || m.sku || `Material ${m.id}`}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        min="0"
+                        className="rounded-full border border-blue-200/60 bg-white/95 px-2 py-1.5 text-[11px] text-slate-900"
+                        placeholder="Qty"
+                        value={row.quantity}
+                        onChange={(e) => {
+                          const next = [...leadItems]
+                          next[index] = { ...next[index], quantity: e.target.value }
+                          setLeadItems(next)
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-1 text-[10px] text-blue-100/80">
+                  These items will be saved on the lead so quotes and production can see what the customer requested.
+                </p>
+              </div>
             </div>
 
           </div>

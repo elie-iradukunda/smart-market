@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import ReportFilters from '../../modules/finance/components/ReportFilters'
-import { fetchFinancialOverview } from '../../api/apiClient'
+import { fetchFinancialOverview, fetchInvoices, fetchPayments } from '../../api/apiClient'
+
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
 import PosTopNav from '@/components/layout/PosTopNav'
@@ -14,6 +15,8 @@ import { getAuthUser } from '@/utils/apiClient'
 export default function FinancialReportsPage() {
   const navigate = useNavigate()
   const [overview, setOverview] = useState<{ total_revenue: any; outstanding_amount: any } | null>(null)
+  const [invoices, setInvoices] = useState<any[]>([])
+  const [payments, setPayments] = useState<any[]>([])
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -23,6 +26,25 @@ export default function FinancialReportsPage() {
     const parsed = parseFloat(value ?? '0')
     return Number.isFinite(parsed) ? parsed : 0
   }
+
+  const withinLastDays = (isoDate: string | null | undefined, days: number) => {
+    if (!isoDate) return false
+    const d = new Date(isoDate)
+    if (isNaN(d.getTime())) return false
+    const now = new Date()
+    const diffMs = now.getTime() - d.getTime()
+    const diffDays = diffMs / (1000 * 60 * 60 * 24)
+    return diffDays >= 0 && diffDays <= days
+  }
+
+  const totalPaymentsLast30 = payments.reduce((sum, p: any) => {
+    if (!withinLastDays(p.created_at, 30)) return sum
+    const amt = normalizeNumber(p.amount)
+    return sum + amt
+  }, 0)
+
+  const invoiceCount = invoices.length
+  const paymentCount = payments.length
 
   const kpis = [
     overview
@@ -39,8 +61,21 @@ export default function FinancialReportsPage() {
           trend: '',
         }
       : { label: 'Outstanding AR', value: loading ? 'Loading...' : '$0.00', trend: '' },
-    { label: 'Gross Margin', value: '—', trend: '' },
-    { label: 'Cash at Bank', value: '—', trend: '' },
+    {
+      label: 'Payments received (30 days)',
+      value: `$${normalizeNumber(totalPaymentsLast30).toFixed(2)}`,
+      trend: '',
+    },
+    {
+      label: 'Invoices issued (all time)',
+      value: loading ? '—' : String(invoiceCount),
+      trend: '',
+    },
+    {
+      label: 'Payments recorded (all time)',
+      value: loading ? '—' : String(paymentCount),
+      trend: '',
+    },
   ]
 
   const getTrendColor = (trend) => {
@@ -54,10 +89,12 @@ export default function FinancialReportsPage() {
     setLoading(true)
     setError(null)
 
-    fetchFinancialOverview()
-      .then((data) => {
+    Promise.all([fetchFinancialOverview(), fetchInvoices(), fetchPayments()])
+      .then(([overviewData, invoicesData, paymentsData]) => {
         if (!isMounted) return
-        setOverview(data)
+        setOverview(overviewData)
+        setInvoices(Array.isArray(invoicesData) ? invoicesData : [])
+        setPayments(Array.isArray(paymentsData) ? paymentsData : [])
       })
       .catch((err) => {
         if (!isMounted) return
@@ -112,40 +149,35 @@ export default function FinancialReportsPage() {
         {/* Filters and KPI Cards Container - Applying the clean aesthetic */}
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl space-y-6">
 
-        {error && (
-          <p className="mb-3 rounded-lg bg-red-50 p-2 text-xs text-red-700 border border-red-200">{error}</p>
-        )}
+          {error && (
+            <p className="mb-3 rounded-lg bg-red-50 p-2 text-xs text-red-700 border border-red-200">{error}</p>
+          )}
 
-        {/* Report Filters component */}
-        <ReportFilters />
+          {/* Report Filters component */}
+          <ReportFilters />
 
-        {/* KPI Grid - Enhanced card style */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-
-        {kpis.map(kpi => (
-          <div
-            key={kpi.label}
-            // KPI Card Styling: Rounded-xl, cleaner border, better shadow
-            className="rounded-xl border border-gray-100 bg-gray-50/70 p-5 transition hover:shadow-md"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{kpi.label}</p>
-            <div className="flex items-end justify-between mt-1">
-              {/* Main Value */}
-              <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
-              {/* Trend Indicator */}
-              <span className={`text-sm font-medium ${getTrendColor(kpi.trend)}`}>
-                {kpi.trend}
-              </span>
-            </div>
+          {/* KPI Grid - Enhanced card style */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {kpis.map((kpi) => (
+              <div
+                key={kpi.label}
+                className="rounded-xl border border-gray-100 bg-gray-50/70 p-5 transition hover:shadow-md"
+              >
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{kpi.label}</p>
+                <div className="flex items-end justify-between mt-1">
+                  <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
+                  <span className={`text-sm font-medium ${getTrendColor(kpi.trend)}`}>
+                    {kpi.trend}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-        </div>
 
-        {/* Placeholder for the main report content (e.g., P&L, Balance Sheet) */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-inner mt-4">
+          {/* Placeholder for the main report content (e.g., P&L, Balance Sheet) */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-inner mt-4" />
         </div>
       </div>
     </div>
-  </div>
   )
 }

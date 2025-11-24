@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
+
 import { fetchOrder, createInvoice, recordPayment, updateOrderStatus } from '../../api/apiClient'
 
 import { CheckCircle, Clock, DollarSign, Package, Truck, User } from 'lucide-react'
@@ -41,6 +42,8 @@ const getStatusClasses = (status) => {
 
 export default function OrderDetailPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
+
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -85,6 +88,7 @@ export default function OrderDetailPage() {
   const user = getAuthUser()
   const isController = user?.role_id === 4
   const isReception = user?.role_id === 5
+  const isTechnician = user?.role_id === 7
 
   const handleProcessPayment = async () => {
     if (!order) return
@@ -112,16 +116,6 @@ export default function OrderDetailPage() {
         amount: amountNumber,
         reference: paymentReference || `ORDER-${order.id}`,
       })
-
-      // If this payment covers the current balance, mark order as delivered in backend and UI
-      if (amountNumber >= balanceDue) {
-        try {
-          await updateOrderStatus(order.id, 'delivered')
-          setOrder({ ...order, status: 'delivered' })
-        } catch (e) {
-          // If status update fails, still keep the payment success
-        }
-      }
 
       setPaymentSuccess('Payment recorded successfully and invoice updated.')
       setPaymentReference('')
@@ -224,6 +218,17 @@ export default function OrderDetailPage() {
                 </p>
                 <p className="mt-1 text-lg font-bold text-blue-700">{order.eta || 'N/A'}</p>
               </div>
+
+              {/* Technician quick access to production materials view */}
+              {isTechnician && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/production/work-orders/${id}`)}
+                  className="col-span-2 mt-2 inline-flex items-center justify-center rounded-full border border-indigo-500 bg-white px-4 py-2 text-xs font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50"
+                >
+                  Open technician materials view
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -2,12 +2,12 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import FinanceTopNav from '@/components/layout/FinanceTopNav'
 
 export default function AccountantDashboard() {
   return (
     <div className="min-h-screen bg-slate-50">
-      <OwnerTopNav />
+      <FinanceTopNav />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
 
         {/* Header section */}

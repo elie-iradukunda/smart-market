@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { DollarSign, User, Calendar, Clock, Download, AlertTriangle, Loader, Package, CreditCard, PiggyBank } from 'lucide-react'
+
 import { fetchPOSSales } from '../../api/apiClient'
 import PosTopNav from '@/components/layout/PosTopNav'
 
@@ -23,7 +24,6 @@ const formatCurrency = (amount) => {
     if (typeof amount !== 'number' || isNaN(amount)) return '$0.00';
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
-
 
 const StateFeedback = ({ error, loading, salesLength }) => {
     if (error) {
@@ -57,7 +57,6 @@ const StateFeedback = ({ error, loading, salesLength }) => {
     return null
 }
 
-
 export default function PosSalesHistoryPage() {
     const [sales, setSales] = useState([])
     const [loading, setLoading] = useState(true)
@@ -66,6 +65,7 @@ export default function PosSalesHistoryPage() {
         paymentMethod: 'All',
         date: new Date().toISOString().slice(0, 10),
     });
+    const [selectedSale, setSelectedSale] = useState<any | null>(null)
 
     useEffect(() => {
         let isMounted = true
@@ -80,6 +80,7 @@ export default function PosSalesHistoryPage() {
                     return {
                         id: `POS-${s.id}`,
                         customer: s.customer_name || 'Walk-in',
+                        cashier: s.cashier_name || 'Unknown',
                         total: Number(s.total) || 0,
                         paymentMethod: s.payment_method || 'Cash', 
                         date: dt.toISOString().slice(0, 10),
@@ -119,6 +120,37 @@ export default function PosSalesHistoryPage() {
         return true;
     });
 
+    const totalForDay = filteredSales.reduce((sum, sale) => sum + (typeof sale.total === 'number' ? sale.total : 0), 0)
+    const transactionCount = filteredSales.length
+    const averageTicket = transactionCount ? totalForDay / transactionCount : 0
+
+    const handleExport = () => {
+        if (!filteredSales.length) return
+        const header = ['ID', 'Customer', 'Cashier', 'Payment Method', 'Total', 'Date', 'Time']
+        const rows = filteredSales.map((s) => [
+            s.id,
+            s.customer,
+            s.cashier,
+            s.paymentMethod,
+            s.total,
+            s.date,
+            s.time,
+        ])
+        const csvContent = [header, ...rows]
+            .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+            .join('\n')
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        const dateLabel = filter.date || 'all'
+        link.download = `pos-sales-${dateLabel}.csv`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 via-white to-blue-100/50 font-sans">
@@ -138,6 +170,7 @@ export default function PosSalesHistoryPage() {
                     </p>
                     <button 
                         className="mt-4 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-500/50 hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/50 transition duration-300"
+                        onClick={handleExport}
                         aria-label="Export full sales report"
                     >
                         <Download className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -148,7 +181,10 @@ export default function PosSalesHistoryPage() {
                 <div className="mt-8 rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl shadow-xl overflow-hidden">
                     <div className="p-6 border-b border-gray-100">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                            <p className="text-xl font-semibold text-gray-900">Recent Transactions ({filteredSales.length})</p>
+                            <div>
+                                <p className="text-xl font-semibold text-gray-900">Recent Transactions ({filteredSales.length})</p>
+                                <p className="text-sm text-gray-600 mt-1">Total for {filter.date}: <span className="font-semibold text-gray-900">{formatCurrency(totalForDay)}</span></p>
+                            </div>
 
                             <div className="flex flex-wrap items-center gap-3 text-sm">
                                 <select 
@@ -177,6 +213,22 @@ export default function PosSalesHistoryPage() {
                         </div>
                     </div>
 
+                    {/* KPI strip for the selected day */}
+                    <div className="px-6 pb-4 grid gap-3 sm:grid-cols-3 text-sm">
+                        <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Transactions</p>
+                            <p className="mt-1 text-xl font-bold text-gray-900">{transactionCount}</p>
+                        </div>
+                        <div className="rounded-xl border border-green-100 bg-green-50 px-4 py-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-green-700">Total sales</p>
+                            <p className="mt-1 text-xl font-bold text-green-800">{formatCurrency(totalForDay)}</p>
+                        </div>
+                        <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">Average ticket</p>
+                            <p className="mt-1 text-xl font-bold text-indigo-800">{formatCurrency(averageTicket)}</p>
+                        </div>
+                    </div>
+
                     {error || loading || filteredSales.length === 0 ? (
                          <StateFeedback error={error} loading={loading} salesLength={filteredSales.length} />
                     ) : (
@@ -186,6 +238,7 @@ export default function PosSalesHistoryPage() {
                                     <tr>
                                         <th className="px-6 py-3 font-semibold text-blue-700 uppercase tracking-wider" scope="col">ID</th>
                                         <th className="px-6 py-3 font-semibold text-blue-700 uppercase tracking-wider" scope="col"><User className="inline h-4 w-4 mr-1" aria-hidden="true" /> Customer</th>
+                                        <th className="px-6 py-3 font-semibold text-blue-700 uppercase tracking-wider" scope="col">Cashier</th>
                                         <th className="px-6 py-3 font-semibold text-blue-700 uppercase tracking-wider" scope="col"><CreditCard className="inline h-4 w-4 mr-1" aria-hidden="true" /> Method</th>
                                         <th className="px-6 py-3 text-right font-semibold text-blue-700 uppercase tracking-wider" scope="col">Total</th>
                                         <th className="px-6 py-3 font-semibold text-blue-700 uppercase tracking-wider" scope="col"><Calendar className="inline h-4 w-4 mr-1" aria-hidden="true" /> Date & Time</th>
@@ -197,6 +250,7 @@ export default function PosSalesHistoryPage() {
                                         <tr key={sale.id} className="hover:bg-blue-50/50 transition duration-150 cursor-pointer">
                                             <td className="px-6 py-4 text-gray-500 font-mono text-xs">{sale.id}</td>
                                             <td className="px-6 py-4 text-gray-800 font-medium">{sale.customer}</td>
+                                            <td className="px-6 py-4 text-gray-700">{sale.cashier}</td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium ring-1 ring-inset ${getPaymentColor(sale.paymentMethod)}`}>
                                                     {sale.paymentMethod}
@@ -210,6 +264,7 @@ export default function PosSalesHistoryPage() {
                                                 <button 
                                                     className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition duration-150"
                                                     aria-label={`View receipt for transaction ID ${sale.id}`}
+                                                    onClick={() => setSelectedSale(sale)}
                                                 >
                                                     View Receipt
                                                 </button>
@@ -222,6 +277,32 @@ export default function PosSalesHistoryPage() {
                     )}
                 </div>
             </div>
+
+            {/* Simple receipt modal */}
+            {selectedSale && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+                    <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-gray-900">Receipt</h2>
+                            <button
+                                className="text-sm text-gray-500 hover:text-gray-800"
+                                onClick={() => setSelectedSale(null)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                        <div className="text-sm text-gray-700 space-y-1">
+                            <p><span className="font-semibold">Transaction:</span> {selectedSale.id}</p>
+                            <p><span className="font-semibold">Customer:</span> {selectedSale.customer}</p>
+                            <p><span className="font-semibold">Cashier:</span> {selectedSale.cashier}</p>
+                            <p><span className="font-semibold">Date:</span> {selectedSale.date} {selectedSale.time}</p>
+                            <p><span className="font-semibold">Method:</span> {selectedSale.paymentMethod}</p>
+                            <p><span className="font-semibold">Total:</span> {formatCurrency(selectedSale.total)}</p>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">Use the POS reports for more detailed line items if needed.</p>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
