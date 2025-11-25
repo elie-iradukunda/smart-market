@@ -6,7 +6,7 @@ import { clearAuth, currentUserHasPermission, getAuthUser } from '@/utils/apiCli
 export default function ControllerTopNav() {
   const navigate = useNavigate()
   const user = getAuthUser()
-  const isController = user?.role_id === 4
+  const isController = user?.role_id === 6
 
   const handleLogout = () => {
     clearAuth()

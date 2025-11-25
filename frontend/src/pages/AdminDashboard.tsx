@@ -2,6 +2,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearAuth, currentUserHasPermission } from '@/utils/apiClient'
+import AdminTopNav from '@/components/layout/AdminTopNav'
 
 import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
 import JobPipelineOverview from '../modules/dashboards/components/JobPipelineOverview'
@@ -20,10 +21,10 @@ export default function AdminDashboard() {
   }
 
   return (
-    // 1. Updated Background to a lighter, sophisticated gradient matching the image's soft background
-    // Using a very light gray-blue to a very light gray-purple
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
+    // Background wrapper for admin / manager / viewer
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-0 pb-10">
+      <AdminTopNav />
+      <div className="mx-auto max-w-7xl space-y-8 px-4 pt-6 sm:px-6 lg:px-8">
         {/* Top bar with title and logout */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-sm font-semibold text-gray-500">Admin</h2>

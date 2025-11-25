@@ -1,13 +1,14 @@
 // @ts-nocheck
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { Users, FileText, ListOrdered } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, ListOrdered } from 'lucide-react'
 
 const linkBase =
   'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold transition-colors'
 
 export default function SalesTopNav() {
   const links = [
+    { to: '/dashboard/sales', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/crm/leads', label: 'Leads', icon: Users },
     { to: '/crm/quotes', label: 'Quotes', icon: FileText },
     { to: '/orders', label: 'Orders', icon: ListOrdered },

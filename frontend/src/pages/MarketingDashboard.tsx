@@ -2,6 +2,7 @@
 import React from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { clearAuth, currentUserHasPermission } from '@/utils/apiClient'
+import MarketingTopNav from '@/components/layout/MarketingTopNav'
 import CampaignPerformanceWidget from '../modules/dashboards/components/CampaignPerformanceWidget'
 import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
 
@@ -13,8 +14,9 @@ export default function MarketingDashboard() {
     navigate('/login')
   }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50 px-0 pb-10">
+      <MarketingTopNav />
+      <div className="mx-auto max-w-7xl space-y-8 px-4 pt-6 sm:px-6 lg:px-8">
         {/* Top bar with logout */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-sm font-semibold text-gray-500">Marketing</h2>

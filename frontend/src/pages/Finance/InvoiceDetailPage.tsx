@@ -1,80 +1,125 @@
 // @ts-nocheck
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import { fetchInvoice } from '@/api/apiClient'
 
 export default function InvoiceDetailPage() {
-  const invoice = {
-    id: 'INV-2025-001',
-    customer: 'Acme School',
-    status: 'Partially Paid',
-    dueDate: '2025-11-30',
+  const { id } = useParams()
+  const [invoice, setInvoice] = useState<any | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const printRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+    if (!id) {
+      setError('Missing invoice id')
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    fetchInvoice(id)
+      .then((data) => {
+        if (!isMounted) return
+        setInvoice(data)
+      })
+      .catch((err) => {
+        if (!isMounted) return
+        setError(err.message || 'Failed to load invoice')
+      })
+      .finally(() => {
+        if (!isMounted) return
+        setLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [id])
+
+  const formatCurrency = (value: number) => {
+    if (typeof value !== 'number' || isNaN(value)) return '$0.00'
+    return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
-  const lines = [
-    { id: 1, description: 'PVC Banner 3m x 1m', qty: 4, unitPrice: 45 },
-    { id: 2, description: 'Design fee', qty: 1, unitPrice: 30 },
-  ]
+  const handlePrint = () => {
+    // Simple approach: print whole page; browser can "Save as PDF"
+    window.print()
+  }
 
-  const subtotal = lines.reduce((sum, l) => sum + l.qty * l.unitPrice, 0)
-  const vat = Math.round(subtotal * 0.18 * 100) / 100
-  const total = subtotal + vat
+  const totalAmount = (() => {
+    if (!invoice) return 0
+    const raw = invoice.amount
+    const num = typeof raw === 'number' ? raw : parseFloat(raw || '0')
+    return isNaN(num) ? 0 : num
+  })()
 
   return (
     <div className="min-h-screen bg-slate-50">
       <OwnerTopNav />
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Invoice</p>
-            <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900">{invoice.id}</h1>
-            <p className="mt-2 text-sm text-gray-600">{invoice.customer}</p>
+            <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900">Invoice #{invoice?.id || id}</h1>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
-            <div className="rounded-lg bg-blue-50 px-3 py-2 border border-blue-100">
-              <p className="text-gray-600">Status</p>
-              <p className="mt-1 text-sm font-semibold text-gray-900">{invoice.status}</p>
-            </div>
-            <div className="rounded-lg bg-slate-50 px-3 py-2 border border-slate-200">
-              <p className="text-gray-600">Due date</p>
-              <p className="mt-1 text-sm font-semibold text-gray-900">{invoice.dueDate}</p>
-            </div>
-            <div className="rounded-lg bg-emerald-50 px-3 py-2 border border-emerald-100 col-span-2 sm:col-span-1">
-              <p className="text-gray-600">Total</p>
-              <p className="mt-1 text-sm font-semibold text-emerald-800">${total}</p>
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500"
+          >
+            Download / Print PDF
+          </button>
         </div>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl text-sm space-y-3">
-          <h2 className="text-base font-semibold text-gray-900">Lines</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-xs sm:text-sm">
-              <thead className="bg-indigo-50/80 border-b border-indigo-200">
-                <tr>
-                  <th className="px-3 py-2 font-semibold text-indigo-700 uppercase tracking-wider">Description</th>
-                  <th className="px-3 py-2 text-right font-semibold text-indigo-700 uppercase tracking-wider">Qty</th>
-                  <th className="px-3 py-2 text-right font-semibold text-indigo-700 uppercase tracking-wider">Unit price</th>
-                  <th className="px-3 py-2 text-right font-semibold text-indigo-700 uppercase tracking-wider">Line total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {lines.map(line => (
-                  <tr key={line.id} className="bg-white hover:bg-blue-50/50">
-                    <td className="px-3 py-2 text-gray-800">{line.description}</td>
-                    <td className="px-3 py-2 text-right text-gray-800">{line.qty}</td>
-                    <td className="px-3 py-2 text-right text-gray-800">${line.unitPrice}</td>
-                    <td className="px-3 py-2 text-right text-gray-800">${line.qty * line.unitPrice}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {error && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
           </div>
-          <div className="mt-2 space-y-1 text-right text-sm">
-            <p className="text-gray-700">Subtotal: ${subtotal}</p>
-            <p className="text-gray-700">VAT 18%: ${vat}</p>
-            <p className="text-gray-900 font-medium">Total: ${total}</p>
+        )}
+
+        {loading ? (
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl text-sm text-gray-500">
+            Loading invoice details...
           </div>
-        </section>
+        ) : (
+          <div ref={printRef} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl text-sm">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mb-6">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Top Design Printing</h2>
+                <p className="text-xs text-gray-600 mt-1">Official Invoice</p>
+                <div className="mt-3 text-xs text-gray-700 space-y-0.5">
+                  <p><span className="font-semibold">Invoice #:</span> {invoice?.id}</p>
+                  <p><span className="font-semibold">Order #:</span> {invoice?.order_number}</p>
+                  <p><span className="font-semibold">Date:</span> {(invoice?.created_at || '').slice(0, 10)}</p>
+                </div>
+              </div>
+              <div className="text-xs text-gray-700 space-y-0.5">
+                <p className="font-semibold text-gray-900">Bill To</p>
+                <p>{invoice?.customer_name}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs mb-6">
+              <div className="rounded-lg bg-blue-50 px-3 py-2 border border-blue-100">
+                <p className="text-gray-600">Status</p>
+                <p className="mt-1 text-sm font-semibold text-gray-900">{invoice?.status || 'unpaid'}</p>
+              </div>
+              <div className="rounded-lg bg-emerald-50 px-3 py-2 border border-emerald-100">
+                <p className="text-gray-600">Total</p>
+                <p className="mt-1 text-sm font-semibold text-emerald-800">{formatCurrency(totalAmount)}</p>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200 pt-4 mt-2 text-xs text-gray-600">
+              <p>Thank you for your business. Please contact accounts if you need any clarification on this invoice.</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

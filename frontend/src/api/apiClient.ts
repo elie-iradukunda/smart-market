@@ -51,6 +51,65 @@ export async function fetchLead(id: number | string) {
   return res.json()
 }
 
+// CRM: single quote detail (used by technician to see materials for an order)
+export async function fetchQuote(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/quotes/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch quote')
+  }
+
+  return res.json()
+}
+
+// Finance: single invoice detail
+export async function fetchInvoice(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/invoices/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch invoice')
+  }
+
+  return res.json()
+}
+
+// Orders: customers with orders ready/delivered for reception follow-up
+export async function fetchOrdersReadyForCommunication() {
+  const token = getAuthToken()
+  if (!token) {
+    throw new Error('Not authenticated')
+  }
+
+  const res = await fetch(`${API_BASE}/orders/ready-for-communication`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch orders ready for communication')
+  }
+
+  return res.json()
+}
+
 // CRM: customers list
 export async function fetchCustomers() {
   const token = getAuthToken()
@@ -125,6 +184,30 @@ export async function createSupplier(payload: any) {
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
     throw new Error(data.message || data.error || 'Failed to create supplier')
+  }
+
+  return data
+}
+
+// Production: issue materials for an order (used by technicians before/when starting production)
+export async function issueOrderMaterials(orderId: number | string, items: Array<{ material_id: number; quantity: number }>) {
+  const token = getAuthToken()
+  if (!token) {
+    throw new Error('Not authenticated')
+  }
+
+  const res = await fetch(`${API_BASE}/orders/${orderId}/issue-materials`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ items }),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to issue materials for order')
   }
 
   return data
@@ -927,6 +1010,7 @@ export async function fetchDemoOrders() {
     customer: o.customer_name,
     total: o.total_amount || o.balance || 0,
     status: o.status,
+    paymentStatus: o.invoice_status || 'unbilled',
     eta: o.eta || o.created_at,
   }))
 }

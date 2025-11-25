@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
-import { fetchPayments } from '../../api/apiClient'
+import { fetchPayments, recordPayment, fetchInvoices } from '../../api/apiClient'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
 import PosTopNav from '@/components/layout/PosTopNav'
@@ -8,20 +8,43 @@ import { getAuthUser } from '@/utils/apiClient'
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState([])
+  const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [methodFilter, setMethodFilter] = useState('All')
   const [dateFilter, setDateFilter] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [invoiceId, setInvoiceId] = useState('')
+  const [amount, setAmount] = useState('')
+  const [method, setMethod] = useState('cash')
+  const [reference, setReference] = useState('')
+
+  const reloadPayments = () => {
+    setLoading(true)
+    setError(null)
+
+    fetchPayments()
+      .then((data) => {
+        setPayments(Array.isArray(data) ? data : [])
+      })
+      .catch((err) => {
+        setError(err.message || 'Failed to load payments')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }
 
   useEffect(() => {
     let isMounted = true
     setLoading(true)
     setError(null)
 
-    fetchPayments()
-      .then((data) => {
+    Promise.all([fetchPayments(), fetchInvoices()])
+      .then(([paymentsData, invoicesData]) => {
         if (!isMounted) return
-        setPayments(Array.isArray(data) ? data : [])
+        setPayments(Array.isArray(paymentsData) ? paymentsData : [])
+        setInvoices(Array.isArray(invoicesData) ? invoicesData : [])
       })
       .catch((err) => {
         if (!isMounted) return
@@ -37,6 +60,33 @@ export default function PaymentsPage() {
     }
   }, [])
 
+  const handleRecordPayment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!invoiceId || !amount) return
+    const amountNumber = Number(amount)
+    if (!amountNumber || amountNumber <= 0) return
+
+    setCreating(true)
+    setError(null)
+    try {
+      await recordPayment({
+        invoice_id: Number(invoiceId),
+        amount: amountNumber,
+        method,
+        reference: reference || undefined,
+      })
+      setInvoiceId('')
+      setAmount('')
+      setMethod('cash')
+      setReference('')
+      reloadPayments()
+    } catch (err: any) {
+      setError(err.message || 'Failed to record payment')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   const filtered = payments.filter((p: any) => {
     const matchesMethod =
       methodFilter === 'All' ||
@@ -45,7 +95,37 @@ export default function PaymentsPage() {
     return matchesMethod && matchesDate
   })
 
-  const totalReceived = filtered.reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
+  const totalReceived = filtered.reduce((sum: number, p: any) => {
+    const amt = typeof p.amount === 'number' ? p.amount : parseFloat(p.amount || '0')
+    return sum + (isNaN(amt) ? 0 : amt)
+  }, 0)
+
+  const formatCurrency = (value: number) => {
+    if (typeof value !== 'number' || isNaN(value)) return '$0.00'
+    return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+
+  const formatMethod = (m: string | null | undefined) => {
+    const code = (m || '').toLowerCase()
+    switch (code) {
+      case 'cash':
+        return 'Cash'
+      case 'momo':
+      case 'mobile_money':
+        return 'Mobile money'
+      case 'card':
+        return 'Card'
+      case 'bank':
+        return 'Bank transfer'
+      default:
+        return ''
+    }
+  }
+
+  const openInvoices = invoices.filter((inv: any) => {
+    const status = (inv.status || '').toLowerCase()
+    return status !== 'paid'
+  })
 
   const user = getAuthUser()
   const isController = user?.role_id === 4
@@ -70,13 +150,65 @@ export default function PaymentsPage() {
           </div>
           <div className="rounded-lg bg-indigo-50 px-3 py-2 border border-indigo-100">
             <p className="text-gray-600">Total received</p>
-            <p className="mt-1 text-xl font-semibold text-gray-900">${totalReceived}</p>
+            <p className="mt-1 text-xl font-semibold text-gray-900">{formatCurrency(totalReceived)}</p>
           </div>
           <div className="rounded-lg bg-gray-50 px-3 py-2 border border-gray-200">
             <p className="text-gray-600">Payment methods</p>
             <p className="mt-1 text-xl font-semibold text-gray-900">3</p>
           </div>
         </div>
+        {/* Quick Record Payment form */}
+        <form
+          onSubmit={handleRecordPayment}
+          className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-indigo-100 bg-indigo-50/40 px-3 py-2 text-xs"
+        >
+          <span className="font-semibold text-gray-800 mr-1">Record payment:</span>
+          <select
+            value={invoiceId}
+            onChange={(e) => setInvoiceId(e.target.value)}
+            className="w-56 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          >
+            <option value="">Select invoice (customer / amount)</option>
+            {openInvoices.map((inv: any) => (
+              <option key={inv.id} value={inv.id}>
+                #{inv.id} - {inv.customer_name || 'Customer'} - ${inv.amount || 0}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="Amount"
+            className="w-24 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          />
+          <select
+            value={method}
+            onChange={(e) => setMethod(e.target.value)}
+            className="rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          >
+            <option value="cash">Cash</option>
+            <option value="momo">Mobile Money</option>
+            <option value="card">Card</option>
+            <option value="bank">Bank</option>
+          </select>
+          <input
+            type="text"
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            placeholder="Reference (optional)"
+            className="w-40 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          />
+          <button
+            type="submit"
+            disabled={creating}
+            className="ml-auto rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
+          >
+            {creating ? 'Saving…' : 'Save payment'}
+          </button>
+        </form>
       </div>
 
       {/* Table card */}
@@ -124,8 +256,8 @@ export default function PaymentsPage() {
                   <tr key={pmt.id} className="border-t border-gray-100 hover:bg-gray-50">
                     <td className="px-3 py-2 text-gray-800">{pmt.id}</td>
                     <td className="px-3 py-2 text-gray-800">{pmt.invoice_number}</td>
-                    <td className="px-3 py-2 text-gray-800">{pmt.method}</td>
-                    <td className="px-3 py-2 text-right text-gray-800">${pmt.amount}</td>
+                    <td className="px-3 py-2 text-gray-800">{formatMethod(pmt.method)}</td>
+                    <td className="px-3 py-2 text-right text-gray-800">{formatCurrency(typeof pmt.amount === 'number' ? pmt.amount : parseFloat(pmt.amount || '0'))}</td>
                     <td className="px-3 py-2 text-gray-800">{(pmt.created_at || '').slice(0, 10)}</td>
                   </tr>
                 ))}

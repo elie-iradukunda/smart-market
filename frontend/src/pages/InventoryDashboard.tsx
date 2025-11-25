@@ -1,10 +1,44 @@
 // @ts-nocheck
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import InventoryTopNav from '@/components/layout/InventoryTopNav'
 import StockAlerts from '../modules/dashboards/components/StockAlerts'
+import { createMaterial, fetchDemoMaterials } from '@/api/apiClient'
+import { currentUserHasPermission } from '@/utils/apiClient'
 
 export default function InventoryDashboard() {
+  const [name, setName] = useState('')
+  const [unit, setUnit] = useState('')
+  const [category, setCategory] = useState('')
+  const [reorderLevel, setReorderLevel] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const canCreateMaterial = currentUserHasPermission('material.create')
+
+  const handleCreateMaterial = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!canCreateMaterial) return
+    setSaving(true)
+    setError(null)
+    try {
+      await createMaterial({
+        name,
+        unit,
+        category,
+        reorder_level: reorderLevel === '' ? null : Number(reorderLevel),
+      })
+      setName('')
+      setUnit('')
+      setCategory('')
+      setReorderLevel('')
+    } catch (err: any) {
+      setError(err.message || 'Failed to create material')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50/50 via-white to-lime-50/50">
       <InventoryTopNav />
@@ -76,11 +110,72 @@ export default function InventoryDashboard() {
 
         {/* Main widgets area */}
         <div className="grid gap-6 lg:grid-cols-3 items-start">
-          <div className="lg:col-span-3 space-y-6">
+          <div className="space-y-6 lg:col-span-2">
             <div className="rounded-2xl border border-gray-100 bg-white/95 shadow-md">
               <StockAlerts />
             </div>
           </div>
+
+          {canCreateMaterial && (
+            <div className="space-y-3 rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 shadow-md">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">New material</p>
+              {error && (
+                <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-2 py-1 mb-1">{error}</p>
+              )}
+              <form onSubmit={handleCreateMaterial} className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-medium text-emerald-900 mb-1">Name</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="w-full rounded-md border border-emerald-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-medium text-emerald-900 mb-1">Unit</label>
+                    <input
+                      type="text"
+                      value={unit}
+                      onChange={(e) => setUnit(e.target.value)}
+                      className="w-full rounded-md border border-emerald-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium text-emerald-900 mb-1">Category</label>
+                    <input
+                      type="text"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full rounded-md border border-emerald-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block font-medium text-emerald-900 mb-1">Reorder level</label>
+                  <input
+                    type="number"
+                    value={reorderLevel}
+                    onChange={(e) => setReorderLevel(e.target.value)}
+                    className="w-full rounded-md border border-emerald-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed w-full"
+                >
+                  {saving ? 'Saving...' : 'Save material'}
+                </button>
+                <p className="text-[10px] text-emerald-800/80 leading-snug">
+                  Tip: Use this for quick capture when a new stock item arrives. For full editing, go to the
+                  Materials page.
+                </p>
+              </form>
+            </div>
+          )}
         </div>
       </div>
     </div>

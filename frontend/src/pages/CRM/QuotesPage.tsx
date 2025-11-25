@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 // WARNING: This import is causing a compilation error in this isolated environment
 // because it cannot resolve the path '../../api/apiClient'.
 // It is left here as requested.
-import { fetchQuotes, createQuote, approveQuote, fetchCustomers } from '../../api/apiClient'
+import { fetchQuotes, createQuote, approveQuote, fetchCustomers, fetchLead, fetchDemoLeads } from '../../api/apiClient'
 
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
@@ -29,7 +29,6 @@ const safeFetchQuotes = typeof fetchQuotes === 'function'
         return new Promise(resolve => resolve([]));
     };
 
-
 export default function QuotesPage() {
     const [quotes, setQuotes] = useState([])
     const [search, setSearch] = useState('')
@@ -40,12 +39,20 @@ export default function QuotesPage() {
     const [customers, setCustomers] = useState<any[]>([])
     const [saving, setSaving] = useState(false)
     const [approving, setApproving] = useState(false)
+
     const [newQuote, setNewQuote] = useState({
       customerId: '',
       description: '',
       unitPrice: '',
       quantity: '',
     })
+
+    // Optional: prefill quote items from an existing lead's requested materials
+    const [leadIdForQuote, setLeadIdForQuote] = useState('')
+    const [availableLeads, setAvailableLeads] = useState<any[]>([])
+    const [leadItemsForQuote, setLeadItemsForQuote] = useState<any[]>([])
+    const [loadingLeadForQuote, setLoadingLeadForQuote] = useState(false)
+    const [leadLoadError, setLeadLoadError] = useState<string | null>(null)
 
     // Helper to get status tag styling
     const getStatusTag = (status) => {
@@ -81,7 +88,6 @@ export default function QuotesPage() {
                 );
         }
     };
-
 
     useEffect(() => {
         let isMounted = true
@@ -120,6 +126,16 @@ export default function QuotesPage() {
             // ignore customer load error in this view
           })
 
+        // Load recent leads so we can select them by customer name when prefilling quote items
+        fetchDemoLeads()
+          .then((data) => {
+            if (!isMounted) return
+            setAvailableLeads(Array.isArray(data) ? data : [])
+          })
+          .catch(() => {
+            // ignore lead load error in this view
+          })
+
         return () => {
             isMounted = false
         }
@@ -147,25 +163,73 @@ export default function QuotesPage() {
       }
     }
 
+    const handleLoadFromLead = async () => {
+      if (!leadIdForQuote) return
+
+      setLeadLoadError(null)
+      setLoadingLeadForQuote(true)
+      try {
+        // leadIdForQuote already contains the numeric backend ID selected from dropdown
+        const lead = await fetchLead(leadIdForQuote)
+
+        // Preselect customer on quote form
+        if (lead.customer_id) {
+          setNewQuote((prev) => ({ ...prev, customerId: String(lead.customer_id) }))
+        }
+
+        const items = Array.isArray(lead.items)
+          ? lead.items.map((it: any) => ({
+              material_id: it.material_id,
+              description: it.material_name || `Material ${it.material_id}`,
+              quantity: Number(it.quantity || 0) || 0,
+              unitPrice: '',
+            }))
+          : []
+
+        setLeadItemsForQuote(items)
+      } catch (err: any) {
+        setLeadLoadError(err.message || 'Failed to load materials from lead')
+        setLeadItemsForQuote([])
+      } finally {
+        setLoadingLeadForQuote(false)
+      }
+    }
+
     const handleCreateQuote = async (e: React.FormEvent) => {
       e.preventDefault()
-      if (!newQuote.customerId) return
+      // Quotes must come from a lead so that materials are linked to stock.
+      if (!newQuote.customerId || leadItemsForQuote.length === 0) {
+        setError('Please load items from a lead before creating a quote.')
+        return
+      }
       setSaving(true)
       setError(null)
       setSuccess(null)
       try {
+        // Always use items loaded from lead: user only entered unit prices
+        const itemsPayload = leadItemsForQuote
+          .map((row) => ({
+            material_id: row.material_id || row.materialId || null,
+            description: row.description || 'Quoted item',
+            unit_price: Number(row.unitPrice || 0),
+            quantity: Number(row.quantity || 0) || 0,
+          }))
+          .filter((row) => row.material_id && row.quantity > 0)
+
+        if (itemsPayload.length === 0) {
+          setError('Loaded lead has no valid materials. Please check the lead items.')
+          setSaving(false)
+          return
+        }
+
         const payload = {
           customer_id: Number(newQuote.customerId),
-          items: [
-            {
-              description: newQuote.description || 'Quoted items',
-              unit_price: Number(newQuote.unitPrice || 0),
-              quantity: Number(newQuote.quantity || 1),
-            },
-          ],
+          items: itemsPayload,
         }
         await createQuote(payload)
         setNewQuote({ customerId: '', description: '', unitPrice: '', quantity: '' })
+        setLeadIdForQuote('')
+        setLeadItemsForQuote([])
         await refreshQuotes()
       } catch (err: any) {
         setError(err.message || 'Failed to create quote')
@@ -243,9 +307,10 @@ export default function QuotesPage() {
                             </div>
                         </div>
 
-                        {/* Simple New Quote form for accountants */}
+                        {/* New Quote form: now always based on a lead so materials are linked to stock */}
                         <form onSubmit={handleCreateQuote} className="flex flex-wrap gap-2 items-center rounded-2xl bg-indigo-50/70 border border-indigo-200 px-3 py-3 text-xs sm:text-sm">
-                          <span className="font-semibold text-indigo-900 mr-1">New quote:</span>
+                          <span className="font-semibold text-indigo-900 mr-1">New quote (from lead):</span>
+
                           <select
                             value={newQuote.customerId}
                             onChange={(e) => setNewQuote({ ...newQuote, customerId: e.target.value })}
@@ -259,40 +324,78 @@ export default function QuotesPage() {
                               </option>
                             ))}
                           </select>
-                          <input
-                            type="text"
-                            placeholder="Description"
-                            value={newQuote.description}
-                            onChange={(e) => setNewQuote({ ...newQuote, description: e.target.value })}
-                            className="min-w-[150px] flex-1 rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-[11px] text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                          />
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="Unit price"
-                            value={newQuote.unitPrice}
-                            onChange={(e) => setNewQuote({ ...newQuote, unitPrice: e.target.value })}
-                            className="w-24 rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-[11px] text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                            required
-                          />
-                          <input
-                            type="number"
-                            min="1"
-                            placeholder="Qty"
-                            value={newQuote.quantity}
-                            onChange={(e) => setNewQuote({ ...newQuote, quantity: e.target.value })}
-                            className="w-20 rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-[11px] text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                            required
-                          />
+
                           <button
                             type="submit"
-                            disabled={saving}
+                            disabled={saving || !newQuote.customerId || leadItemsForQuote.length === 0}
                             className="inline-flex items-center rounded-full bg-indigo-600 px-4 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
                           >
-                            {saving ? 'Saving…' : 'Create Quote'}
+                            {saving ? 'Saving…' : 'Create Quote from loaded items'}
                           </button>
                         </form>
+
+                        {/* Load materials from an existing lead (required for quote creation) */}
+                        <div className="mt-2 rounded-2xl border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-[11px] text-slate-800 flex flex-col gap-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-indigo-900">Or load items from lead:</span>
+                            <select
+                              value={leadIdForQuote}
+                              onChange={(e) => setLeadIdForQuote(e.target.value)}
+                              className="min-w-[180px] rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                            >
+                              <option value="">Select lead by customer</option>
+                              {availableLeads.map((lead: any) => (
+                                <option key={lead.id} value={String(lead.id).replace(/^L-?/i, '')}>
+                                  {lead.name} ({lead.channel})
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={handleLoadFromLead}
+                              disabled={loadingLeadForQuote || !leadIdForQuote}
+                              className="inline-flex items-center rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-indigo-700 shadow-sm hover:bg-white disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                              {loadingLeadForQuote ? 'Loading…' : 'Load from Lead'}
+                            </button>
+                          </div>
+                          {leadLoadError && (
+                            <p className="mt-1 rounded-md bg-red-50 px-2 py-1 text-[10px] text-red-700 border border-red-200">{leadLoadError}</p>
+                          )}
+                          {leadItemsForQuote.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              {leadItemsForQuote.map((row, index) => (
+                                <div
+                                  key={index}
+                                  className="grid gap-1 sm:grid-cols-[minmax(0,2.2fr)_minmax(0,0.8fr)_minmax(0,0.8fr)] items-center"
+                                >
+                                  <p className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] text-slate-900 border border-indigo-100 truncate">
+                                    {row.description} (Qty: {row.quantity})
+                                  </p>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    className="rounded-full border border-indigo-200 bg-white px-2 py-1.5 text-[11px] text-slate-900"
+                                    placeholder="Unit price"
+                                    value={row.unitPrice}
+                                    onChange={(e) => {
+                                      const next = [...leadItemsForQuote]
+                                      next[index] = { ...next[index], unitPrice: e.target.value }
+                                      setLeadItemsForQuote(next)
+                                    }}
+                                  />
+                                  <p className="text-[11px] text-slate-600">
+                                    Line total: {row.unitPrice && row.quantity ? (Number(row.unitPrice) * Number(row.quantity)).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '--'}
+                                  </p>
+                                </div>
+                              ))}
+                              <p className="mt-1 text-[10px] text-indigo-800/80">
+                                When you click Create Quote, all these lines will be saved as quote items.
+                              </p>
+                            </div>
+                          )}
+                        </div>
                     </div>
 
                     {/* Error Message */}

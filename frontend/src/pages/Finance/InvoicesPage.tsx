@@ -1,5 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
 import PosTopNav from '@/components/layout/PosTopNav'
@@ -19,7 +21,7 @@ import {
 } from 'lucide-react'
 
 // RESTORED EXTERNAL API CLIENT IMPORT
-import { fetchInvoices } from '../../api/apiClient'
+import { fetchInvoices, createInvoice, fetchDemoOrders } from '../../api/apiClient'
 
 // --- Utility Functions and Components for Design ---
 
@@ -92,30 +94,82 @@ const MetricCard = ({ title, value, icon: Icon, colorClass, description }) => (
 // --- InvoicesPage Component ---
 
 export default function InvoicesPage() {
+  const navigate = useNavigate()
   const [invoices, setInvoices] = useState([])
   const [statusFilter, setStatusFilter] = useState('All')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [creating, setCreating] = useState(false)
+  const [newOrderId, setNewOrderId] = useState('')
+  const [newAmount, setNewAmount] = useState('')
+  const [ordersReady, setOrdersReady] = useState([])
+  const [ordersLoading, setOrdersLoading] = useState(true)
+  const [ordersError, setOrdersError] = useState<string | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
+  const [invoiceFormAmount, setInvoiceFormAmount] = useState('')
+  const [invoicedOrderIds, setInvoicedOrderIds] = useState<number[]>([])
+
+  const reloadInvoices = () => {
+    setLoading(true)
+    setError(null)
+
+    fetchInvoices()
+      .then((data) => {
+        const processedData = Array.isArray(data)
+          ? data.map((inv) => {
+              const rawAmount = inv.amount
+              const amountNum =
+                typeof rawAmount === 'number'
+                  ? rawAmount
+                  : parseFloat(rawAmount || '0')
+              return {
+                ...inv,
+                amount: isNaN(amountNum) ? 0 : amountNum,
+                status: inv.status || 'Draft',
+                due_date: inv.due_date || 'N/A',
+              }
+            })
+          : []
+        setInvoices(processedData)
+      })
+
+      .catch((err) => {
+        setError(err.message || 'Failed to load invoices from API')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }
 
   // Fetching data from the external API client
   useEffect(() => {
     let isMounted = true
+
     setLoading(true)
     setError(null)
 
     fetchInvoices()
       .then((data) => {
         if (!isMounted) return
-        // Ensure data is an array before setting state
-        const processedData = Array.isArray(data) ? data.map(inv => ({
-          ...inv,
-          status: inv.status || 'Draft', // Ensure status is always set
-          // Add a simple default due_date if not provided by API for better visual fidelity
-          due_date: inv.due_date || 'N/A' 
-        })) : []
+        const processedData = Array.isArray(data)
+          ? data.map((inv) => {
+              const rawAmount = inv.amount
+              const amountNum =
+                typeof rawAmount === 'number'
+                  ? rawAmount
+                  : parseFloat(rawAmount || '0')
+              return {
+                ...inv,
+                amount: isNaN(amountNum) ? 0 : amountNum,
+                status: inv.status || 'Draft',
+                due_date: inv.due_date || 'N/A',
+              }
+            })
+          : []
         setInvoices(processedData)
       })
+
       .catch((err) => {
         if (!isMounted) return
         setError(err.message || 'Failed to load invoices from API')
@@ -123,6 +177,37 @@ export default function InvoicesPage() {
       .finally(() => {
         if (!isMounted) return
         setLoading(false)
+      })
+
+    // Load delivered orders so accountant can create invoices without typing IDs
+    setOrdersLoading(true)
+    setOrdersError(null)
+    fetchDemoOrders()
+      .then((orders) => {
+        if (!isMounted) return
+        const processed = Array.isArray(orders)
+          ? orders.map((o: any) => {
+              const rawTotal = o.total
+              const totalNum =
+                typeof rawTotal === 'number'
+                  ? rawTotal
+                  : parseFloat(rawTotal || '0')
+              return {
+                ...o,
+                total: isNaN(totalNum) ? 0 : totalNum,
+              }
+            })
+          : []
+        setOrdersReady(processed)
+      })
+
+      .catch((err) => {
+        if (!isMounted) return
+        setOrdersError(err.message || 'Failed to load delivered orders')
+      })
+      .finally(() => {
+        if (!isMounted) return
+        setOrdersLoading(false)
       })
 
     return () => {
@@ -190,6 +275,67 @@ export default function InvoicesPage() {
   const isController = user?.role_id === 4
   const isPosRole = user?.role_id === 5 || user?.role_id === 11
 
+  const handleCreateInvoice = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newOrderId || !newAmount) return
+    const amountNumber = Number(newAmount)
+    if (!amountNumber || amountNumber <= 0) return
+    setCreating(true)
+    setError(null)
+    try {
+      await createInvoice({ order_id: Number(newOrderId), amount: amountNumber })
+      setNewOrderId('')
+      setNewAmount('')
+      reloadInvoices()
+    } catch (err: any) {
+      setError(err.message || 'Failed to create invoice')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const deliveredOrders = ordersReady
+    .filter((o: any) => {
+      const status = (o.status || '').toLowerCase()
+      return status === 'delivered'
+    })
+    .filter((o: any) => !invoicedOrderIds.includes(o.id))
+
+  const handleCreateInvoiceFromOrder = async (order: any) => {
+    if (!order?.id) return
+    setSelectedOrder(order)
+    setInvoiceFormAmount(
+      order.total != null && !isNaN(order.total) ? String(order.total) : ''
+    )
+  }
+
+  const handleSubmitOrderInvoice = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedOrder?.id) return
+    const amountNumber = Number(invoiceFormAmount)
+    if (!amountNumber || amountNumber <= 0) return
+    setCreating(true)
+    setError(null)
+    try {
+      await createInvoice({ order_id: selectedOrder.id, amount: amountNumber })
+      reloadInvoices()
+      setInvoicedOrderIds((prev) =>
+        prev.includes(selectedOrder.id) ? prev : [...prev, selectedOrder.id]
+      )
+      setSelectedOrder(null)
+      setInvoiceFormAmount('')
+      // Optionally refresh orders list from backend
+      setOrdersLoading(true)
+      const updated = await fetchDemoOrders()
+      setOrdersReady(Array.isArray(updated) ? updated : [])
+    } catch (err: any) {
+      setError(err.message || 'Failed to create invoice for order')
+    } finally {
+      setCreating(false)
+      setOrdersLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Top navigation */}
@@ -248,6 +394,117 @@ export default function InvoicesPage() {
             </div>
         </div>
 
+        {/* Delivered orders ready for invoicing */}
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+            <p className="text-lg font-semibold text-gray-900">Delivered Orders Ready for Invoicing</p>
+            {ordersLoading && (
+              <div className="flex items-center text-xs text-gray-500">
+                <Loader className="h-4 w-4 mr-1 animate-spin text-indigo-500" />
+                Loading orders...
+              </div>
+            )}
+          </div>
+          {selectedOrder && (
+            <div className="px-6 pt-4 pb-2 border-b border-slate-100 bg-slate-50/60">
+              <form
+                onSubmit={handleSubmitOrderInvoice}
+                className="flex flex-wrap items-center gap-3 text-sm"
+              >
+                <div className="text-gray-700 font-medium">
+                  Creating invoice for order
+                  <span className="ml-1 font-bold text-indigo-700">#{selectedOrder.id}</span>
+                  <span className="ml-2 text-gray-500">({selectedOrder.customer})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-gray-500">Amount</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={invoiceFormAmount}
+                    onChange={(e) => setInvoiceFormAmount(e.target.value)}
+                    className="w-28 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedOrder(null)
+                      setInvoiceFormAmount('')
+                    }}
+                    className="rounded-full border border-gray-300 px-3 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
+                  >
+                    {creating ? 'Saving…' : 'Save invoice'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+          {ordersError ? (
+            <div className="p-6 flex items-center text-sm text-red-600 bg-red-50 border-t border-red-100">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              {ordersError}
+            </div>
+          ) : deliveredOrders.length === 0 ? (
+            <div className="p-6 text-sm text-gray-500 flex items-center justify-center">
+              <FileText className="h-5 w-5 mr-2 text-gray-400" />
+              No delivered orders waiting for invoices.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Order ID
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-4 py-2 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Total
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Payment Status
+                    </th>
+                    <th className="px-4 py-2" />
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {deliveredOrders.map((order: any) => (
+                    <tr key={order.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">#{order.id}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{order.customer}</td>
+                      <td className="px-4 py-3 text-sm text-right">{formatCurrency(order.total)}</td>
+                      <td className="px-4 py-3 text-xs text-gray-600 capitalize">{order.paymentStatus}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleCreateInvoiceFromOrder(order)}
+                          disabled={creating}
+                          className="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          Create invoice
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
         {/* Invoice List and Filters */}
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
           <div className="p-6 border-b border-gray-200">
@@ -255,7 +512,7 @@ export default function InvoicesPage() {
               
               <p className="text-xl font-semibold text-gray-900">Invoice List ({filtered.length})</p>
               
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto">
                 {/* Status Filter */}
                 <select
                   value={statusFilter}
@@ -280,6 +537,37 @@ export default function InvoicesPage() {
                     className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-2 text-sm text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition duration-200"
                   />
                 </div>
+
+                {/* Quick create invoice form */}
+                <form
+                  onSubmit={handleCreateInvoice}
+                  className="flex flex-wrap items-center gap-2 border border-indigo-100 rounded-2xl px-3 py-2 bg-indigo-50/40"
+                >
+                  <input
+                    type="number"
+                    min="1"
+                    value={newOrderId}
+                    onChange={(e) => setNewOrderId(e.target.value)}
+                    placeholder="Order ID"
+                    className="w-20 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newAmount}
+                    onChange={(e) => setNewAmount(e.target.value)}
+                    placeholder="Amount"
+                    className="w-24 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
+                  >
+                    {creating ? 'Saving…' : 'New invoice'}
+                  </button>
+                </form>
               </div>
             </div>
           </div>
@@ -319,7 +607,7 @@ export default function InvoicesPage() {
                     {filtered.map((inv) => (
                       <tr
                         key={inv.id}
-                        // Mock action: onClick={() => console.log(`Viewing invoice ${inv.id}`)}
+                        onClick={() => navigate(`/finance/invoices/${inv.id}`)}
                         className="group hover:bg-blue-50/50 transition duration-300 ease-in-out cursor-pointer"
                       >
                         {/* Invoice ID/Number */}

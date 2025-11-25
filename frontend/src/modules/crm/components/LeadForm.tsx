@@ -5,7 +5,10 @@ import { createLead } from '@/api/apiClient'
 export default function LeadForm() {
   const [leadName, setLeadName] = useState('Back to School Banner')
   const [customerName, setCustomerName] = useState('Acme School')
-  const [channel, setChannel] = useState('WhatsApp')
+  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
+  const [address, setAddress] = useState('')
+  const [source, setSource] = useState('whatsapp')
   const [estimatedValue, setEstimatedValue] = useState(450)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -21,7 +24,11 @@ export default function LeadForm() {
       await createLead({
         name: leadName,
         customer_name: customerName,
-        channel,
+        phone,
+        email,
+        address,
+        source,
+        channel: source, // backend will normalise channel enum from this
         estimated_value: estimatedValue,
       })
       setSuccess('Lead saved to backend')
@@ -52,18 +59,43 @@ export default function LeadForm() {
         />
       </label>
       <label className="text-sm">
-        <span className="block text-gray-700">Channel</span>
+        <span className="block text-gray-700">Phone</span>
+        <input
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none"
+        />
+      </label>
+      <label className="text-sm">
+        <span className="block text-gray-700">Email</span>
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none"
+        />
+      </label>
+      <label className="text-sm">
+        <span className="block text-gray-700">Address</span>
+        <input
+          value={address}
+          onChange={e => setAddress(e.target.value)}
+          className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none"
+        />
+      </label>
+      <label className="text-sm">
+        <span className="block text-gray-700">Source / Channel</span>
         <select
-          value={channel}
-          onChange={e => setChannel(e.target.value)}
+          value={source}
+          onChange={e => setSource(e.target.value)}
           className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none"
         >
-          <option>Walk-in</option>
-          <option>Phone</option>
-          <option>WhatsApp</option>
-          <option>Instagram</option>
-          <option>Facebook</option>
-          <option>Email</option>
+          <option value="walkin">Walk-in</option>
+          <option value="phone">Phone</option>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="instagram">Instagram</option>
+          <option value="facebook">Facebook</option>
+          <option value="web">Website / Email</option>
         </select>
       </label>
       <label className="text-sm">

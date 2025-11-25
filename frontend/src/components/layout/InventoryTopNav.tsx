@@ -6,7 +6,11 @@ import { clearAuth, currentUserHasPermission, getAuthUser } from '@/utils/apiCli
 export default function InventoryTopNav() {
   const navigate = useNavigate()
   const user = getAuthUser()
-  const isInventoryRole = user?.role_id === 8 || user?.role_id === 7 || user?.role_id === 1 // Inventory/Production manager + Owner
+  const isInventoryRole =
+    user?.role_id === 8 ||
+    user?.role_id === 7 ||
+    user?.role_id === 1 ||
+    user?.role_id === 6 // Manager, Owner, Admin, and Inventory Controller
 
   const handleLogout = () => {
     clearAuth()

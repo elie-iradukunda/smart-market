@@ -51,6 +51,9 @@ export default function ReceptionDashboard() {
                 Orders
               </Link>
             )}
+            <Link to="/communications/inbox" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
+              Communication
+            </Link>
           </nav>
 
           {/* Logout */}

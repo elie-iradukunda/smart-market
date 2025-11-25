@@ -166,3 +166,46 @@ export const updateOrderStatus = async (req, res) => {
     res.status(500).json({ error: 'Status update failed' });
   }
 };
+
+// Technicians: issue materials for an order and reduce inventory
+export const issueOrderMaterials = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { items } = req.body || {};
+
+    // Basic validation
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'No materials provided to issue' });
+    }
+
+    // Check order exists
+    const [order] = await pool.execute('SELECT id FROM orders WHERE id = ?', [id]);
+    if (order.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    for (const row of items) {
+      if (!row) continue;
+      const materialId = Number(row.material_id || row.materialId);
+      const qty = Number(row.quantity || row.qty || 0);
+      if (!materialId || !Number.isFinite(qty) || qty <= 0) continue;
+
+      // Decrement material stock
+      await pool.execute(
+        'UPDATE materials SET current_stock = current_stock - ? WHERE id = ?',
+        [qty, materialId]
+      );
+
+      // Log stock movement as an issue against this order
+      await pool.execute(
+        'INSERT INTO stock_movements (material_id, type, quantity, reference, user_id) VALUES (?, ?, ?, ?, ?)',
+        [materialId, 'issue', qty, `ORDER-${id}`, req.user.id]
+      );
+    }
+
+    res.json({ message: 'Materials issued for order' });
+  } catch (error) {
+    console.error('Issue materials error:', error);
+    res.status(500).json({ error: 'Failed to issue materials for order' });
+  }
+};

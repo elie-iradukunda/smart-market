@@ -16,8 +16,8 @@ export default function OwnerTopNav() {
   const navigate = useNavigate()
 
   const user = getAuthUser()
-  // Only show the owner navbar if the logged-in user is the owner (role_id === 1)
-  if (!user || user.role_id !== 1) {
+  // Only show the owner navbar if the logged-in user is the Super Admin / Owner (role_id === 7)
+  if (!user || user.role_id !== 7) {
     return null
   }
 

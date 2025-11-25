@@ -6,7 +6,8 @@ import { clearAuth, currentUserHasPermission, getAuthUser } from '@/utils/apiCli
 export default function PosTopNav() {
   const navigate = useNavigate()
   const user = getAuthUser()
-  const isPosRole = user?.role_id === 5 || user?.role_id === 11 // Reception / Cashier and POS Cashier
+  // POS is handled primarily by Sales Rep role (role_id 9)
+  const isPosRole = user?.role_id === 9
 
   const handleLogout = () => {
     clearAuth()
