@@ -176,10 +176,11 @@ CREATE TABLE invoices (
 CREATE TABLE payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     invoice_id INT,
-    method ENUM('cash','momo','card','bank'),
+    method VARCHAR(50) DEFAULT 'cash',
     amount DECIMAL(12,2),
     user_id INT,
     reference VARCHAR(120),
+    status ENUM('pending','completed','failed') DEFAULT 'completed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (invoice_id) REFERENCES invoices(id),
     FOREIGN KEY (user_id) REFERENCES users(id)

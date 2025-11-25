@@ -1,4 +1,5 @@
 import pool from '../config/database.js';
+import emailService from '../services/emailService.js';
 
 export const createWorkOrder = async (req, res) => {
   try {
@@ -20,6 +21,31 @@ export const createWorkOrder = async (req, res) => {
       'INSERT INTO work_orders (order_id, stage, assigned_to) VALUES (?, ?, ?)',
       [order_id, stage, assigned_to]
     );
+    
+    // Send work order assignment email to technician
+    const [technicianData] = await pool.execute('SELECT email, name FROM users WHERE id = ?', [assigned_to]);
+    const [orderData] = await pool.execute(`
+      SELECT o.id, c.name as customer_name 
+      FROM orders o 
+      JOIN customers c ON o.customer_id = c.id 
+      WHERE o.id = ?
+    `, [order_id]);
+    
+    if (technicianData.length > 0 && technicianData[0].email) {
+      try {
+        await emailService.sendWorkOrderAssignment(technicianData[0].email, {
+          work_order_id: result.insertId,
+          order_id: order_id,
+          stage: stage,
+          technician_name: technicianData[0].name,
+          customer_name: orderData[0]?.customer_name || 'Unknown'
+        });
+        console.log(`Work order assignment email sent to ${technicianData[0].email}`);
+      } catch (emailError) {
+        console.error('Failed to send work order assignment email:', emailError);
+      }
+    }
+    
     res.status(201).json({ id: result.insertId, message: 'Work order created' });
   } catch (error) {
     res.status(500).json({ error: 'Work order creation failed' });
@@ -111,6 +137,30 @@ export const updateOrderStatus = async (req, res) => {
     }
     
     await pool.execute('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
+    
+    // Send status update email to customer if order is ready or delivered
+    if (['ready', 'delivered'].includes(status)) {
+      const [customerData] = await pool.execute(`
+        SELECT c.email, c.name 
+        FROM customers c 
+        JOIN orders o ON c.id = o.customer_id 
+        WHERE o.id = ?
+      `, [id]);
+      
+      if (customerData.length > 0 && customerData[0].email) {
+        try {
+          await emailService.sendOrderStatusUpdate(customerData[0].email, {
+            order_id: id,
+            customer_name: customerData[0].name,
+            status: status
+          });
+          console.log(`Order status update email sent to ${customerData[0].email}`);
+        } catch (emailError) {
+          console.error('Failed to send order status update email:', emailError);
+        }
+      }
+    }
+    
     res.json({ message: 'Order status updated' });
   } catch (error) {
     res.status(500).json({ error: 'Status update failed' });
