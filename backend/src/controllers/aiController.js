@@ -5,7 +5,7 @@ import {
   getSimplifiedChurnPrediction, 
   getSimplifiedInventoryOptimization 
 } from '../services/simplifiedAiService.js';
-import { generateHuggingFaceRecommendations } from '../services/huggingFaceService.js';
+import { generateBusinessRecommendations } from '../services/geminiService.js';
 
 export const getDemandPredictions = async (req, res) => {
   try {
@@ -13,13 +13,13 @@ export const getDemandPredictions = async (req, res) => {
     const demandData = await getSimplifiedDemandForecast();
     
     // Generate AI recommendations using Google AI Studio
-    const recommendations = await generateHuggingFaceRecommendations(demandData.slice(0, 10), 'demand_forecast');
+    const recommendations = await generateBusinessRecommendations(demandData.slice(0, 10), 'demand_forecast');
     
     res.json({
       predictions: demandData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Google AI Studio (Free)'
+      powered_by: 'Smart Market'
     });
   } catch (error) {
     console.error('Demand predictions error:', error);
@@ -33,13 +33,13 @@ export const getReorderSuggestions = async (req, res) => {
     const inventoryData = await getSimplifiedInventoryOptimization();
     
     // Generate AI recommendations using Google AI Studio
-    const recommendations = await generateHuggingFaceRecommendations(inventoryData.slice(0, 10), 'inventory_optimization');
+    const recommendations = await generateBusinessRecommendations(inventoryData.slice(0, 10), 'inventory_optimization');
     
     res.json({
       inventory_analysis: inventoryData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Google AI Studio (Free)'
+      powered_by: 'Smart Market'
     });
   } catch (error) {
     console.error('Reorder suggestions error:', error);
@@ -53,13 +53,13 @@ export const getCustomerInsights = async (req, res) => {
     const segmentationData = await getSimplifiedCustomerSegmentation();
     
     // Generate AI recommendations using Google AI Studio
-    const recommendations = await generateHuggingFaceRecommendations(segmentationData.slice(0, 15), 'customer_segmentation');
+    const recommendations = await generateBusinessRecommendations(segmentationData.slice(0, 15), 'customer_segmentation');
     
     res.json({
       customer_segments: segmentationData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Google AI Studio (Free)'
+      powered_by: 'Smart Market'
     });
   } catch (error) {
     console.error('Customer insights error:', error);
@@ -73,13 +73,13 @@ export const getChurnPredictions = async (req, res) => {
     const churnData = await getSimplifiedChurnPrediction();
     
     // Generate AI recommendations using Google AI Studio
-    const recommendations = await generateHuggingFaceRecommendations(churnData.slice(0, 10), 'churn_prediction');
+    const recommendations = await generateBusinessRecommendations(churnData.slice(0, 10), 'churn_prediction');
     
     res.json({
       churn_analysis: churnData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Google AI Studio (Free)'
+      powered_by: 'Smart Market'
     });
   } catch (error) {
     console.error('Churn predictions error:', error);
@@ -104,14 +104,14 @@ export const getPricingRecommendations = async (req, res) => {
     };
     
     // Generate AI pricing recommendations using Google AI Studio
-    const recommendations = await generateHuggingFaceRecommendations(mockData, 'pricing_optimization');
+    const recommendations = await generateBusinessRecommendations(mockData, 'pricing_optimization');
     
     res.json({
       pricing_analysis: mockData,
       market_summary: marketData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Google AI Studio (Free)'
+      powered_by: 'Smart Market'
     });
   } catch (error) {
     console.error('Pricing recommendations error:', error);
@@ -125,14 +125,14 @@ export const getProductionOptimization = async (req, res) => {
     const resourceData = [];
     
     // Generate AI optimization recommendations
-    const recommendations = await generateHuggingFaceRecommendations({ workflow: workflowData, resources: resourceData }, 'production_optimization');
+    const recommendations = await generateBusinessRecommendations({ workflow: workflowData, resources: resourceData }, 'production_optimization');
     
     res.json({
       workflow_analysis: workflowData,
       resource_utilization: resourceData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Google AI Studio (Free)'
+      powered_by: 'Smart Market'
     });
   } catch (error) {
     console.error('Production optimization error:', error);
@@ -146,14 +146,14 @@ export const getMarketingInsights = async (req, res) => {
     const customerData = [];
     
     // Generate AI marketing recommendations
-    const recommendations = await generateHuggingFaceRecommendations({ campaigns: campaignData, customers: customerData }, 'marketing_insights');
+    const recommendations = await generateBusinessRecommendations({ campaigns: campaignData, customers: customerData }, 'marketing_insights');
     
     res.json({
       campaign_performance: campaignData,
       customer_acquisition: customerData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Google AI Studio (Free)'
+      powered_by: 'Smart Market'
     });
   } catch (error) {
     console.error('Marketing insights error:', error);
@@ -164,7 +164,7 @@ export const getMarketingInsights = async (req, res) => {
 // Generate all AI insights using simplified service
 export const runAllPredictions = async (req, res) => {
   try {
-    console.log('Generating AI insights with Google AI Studio...');
+    console.log('Generating AI insights with Smart Market internal AI...');
     
     // Generate all predictions using simplified service + Google AI Studio
     const [demandData, inventoryData, customerData, churnData] = await Promise.all([
@@ -182,14 +182,14 @@ export const runAllPredictions = async (req, res) => {
     
     if (res) {
       res.json({ 
-        message: 'AI predictions generated successfully using Google AI Studio',
+        message: 'AI predictions generated successfully using Smart Market',
         data_points: {
           demand_forecasts: demandData.length,
           inventory_items: inventoryData.length,
           customer_segments: customerData.length,
           churn_predictions: churnData.length
         },
-        powered_by: 'Google AI Studio (Free)',
+        powered_by: 'Smart Market',
         generated_at: new Date().toISOString()
       });
     }
