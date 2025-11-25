@@ -23,7 +23,8 @@ export const sendEmail = async (req, res) => {
         success: true,
         message: 'Email sent successfully',
         messageId: result.messageId,
-        service: 'Gmail SMTP (Free)'
+        service: 'Gmail SMTP (Free)',
+        poweredBy: 'Smart Market'
       });
     } else {
       res.status(500).json({
