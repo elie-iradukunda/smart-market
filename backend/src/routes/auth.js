@@ -20,12 +20,12 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 
 // User CRUD routes
-// View/list users requires user.view; create/update/delete require user.manage
-router.post('/users', authenticateToken, checkPermission('user.manage'), createUser);
+// View/list users requires user.view; create/update/delete use granular permissions
+router.post('/users', authenticateToken, checkPermission('user.create'), createUser);
 router.get('/users', authenticateToken, checkPermission('user.view'), getUsers);
 router.get('/users/:id', authenticateToken, checkPermission('user.view'), getUser);
-router.put('/users/:id', authenticateToken, checkPermission('user.manage'), updateUser);
-router.delete('/users/:id', authenticateToken, checkPermission('user.manage'), deleteUser);
+router.put('/users/:id', authenticateToken, checkPermission('user.update'), updateUser);
+router.delete('/users/:id', authenticateToken, checkPermission('user.delete'), deleteUser);
 
 router.put('/users/:id/password', authenticateToken, changePassword);
 
