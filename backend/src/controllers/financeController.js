@@ -1,4 +1,5 @@
 import pool from '../config/database.js';
+import emailService from '../services/emailService.js';
 
 export const createInvoice = async (req, res) => {
   try {
@@ -14,6 +15,28 @@ export const createInvoice = async (req, res) => {
       'INSERT INTO invoices (order_id, amount) VALUES (?, ?)',
       [order_id, amount]
     );
+    
+    // Get customer email to send invoice
+    const [customer] = await pool.execute(`
+      SELECT c.email, c.name 
+      FROM customers c 
+      JOIN orders o ON c.id = o.customer_id 
+      WHERE o.id = ?
+    `, [order_id]);
+    
+    if (customer.length > 0 && customer[0].email) {
+      try {
+        await emailService.sendInvoice(customer[0].email, {
+          id: result.insertId,
+          amount: amount,
+          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toDateString()
+        });
+        console.log(`Invoice email sent to ${customer[0].email}`);
+      } catch (emailError) {
+        console.error('Failed to send invoice email:', emailError);
+      }
+    }
+    
     res.status(201).json({ id: result.insertId, message: 'Invoice created' });
   } catch (error) {
     res.status(500).json({ error: 'Invoice creation failed' });
@@ -30,9 +53,9 @@ export const recordPayment = async (req, res) => {
       return res.status(404).json({ error: 'Invoice not found' });
     }
     
-    await pool.execute(
-      'INSERT INTO payments (invoice_id, method, amount, user_id, reference) VALUES (?, ?, ?, ?, ?)',
-      [invoice_id, method, amount, req.user.id, reference]
+    const [result] = await pool.execute(
+      'INSERT INTO payments (invoice_id, method, amount, user_id, reference, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [invoice_id, method || 'cash', amount, req.user.id, reference || null, 'completed']
     );
 
     const [payments] = await pool.execute(
@@ -44,8 +67,33 @@ export const recordPayment = async (req, res) => {
     
     await pool.execute('UPDATE invoices SET status = ? WHERE id = ?', [status, invoice_id]);
     
+    // Get customer email to send payment confirmation
+    const [customer] = await pool.execute(`
+      SELECT c.email, c.name, i.id as invoice_id
+      FROM customers c 
+      JOIN orders o ON c.id = o.customer_id 
+      JOIN invoices i ON o.id = i.order_id
+      WHERE i.id = ?
+    `, [invoice_id]);
+    
+    if (customer.length > 0 && customer[0].email) {
+      try {
+        await emailService.sendPaymentConfirmation(customer[0].email, {
+          payment_id: result.insertId,
+          invoice_id: invoice_id,
+          amount: amount,
+          method: method || 'cash',
+          status: status
+        });
+        console.log(`Payment confirmation email sent to ${customer[0].email}`);
+      } catch (emailError) {
+        console.error('Failed to send payment confirmation email:', emailError);
+      }
+    }
+    
     res.json({ message: 'Payment recorded' });
   } catch (error) {
+    console.error('Payment recording error:', error);
     res.status(500).json({ error: 'Payment recording failed' });
   }
 };
