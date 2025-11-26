@@ -1,13 +1,19 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { fetchCampaign } from '../../api/apiClient'
+import { fetchCampaign } from '@/api/apiClient'
+import MarketingTopNav from '@/components/layout/MarketingTopNav'
+import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import { getAuthUser } from '@/utils/apiClient'
 
 export default function CampaignDetailPage() {
   const { id } = useParams()
   const [campaign, setCampaign] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const user = getAuthUser()
+  const isOwner = user?.role_id === 7
 
   useEffect(() => {
     if (!id) return
@@ -35,15 +41,27 @@ export default function CampaignDetailPage() {
   }, [id])
 
   if (loading) {
-    return <div className="px-4 py-6 sm:px-6 lg:px-8"><p className="text-sm text-gray-600">Loading campaign...</p></div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50 px-0 pb-10">
+        {isOwner ? <OwnerTopNav /> : <MarketingTopNav />}
+        <div className="px-4 py-6 sm:px-6 lg:px-8"><p className="text-sm text-gray-600">Loading campaign...</p></div>
+      </div>
+    )
   }
 
   if (error || !campaign) {
-    return <div className="px-4 py-6 sm:px-6 lg:px-8"><p className="text-sm text-red-600">{error || 'Campaign not found'}</p></div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50 px-0 pb-10">
+        {isOwner ? <OwnerTopNav /> : <MarketingTopNav />}
+        <div className="px-4 py-6 sm:px-6 lg:px-8"><p className="text-sm text-red-600">{error || 'Campaign not found'}</p></div>
+      </div>
+    )
   }
 
   return (
-    <div className="px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50 px-0 pb-10">
+      {isOwner ? <OwnerTopNav /> : <MarketingTopNav />}
+      <div className="px-4 py-6 sm:px-6 lg:px-8 space-y-6">
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Campaign</p>
@@ -75,6 +93,7 @@ export default function CampaignDetailPage() {
           <li>Use lead forms or WhatsApp click-to-chat for quick follow-up.</li>
         </ul>
       </section>
+    </div>
     </div>
   )
 }

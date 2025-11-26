@@ -145,7 +145,7 @@ export default function OrderDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50">
         {isController ? <ControllerTopNav /> : isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-        <SalesTopNav />
+        {!isReception && <SalesTopNav />}
         <div className="max-w-6xl mx-auto flex items-center justify-center p-8">
           <span className="animate-spin mr-3 text-indigo-600">🌀</span>
           <p className="text-lg text-gray-600">Loading Order Details for ID: {id}...</p>
@@ -158,7 +158,7 @@ export default function OrderDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50">
         {isController ? <ControllerTopNav /> : isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-        <SalesTopNav />
+        {!isReception && <SalesTopNav />}
         <div className="max-w-6xl mx-auto flex flex-col items-center justify-center p-8 text-red-700 bg-red-50 border border-red-200 rounded-3xl shadow-md mt-8">
           <Package className="h-8 w-8 mb-3" />
           <p className="text-xl font-semibold">Error Loading Order</p>
@@ -181,7 +181,7 @@ export default function OrderDetailPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       {isController ? <ControllerTopNav /> : isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-      <SalesTopNav />
+      {!isReception && <SalesTopNav />}
       <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
         
         {/* Section 1: Header and Key Metrics Card */}

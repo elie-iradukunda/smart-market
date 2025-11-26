@@ -18,7 +18,7 @@ export default function WorkOrderDetailPage() {
   const [order, setOrder] = useState(null)
 
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [actionMessage, setActionMessage] = useState('')
 
@@ -117,6 +117,8 @@ export default function WorkOrderDetailPage() {
   };
 
   // --- Conditional Rendering: Loading & Error ---
+  const currentUser = getAuthUser()
+  const isOwner = currentUser?.role_id === 7
 
   if (loading) {
     return (

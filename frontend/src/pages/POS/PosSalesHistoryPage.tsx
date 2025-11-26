@@ -4,6 +4,7 @@ import { DollarSign, User, Calendar, Clock, Download, AlertTriangle, Loader, Pac
 
 import { fetchPOSSales } from '../../api/apiClient'
 import PosTopNav from '@/components/layout/PosTopNav'
+import FinanceTopNav from '@/components/layout/FinanceTopNav'
 
 const getPaymentColor = (method) => {
     switch (method) {
@@ -154,6 +155,8 @@ export default function PosSalesHistoryPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 via-white to-blue-100/50 font-sans">
+            {/* Accountant nav renders only for accountant role based on its internal role check */}
+            <FinanceTopNav />
             <PosTopNav />
             <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
 

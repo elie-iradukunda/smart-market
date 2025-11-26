@@ -10,6 +10,7 @@ import { fetchQuotes, createQuote, approveQuote, fetchCustomers, fetchLead, fetc
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
 import SalesTopNav from '@/components/layout/SalesTopNav'
+import OwnerSideNav from '@/components/layout/OwnerSideNav'
 import { getAuthUser } from '@/utils/apiClient'
 
 // Import necessary icons
@@ -266,13 +267,25 @@ export default function QuotesPage() {
     })
 
     const user = getAuthUser()
-    const isReception = user?.role_id === 5
+    const isReception = user?.role_id === 2
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans">
-            {isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-            <SalesTopNav />
-            <div className="max-w-6xl mx-auto space-y-8 px-4 py-10 sm:px-6 lg:px-10">
+            {isReception ? (
+              <ReceptionTopNav />
+            ) : (
+              <>
+                <OwnerTopNav />
+                <SalesTopNav />
+              </>
+            )}
+
+            {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
+            <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-6">
+              <div className="flex gap-6">
+                <OwnerSideNav />
+
+                <main className="flex-1 space-y-8 max-w-6xl mx-auto">
 
                 {/* Header Card */}
                 <div className="rounded-3xl bg-gradient-to-r from-[#043b84] via-[#0555b0] to-[#0fb3ff] p-7 sm:p-8 shadow-2xl border border-blue-500/40">
@@ -527,6 +540,8 @@ export default function QuotesPage() {
                         </div>
                     )}
                 </div>
+                </main>
+              </div>
             </div>
         </div>
     )

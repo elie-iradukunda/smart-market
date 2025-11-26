@@ -1135,6 +1135,34 @@ export function fetchDemoCampaigns() {
   ];
 }
 
+// Marketing: create campaign
+export async function createCampaign(payload: { name: string; channel: string; budget: number }) {
+  const token = getAuthToken()
+  if (!token) {
+    throw new Error('Not authenticated')
+  }
+
+  const res = await fetch(`${API_BASE}/campaigns`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      name: payload.name,
+      platform: payload.channel,
+      budget: payload.budget,
+    }),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error((data as any).message || (data as any).error || 'Failed to create campaign')
+  }
+
+  return data
+}
+
 // Marketing: campaigns from backend
 export async function fetchCampaigns() {
   const token = getAuthToken()

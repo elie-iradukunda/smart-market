@@ -49,10 +49,17 @@ export default function PurchaseOrdersPage() {
 
   const user = getAuthUser()
   const isController = user?.role_id === 4
+  const isOwner = user?.role_id === 7
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <InventoryTopNav />
+      {isOwner ? (
+        <OwnerTopNav />
+      ) : isController ? (
+        <ControllerTopNav />
+      ) : (
+        <InventoryTopNav />
+      )}
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Inventory</p>

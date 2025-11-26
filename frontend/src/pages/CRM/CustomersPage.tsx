@@ -43,7 +43,7 @@ export default function CustomersPage() {
 
   const user = getAuthUser()
   const isController = user?.role_id === 4
-  const isReception = user?.role_id === 5
+  const isReception = user?.role_id === 2
 
   return (
     <div className="min-h-screen bg-slate-50">

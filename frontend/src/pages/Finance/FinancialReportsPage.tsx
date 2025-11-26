@@ -9,6 +9,9 @@ import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
 import PosTopNav from '@/components/layout/PosTopNav'
 import InventoryTopNav from '@/components/layout/InventoryTopNav'
+import MarketingTopNav from '@/components/layout/MarketingTopNav'
+import FinanceTopNav from '@/components/layout/FinanceTopNav'
+import OwnerSideNav from '@/components/layout/OwnerSideNav'
 
 import { getAuthUser } from '@/utils/apiClient'
 
@@ -123,6 +126,9 @@ export default function FinancialReportsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Marketing and accountant navs render only for their respective roles based on internal checks */}
+      <MarketingTopNav />
+      <FinanceTopNav />
       {isController ? (
         <ControllerTopNav />
       ) : isPosRole ? (
