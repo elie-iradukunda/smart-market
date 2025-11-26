@@ -93,18 +93,18 @@ export const createLead = async (req, res) => {
     // Support both direct customer_id and UI payload with full customer details
     const { customer_id, customer_name, name, phone, email, address, source, channel, items } = req.body;
 
-    // Normalise source and channel codes to match ENUM values
-    const allowedSources = ['walkin', 'whatsapp', 'instagram', 'facebook', 'web', 'phone'];
+    // Simplified sources for actual business use
+    const allowedSources = ['walkin', 'phone', 'email', 'referral', 'web'];
     let normalizedSource = (source || '').toLowerCase();
     if (!allowedSources.includes(normalizedSource)) {
-      normalizedSource = null;
+      normalizedSource = 'walkin'; // Default to walk-in
     }
 
-    const allowedChannels = ['whatsapp', 'instagram', 'facebook', 'web'];
+    // Simplified channels - no social media
+    const allowedChannels = ['direct', 'phone', 'email', 'web'];
     let normalizedChannel = (channel || '').toLowerCase();
     if (!allowedChannels.includes(normalizedChannel)) {
-      // Fallback to a generic web channel if the UI sends something like walkin/phone
-      normalizedChannel = 'web';
+      normalizedChannel = 'direct'; // Default to direct contact
     }
 
     let resolvedCustomerId = customer_id;
@@ -142,13 +142,13 @@ export const createLead = async (req, res) => {
       }
     }
 
-    // Check for duplicate lead (same customer and channel)
+    // Check for duplicate lead (same customer)
     const [existing] = await pool.execute(
-      'SELECT id FROM leads WHERE customer_id = ? AND channel = ?',
-      [resolvedCustomerId, normalizedChannel]
+      'SELECT id FROM leads WHERE customer_id = ?',
+      [resolvedCustomerId]
     );
     if (existing.length > 0) {
-      return res.status(409).json({ error: 'Lead already exists for this customer and channel' });
+      return res.status(409).json({ error: 'Lead already exists for this customer' });
     }
 
     const [result] = await pool.execute(

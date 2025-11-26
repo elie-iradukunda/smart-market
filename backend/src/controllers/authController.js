@@ -157,7 +157,7 @@ export const changePassword = async (req, res) => {
     const { id } = req.params;
     const { currentPassword, newPassword } = req.body;
     
-    const [user] = await pool.execute('SELECT password_hash FROM users WHERE id = ?', [id]);
+    const [user] = await pool.execute('SELECT password_hash, email, name FROM users WHERE id = ?', [id]);
     if (user.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -169,6 +169,33 @@ export const changePassword = async (req, res) => {
     
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await pool.execute('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, id]);
+    
+    // Send password change confirmation email
+    const subject = '🔐 Smart Market Password Changed';
+    const content = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2c3e50;">🔐 Smart Market Password Changed</h2>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+          <h3>Hello ${user[0].name || 'User'},</h3>
+          <p>Your Smart Market password has been successfully changed.</p>
+          <div style="background: #d4edda; padding: 15px; border-radius: 5px; border-left: 4px solid #28a745;">
+            <strong>✅ Password Updated Successfully</strong><br>
+            Date: ${new Date().toLocaleString()}<br>
+            Changed by: You (manual change)
+          </div>
+          <p><strong>Security Notice:</strong> If you did not make this change, please contact support immediately.</p>
+        </div>
+        <p style="color: #7f8c8d; font-size: 12px; margin-top: 20px;">
+          This is an automated message from Smart Market System
+        </p>
+      </div>
+    `;
+    
+    try {
+      await emailService.sendEmail(user[0].email, subject, content);
+    } catch (emailError) {
+      console.error('Failed to send password change confirmation email:', emailError);
+    }
     
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
@@ -201,13 +228,23 @@ export const forgotPassword = async (req, res) => {
     const frontendBase = process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
     const resetLink = `${frontendBase}/reset-password?token=${encodeURIComponent(token)}`;
 
-    const subject = 'Reset your Smart Market password';
+    const subject = '🔐 Reset your Smart Market password';
     const content = `
-      <h2>Password reset request</h2>
-      <p>Hello ${user.name || ''},</p>
-      <p>We received a request to reset the password for your account.</p>
-      <p><a href="${resetLink}">Click here to reset your password</a></p>
-      <p>This link will expire in 1 hour. If you did not request a password reset, you can ignore this email.</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2c3e50;">🔐 Smart Market Password Reset</h2>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+          <h3>Hello ${user.name || 'User'},</h3>
+          <p>We received a request to reset the password for your Smart Market account.</p>
+          <div style="text-align: center; margin: 25px 0;">
+            <a href="${resetLink}" style="background: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+          </div>
+          <p><strong>Important:</strong> This link will expire in 1 hour.</p>
+          <p>If you did not request a password reset, you can safely ignore this email.</p>
+        </div>
+        <p style="color: #7f8c8d; font-size: 12px; margin-top: 20px;">
+          This is an automated message from Smart Market System
+        </p>
+      </div>
     `;
 
     try {
@@ -243,6 +280,37 @@ export const resetPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await pool.execute('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, payload.userId]);
+
+    // Get user info for confirmation email
+    const [users] = await pool.execute('SELECT email, name FROM users WHERE id = ?', [payload.userId]);
+    
+    if (users.length > 0) {
+      const user = users[0];
+      const subject = '✅ Smart Market Password Changed';
+      const content = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2c3e50;">✅ Smart Market Password Updated</h2>
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+            <h3>Hello ${user.name || 'User'},</h3>
+            <p>Your Smart Market password has been successfully changed.</p>
+            <div style="background: #d4edda; padding: 15px; border-radius: 5px; border-left: 4px solid #28a745;">
+              <strong>✅ Password Updated Successfully</strong><br>
+              Date: ${new Date().toLocaleString()}
+            </div>
+            <p>If you did not make this change, please contact support immediately.</p>
+          </div>
+          <p style="color: #7f8c8d; font-size: 12px; margin-top: 20px;">
+            This is an automated message from Smart Market System
+          </p>
+        </div>
+      `;
+      
+      try {
+        await emailService.sendEmail(user.email, subject, content);
+      } catch (emailError) {
+        console.error('Failed to send password confirmation email:', emailError);
+      }
+    }
 
     res.json({ message: 'Password reset successfully' });
   } catch (error) {

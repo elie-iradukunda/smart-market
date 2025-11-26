@@ -1,5 +1,7 @@
 import pool from '../config/database.js';
 import emailService from '../services/emailService.js';
+import lanariPaymentService from '../services/lanariPaymentService.js';
+import socketService from '../services/socketService.js';
 
 export const createInvoice = async (req, res) => {
   try {
@@ -46,6 +48,166 @@ export const createInvoice = async (req, res) => {
     res.status(201).json({ id: result.insertId, message: 'Invoice created' });
   } catch (error) {
     res.status(500).json({ error: 'Invoice creation failed' });
+  }
+};
+
+export const processLanariPayment = async (req, res) => {
+  try {
+    const { invoice_id, customer_phone, amount } = req.body;
+    
+    
+    // Get invoice and customer details
+    const [invoice] = await pool.execute(`
+      SELECT i.*, c.name as customer_name, o.id as order_id
+      FROM invoices i
+      JOIN orders o ON i.order_id = o.id
+      JOIN customers c ON o.customer_id = c.id
+      WHERE i.id = ?
+    `, [invoice_id]);
+    
+    if (invoice.length === 0) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+    
+    // Create payment record first
+    const [result] = await pool.execute(
+      'INSERT INTO payments (invoice_id, method, amount, user_id, reference, status, gateway, gateway_transaction_id, gateway_response, customer_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [invoice_id, 'lanari', amount, req.user.id, 'pending', 'pending', 'lanari', 'pending', '{}', customer_phone]
+    );
+    
+    const paymentId = result.insertId;
+    
+    // Emit payment created event
+    socketService.emitPaymentCreated({
+      payment_id: paymentId,
+      invoice_id: invoice_id,
+      amount: amount,
+      status: 'pending',
+      customer_phone: customer_phone
+    });
+    
+    // Process payment through Lanari
+    const paymentResult = await lanariPaymentService.processPayment({
+      amount: Math.round(amount),
+      customer_phone: customer_phone,
+      currency: 'RWF',
+      description: `Smart Market Invoice #${invoice_id} - ${invoice[0].customer_name}`
+    });
+    
+    // Update payment record with API response
+    const paymentStatus = paymentResult.success ? (paymentResult.transaction_id && paymentResult.transaction_id !== 'pending' ? 'completed' : 'pending') : 'failed';
+    const transactionId = paymentResult.transaction_id || 'failed';
+    
+    await pool.execute(
+      'UPDATE payments SET reference = ?, status = ?, gateway_transaction_id = ?, gateway_response = ? WHERE id = ?',
+      [transactionId, paymentStatus, transactionId, JSON.stringify(paymentResult.raw_response || {}), paymentId]
+    );
+    
+    // Emit payment status update
+    if (paymentStatus === 'completed') {
+      socketService.emitPaymentCompleted({
+        payment_id: paymentId,
+        invoice_id: invoice_id,
+        amount: amount,
+        status: 'completed',
+        transaction_id: transactionId
+      });
+    } else if (paymentStatus === 'failed') {
+      socketService.emitPaymentFailed({
+        payment_id: paymentId,
+        invoice_id: invoice_id,
+        amount: amount,
+        status: 'failed',
+        error: paymentResult.error
+      });
+    } else {
+      socketService.emitPaymentUpdated({
+        payment_id: paymentId,
+        invoice_id: invoice_id,
+        amount: amount,
+        status: paymentStatus,
+        transaction_id: transactionId
+      });
+    }
+    
+    if (!paymentResult.success) {
+      return res.status(400).json({ 
+        error: 'Payment processing failed', 
+        details: paymentResult.error,
+        payment_id: paymentId,
+        transaction_ref: transactionId,
+        api_response: paymentResult.raw_response
+      });
+    }
+    
+    res.json({ 
+      success: true,
+      payment_id: paymentId,
+      transaction_id: paymentResult.transaction_id,
+      reference_id: paymentResult.reference_id,
+      status: paymentStatus,
+      message: paymentStatus === 'completed' ? 'Payment completed successfully' : 'Payment initiated successfully',
+      lanari_response: paymentResult.raw_response
+    });
+  } catch (error) {
+    console.error('Lanari payment error:', error);
+    res.status(500).json({ error: 'Payment processing failed' });
+  }
+};
+
+export const checkPaymentStatus = async (req, res) => {
+  try {
+    const { payment_id } = req.params;
+    
+    // Get payment record
+    const [payment] = await pool.execute(
+      'SELECT * FROM payments WHERE id = ? AND gateway = "lanari"',
+      [payment_id]
+    );
+    
+    if (payment.length === 0) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+    
+    // Check status with Lanari
+    const statusResult = await lanariPaymentService.checkPaymentStatus(payment[0].gateway_transaction_id);
+    
+    if (statusResult.success && statusResult.data.status === 'completed') {
+      // Update payment status
+      await pool.execute(
+        'UPDATE payments SET status = "completed", gateway_response = ? WHERE id = ?',
+        [JSON.stringify(statusResult.data), payment_id]
+      );
+      
+      // Update invoice status
+      const [payments] = await pool.execute(
+        'SELECT SUM(amount) as total_paid FROM payments WHERE invoice_id = ? AND status = "completed"',
+        [payment[0].invoice_id]
+      );
+      
+      const [invoice] = await pool.execute('SELECT amount FROM invoices WHERE id = ?', [payment[0].invoice_id]);
+      const status = payments[0].total_paid >= invoice[0].amount ? 'paid' : 'partial';
+      
+      await pool.execute('UPDATE invoices SET status = ? WHERE id = ?', [status, payment[0].invoice_id]);
+      
+      // Emit payment completed event
+      socketService.emitPaymentCompleted({
+        payment_id: payment_id,
+        invoice_id: payment[0].invoice_id,
+        amount: payment[0].amount,
+        status: 'completed',
+        transaction_id: payment[0].gateway_transaction_id
+      });
+    }
+    
+    res.json({
+      payment_status: payment[0].status,
+      gateway_status: statusResult.data?.status || 'unknown',
+      transaction_id: payment[0].gateway_transaction_id
+    });
+  } catch (error) {
+    console.error('Payment status check error:', error);
+    res.status(500).json({ error: 'Status check failed' });
   }
 };
 
@@ -181,6 +343,47 @@ export const createJournalEntry = async (req, res) => {
     res.status(201).json({ id: journal_id, message: 'Journal entry created' });
   } catch (error) {
     res.status(500).json({ error: 'Journal entry failed' });
+  }
+};
+
+// Auto-create invoice when order is completed
+export const autoCreateInvoice = async (order_id, amount) => {
+  try {
+    // Check if invoice already exists
+    const [existing] = await pool.execute('SELECT id FROM invoices WHERE order_id = ?', [order_id]);
+    if (existing.length > 0) {
+      return { success: false, message: 'Invoice already exists' };
+    }
+    
+    const [result] = await pool.execute(
+      'INSERT INTO invoices (order_id, amount, status) VALUES (?, ?, ?)',
+      [order_id, amount, 'pending']
+    );
+    
+    // Get customer email for notification
+    const [customer] = await pool.execute(`
+      SELECT c.email, c.name 
+      FROM customers c 
+      JOIN orders o ON c.id = o.customer_id 
+      WHERE o.id = ?
+    `, [order_id]);
+    
+    if (customer.length > 0 && customer[0].email) {
+      try {
+        await emailService.sendInvoice(customer[0].email, {
+          id: result.insertId,
+          amount: amount,
+          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toDateString()
+        });
+      } catch (emailError) {
+        console.error('Auto-invoice email failed:', emailError);
+      }
+    }
+    
+    return { success: true, invoice_id: result.insertId };
+  } catch (error) {
+    console.error('Auto-invoice creation failed:', error);
+    return { success: false, error: error.message };
   }
 };
 
