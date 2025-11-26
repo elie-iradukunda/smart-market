@@ -160,16 +160,24 @@ export const createLead = async (req, res) => {
 
     // If the UI sent requested materials/products, persist them in lead_items
     if (Array.isArray(items) && items.length > 0) {
-      for (const row of items) {
-        if (!row) continue;
-        const materialId = Number(row.material_id || row.materialId);
-        const qty = Number(row.quantity || row.qty || 0);
-        if (!materialId || !Number.isFinite(qty) || qty <= 0) continue;
+      try {
+        for (const row of items) {
+          if (!row) continue;
+          const materialId = Number(row.material_id || row.materialId);
+          const qty = Number(row.quantity || row.qty || 0);
+          if (!materialId || !Number.isFinite(qty) || qty <= 0) continue;
 
-        await pool.execute(
-          'INSERT INTO lead_items (lead_id, material_id, quantity, notes) VALUES (?, ?, ?, ?)',
-          [leadId, materialId, qty, null]
-        );
+          await pool.execute(
+            'INSERT INTO lead_items (lead_id, material_id, quantity, notes) VALUES (?, ?, ?, ?)',
+            [leadId, materialId, qty, null]
+          );
+        }
+      } catch (err) {
+        if (err && (err.code === 'ER_NO_SUCH_TABLE' || err.errno === 1146)) {
+          console.warn('lead_items table missing; skipping lead material items insert');
+        } else {
+          throw err;
+        }
       }
     }
 
@@ -203,16 +211,28 @@ export const getLead = async (req, res) => {
     }
 
     // Load any requested materials/products captured on this lead
-    const [items] = await pool.execute(
-      `SELECT li.id, li.material_id, li.quantity, li.notes, m.name as material_name
-         FROM lead_items li
-         JOIN materials m ON li.material_id = m.id
-        WHERE li.lead_id = ?`,
-      [id]
-    );
+    let items = [];
+    try {
+      const [rows] = await pool.execute(
+        `SELECT li.id, li.material_id, li.quantity, li.notes, m.name as material_name
+           FROM lead_items li
+           JOIN materials m ON li.material_id = m.id
+          WHERE li.lead_id = ?`,
+        [id]
+      );
+      items = rows;
+    } catch (err) {
+      if (err && (err.code === 'ER_NO_SUCH_TABLE' || err.errno === 1146)) {
+        console.warn('lead_items table missing; returning lead without items');
+        items = [];
+      } else {
+        throw err;
+      }
+    }
 
     res.json({ ...lead[0], items });
   } catch (error) {
+    console.error('Get lead error:', error);
     res.status(500).json({ error: 'Failed to fetch lead' });
   }
 };
