@@ -51,28 +51,6 @@ export async function fetchLead(id: number | string) {
   return res.json()
 }
 
-// Marketing: record ad performance for a campaign
-export async function recordAdPerformance(payload: { campaign_id: number | string; impressions: number; clicks: number; conversions: number; cost_spent: number; date: string }) {
-  const token = getAuthToken()
-  if (!token) throw new Error('Not authenticated')
-
-  const res = await fetch(`${API_BASE}/ad-performance`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  })
-
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    throw new Error(data.error || data.message || 'Failed to record ad performance')
-  }
-
-  return data
-}
-
 // CRM: single quote detail (used by technician to see materials for an order)
 export async function fetchQuote(id: number | string) {
   const token = getAuthToken()

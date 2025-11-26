@@ -3,8 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-// import { createServer } from 'http';
-// import { initializeWebSocket } from './services/websocketService.js';
+import { createServer } from 'http';
+import socketService from './services/socketService.js';
+
 
 import authRoutes from './routes/auth.js';
 import orderRoutes from './routes/orders.js';
@@ -18,19 +19,18 @@ import aiRoutes from './routes/ai.js';
 import reportRoutes from './routes/reports.js';
 import uploadRoutes from './routes/upload.js';
 import roleRoutes from './routes/roles.js';
-import messageRoutes from './routes/messages.js';
-import testAiRoutes from './routes/testAi.js';
+import paymentRoutes from './routes/payments.js';
+
+
 import './jobs/scheduler.js';
 
 dotenv.config();
 
 const app = express();
-// const server = createServer(app);
+
 const PORT = process.env.PORT || 3000;
 
-// Initialize WebSocket
-// const io = initializeWebSocket(server);
-// export { io };
+
 
 // Security middleware
 app.use(helmet());
@@ -63,8 +63,9 @@ app.use('/api', aiRoutes);
 app.use('/api', reportRoutes);
 app.use('/api', uploadRoutes);
 app.use('/api', roleRoutes);
-app.use('/api', messageRoutes);
-app.use('/api', testAiRoutes);
+app.use('/payments', paymentRoutes);
+
+
 
 // Health check
 app.get('/health', (req, res) => {
@@ -88,9 +89,12 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
+const server = createServer(app);
+socketService.init(server);
+
+server.listen(PORT, () => {
   console.log(`Smart Market Backend running on port ${PORT}`);
-  // console.log('WebSocket server initialized');
+  console.log(`Socket.IO server initialized`);
 });
 
 export default app;

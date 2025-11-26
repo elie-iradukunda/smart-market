@@ -87,7 +87,7 @@ export default function OrderDetailPage() {
 
   const user = getAuthUser()
   const isController = user?.role_id === 4
-  const isReception = user?.role_id === 2
+  const isReception = user?.role_id === 5
   const isTechnician = user?.role_id === 7
 
   const handleProcessPayment = async () => {

@@ -176,10 +176,11 @@ CREATE TABLE invoices (
 CREATE TABLE payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     invoice_id INT,
-    method ENUM('cash','momo','card','bank'),
+    method VARCHAR(50) DEFAULT 'cash',
     amount DECIMAL(12,2),
     user_id INT,
     reference VARCHAR(120),
+    status ENUM('pending','completed','failed') DEFAULT 'completed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (invoice_id) REFERENCES invoices(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
@@ -230,9 +231,12 @@ CREATE TABLE journal_lines (
 -- Marketing
 CREATE TABLE campaigns (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(120),
-    platform ENUM('facebook','instagram','whatsapp'),
-    budget DECIMAL(12,2),
+    title VARCHAR(255),
+    subject VARCHAR(255),
+    message TEXT,
+    platform VARCHAR(50) DEFAULT 'email',
+    sent_count INT DEFAULT 0,
+    failed_count INT DEFAULT 0,
     status ENUM('active','paused','ended') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -248,24 +252,7 @@ CREATE TABLE ad_performance (
     FOREIGN KEY (campaign_id) REFERENCES campaigns(id)
 );
 
--- Communications
-CREATE TABLE conversations (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    customer_id INT,
-    channel ENUM('whatsapp','instagram','facebook','email'),
-    status ENUM('open','closed') DEFAULT 'open',
-    FOREIGN KEY (customer_id) REFERENCES customers(id)
-);
-
-CREATE TABLE messages (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    conversation_id INT,
-    sender ENUM('customer','staff'),
-    message TEXT,
-    attachments VARCHAR(255),
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (conversation_id) REFERENCES conversations(id)
-);
+-- Communications removed - using email only
 
 -- AI and Analytics
 CREATE TABLE ai_predictions (

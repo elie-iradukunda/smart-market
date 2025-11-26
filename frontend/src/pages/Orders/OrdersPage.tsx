@@ -200,14 +200,83 @@ export default function OrdersPage() {
                   Active Orders & History
                 </h1>
               </div>
-              <div className="hidden sm:block">
-                {/* Action Button with Hover Animation */}
-                <button
-                  onClick={() => navigate('/new-order')}
-                  className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/50 hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  + Create New Order
-                </button>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  
+                  {/* Table Header - Sticky and Blue Tinted */}
+                  <thead className="bg-indigo-50/70 border-b border-indigo-200 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        Order #
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        <Users className="inline h-4 w-4 mr-2" />
+                        Customer
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        <Clock className="inline h-4 w-4 mr-2" />
+                        Date
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        <Tag className="inline h-4 w-4 mr-2" />
+                        Total
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                        Payment
+                      </th>
+                      <th className="px-6 py-4"></th>
+                    </tr>
+                  </thead>
+                  
+                  {/* Table Body - Dynamic Rows with Hover and Transition */}
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {filteredOrders.map((order, index) => (
+                      <tr
+                        key={order.id}
+                        onClick={() => navigate(`/orders/${order.id}`)}
+                        // Hover and Transition effects
+                        className="group hover:bg-blue-50/50 transition duration-300 ease-in-out cursor-pointer transform hover:shadow-lg hover:z-20 relative"
+                        // Simple "fade-up" effect on initial load (requires external CSS library like animate.css or custom keyframes)
+                        style={{ animation: `fadeInUp 0.5s ease-out forwards`, animationDelay: `${index * 0.05}s`, opacity: 0 }}
+                      >
+                        {/* Order ID/Number */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 transition duration-300 group-hover:text-indigo-800">
+                          #{String(order.id).substring(0, 8).toUpperCase()}
+                        </td>
+                        {/* Customer */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 transition duration-300 group-hover:text-gray-800">
+                          {order.customer}
+                        </td>
+                        {/* Date */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 transition duration-300">
+                          {order.date || 'N/A'} 
+                        </td>
+                        {/* Total - Uses the formatted span for blue color */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {formatCurrency(order.total)}
+                        </td>
+                        {/* Status */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <StatusPill status={order.status} />
+                        </td>
+                        {/* Payment Status */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <PaymentStatusPill paymentStatus={order.paymentStatus} />
+                        </td>
+                        {/* Action/View Link with animation */}
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <span className="inline-flex items-center text-blue-600 opacity-80 group-hover:opacity-100 group-hover:font-semibold transition-all duration-300">
+                            Details
+                            <ChevronRight className="h-4 w-4 ml-1 transition-transform duration-300 group-hover:translate-x-1" />
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
             

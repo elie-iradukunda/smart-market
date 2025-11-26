@@ -93,62 +93,11 @@ export const createLead = async (req, res) => {
     // Support both direct customer_id and UI payload with full customer details
     const { customer_id, customer_name, name, phone, email, address, source, channel, items } = req.body;
 
-    // Normalise source and channel codes to match ENUM values
-    const allowedSources = ['walkin', 'whatsapp', 'instagram', 'facebook', 'web', 'phone'];
-    let normalizedSource = (source || '').toLowerCase();
-    if (!allowedSources.includes(normalizedSource)) {
-      normalizedSource = null;
-    }
-
-    const allowedChannels = ['whatsapp', 'instagram', 'facebook', 'web'];
-    let normalizedChannel = (channel || '').toLowerCase();
-    if (!allowedChannels.includes(normalizedChannel)) {
-      // Fallback to a generic web channel if the UI sends something like walkin/phone
-      normalizedChannel = 'web';
-    }
-
-    let resolvedCustomerId = customer_id;
-
-    if (!resolvedCustomerId) {
-      const effectiveName = customer_name || name;
-      if (!effectiveName) {
-        return res.status(400).json({ error: 'Customer name is required to create a lead' });
-      }
-
-      // Try to find existing customer by email or phone first (if provided)
-      if (email || phone) {
-        const [existingCustomer] = await pool.execute(
-          'SELECT id FROM customers WHERE email = ? OR phone = ? LIMIT 1',
-          [email || null, phone || null]
-        );
-        if (existingCustomer.length > 0) {
-          resolvedCustomerId = existingCustomer[0].id;
-        }
-      }
-
-      // If still not resolved, create a full customer record using lead details
-      if (!resolvedCustomerId) {
-        const [created] = await pool.execute(
-          'INSERT INTO customers (name, phone, email, address, source) VALUES (?, ?, ?, ?, ?)',
-          [
-            effectiveName,
-            phone || null,
-            email || null,
-            address || null,
-            normalizedSource,
-          ]
-        );
-        resolvedCustomerId = created.insertId;
-      }
-    }
-
-    // Check for duplicate lead (same customer and channel)
-    const [existing] = await pool.execute(
-      'SELECT id FROM leads WHERE customer_id = ? AND channel = ?',
-      [resolvedCustomerId, normalizedChannel]
+      'SELECT id FROM leads WHERE customer_id = ?',
+      [resolvedCustomerId]
     );
     if (existing.length > 0) {
-      return res.status(409).json({ error: 'Lead already exists for this customer and channel' });
+      return res.status(409).json({ error: 'Lead already exists for this customer' });
     }
 
     const [result] = await pool.execute(
@@ -160,24 +109,16 @@ export const createLead = async (req, res) => {
 
     // If the UI sent requested materials/products, persist them in lead_items
     if (Array.isArray(items) && items.length > 0) {
-      try {
-        for (const row of items) {
-          if (!row) continue;
-          const materialId = Number(row.material_id || row.materialId);
-          const qty = Number(row.quantity || row.qty || 0);
-          if (!materialId || !Number.isFinite(qty) || qty <= 0) continue;
+      for (const row of items) {
+        if (!row) continue;
+        const materialId = Number(row.material_id || row.materialId);
+        const qty = Number(row.quantity || row.qty || 0);
+        if (!materialId || !Number.isFinite(qty) || qty <= 0) continue;
 
-          await pool.execute(
-            'INSERT INTO lead_items (lead_id, material_id, quantity, notes) VALUES (?, ?, ?, ?)',
-            [leadId, materialId, qty, null]
-          );
-        }
-      } catch (err) {
-        if (err && (err.code === 'ER_NO_SUCH_TABLE' || err.errno === 1146)) {
-          console.warn('lead_items table missing; skipping lead material items insert');
-        } else {
-          throw err;
-        }
+        await pool.execute(
+          'INSERT INTO lead_items (lead_id, material_id, quantity, notes) VALUES (?, ?, ?, ?)',
+          [leadId, materialId, qty, null]
+        );
       }
     }
 
@@ -211,24 +152,13 @@ export const getLead = async (req, res) => {
     }
 
     // Load any requested materials/products captured on this lead
-    let items = [];
-    try {
-      const [rows] = await pool.execute(
-        `SELECT li.id, li.material_id, li.quantity, li.notes, m.name as material_name
-           FROM lead_items li
-           JOIN materials m ON li.material_id = m.id
-          WHERE li.lead_id = ?`,
-        [id]
-      );
-      items = rows;
-    } catch (err) {
-      if (err && (err.code === 'ER_NO_SUCH_TABLE' || err.errno === 1146)) {
-        console.warn('lead_items table missing; returning lead without items');
-        items = [];
-      } else {
-        throw err;
-      }
-    }
+    const [items] = await pool.execute(
+      `SELECT li.id, li.material_id, li.quantity, li.notes, m.name as material_name
+         FROM lead_items li
+         JOIN materials m ON li.material_id = m.id
+        WHERE li.lead_id = ?`,
+      [id]
+    );
 
     res.json({ ...lead[0], items });
   } catch (error) {

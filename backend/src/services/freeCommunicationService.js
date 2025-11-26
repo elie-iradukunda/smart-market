@@ -1,10 +1,73 @@
 // Free communication services without API keys
 import nodemailer from 'nodemailer';
 
+// Email Template Designs
+const getEmailTemplate = (type, message) => {
+  const templates = {
+    default: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2c3e50;">📧 Smart Market Notification</h2>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+          ${message}
+        </div>
+        <p style="color: #7f8c8d; font-size: 12px; margin-top: 20px;">
+          This is an automated message from Smart Market System
+        </p>
+      </div>
+    `,
+    
+    business: `
+      <div style="font-family: 'Segoe UI', sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">🏢 Smart Market</h1>
+          <p style="color: #e8f4fd; margin: 5px 0 0 0;">Business Management Platform</p>
+        </div>
+        <div style="padding: 40px 30px; background: #f9fafb;">
+          ${message}
+        </div>
+        <div style="background: #374151; padding: 20px; text-align: center;">
+          <p style="color: #9ca3af; margin: 0; font-size: 12px;">Powered by Smart Market System</p>
+        </div>
+      </div>
+    `,
+    
+    modern: `
+      <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb;">
+        <div style="background: #1f2937; padding: 25px; border-bottom: 4px solid #3b82f6;">
+          <h2 style="color: #ffffff; margin: 0; font-weight: 600;">⚡ Smart Market</h2>
+        </div>
+        <div style="padding: 35px 25px;">
+          <div style="background: #f3f4f6; padding: 25px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
+            ${message}
+          </div>
+        </div>
+        <div style="background: #f9fafb; padding: 15px 25px; border-top: 1px solid #e5e7eb;">
+          <p style="color: #6b7280; margin: 0; font-size: 11px;">© Smart Market - Professional Business Solutions</p>
+        </div>
+      </div>
+    `,
+    
+    minimal: `
+      <div style="font-family: 'Helvetica Neue', sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+        <div style="border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 30px;">
+          <h3 style="margin: 0; color: #000; font-weight: 300;">Smart Market</h3>
+        </div>
+        <div style="line-height: 1.6; color: #333;">
+          ${message}
+        </div>
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+          <p style="color: #999; font-size: 11px; margin: 0;">Smart Market System</p>
+        </div>
+      </div>
+    `
+  };
+  
+  return templates[type] || templates.default;
+};
+
 // Free Email Service using Gmail SMTP
-export const sendFreeEmail = async (to, subject, message) => {
+export const sendFreeEmail = async (to, subject, message, template = 'default') => {
   try {
-    // Create Gmail transporter (free)
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -17,17 +80,7 @@ export const sendFreeEmail = async (to, subject, message) => {
       from: process.env.GMAIL_USER || 'Smart Market <your-email@gmail.com>',
       to: to,
       subject: subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2c3e50;">📧 Smart Market Notification</h2>
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
-            ${message}
-          </div>
-          <p style="color: #7f8c8d; font-size: 12px; margin-top: 20px;">
-            This is an automated message from Smart Market System
-          </p>
-        </div>
-      `
+      html: getEmailTemplate(template, message)
     };
 
     const result = await transporter.sendMail(mailOptions);

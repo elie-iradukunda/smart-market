@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
-import FinanceTopNav from '@/components/layout/FinanceTopNav'
 import { fetchInvoice } from '@/api/apiClient'
 
 export default function InvoiceDetailPage() {
