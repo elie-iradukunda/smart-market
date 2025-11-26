@@ -1,10 +1,16 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
+
 import { Zap, TrendingUp, DollarSign, Package, Users, Activity, Loader, AlertTriangle, BarChart2, ShieldAlert, Target } from 'lucide-react'
 
 // --- IMPORTANT: DO NOT REMOVE / EXTERNAL API IMPORTS ---
 // These are assumed to be implemented in your project and are necessary for the component to function.
 import { fetchDemandPredictions, fetchReorderSuggestions, fetchPricingPredictions, fetchCustomerInsights, fetchChurnPredictions, fetchSegmentPredictions, fetchDemoAiInsights } from '../../api/apiClient'
+import MarketingTopNav from '@/components/layout/MarketingTopNav'
+import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import OwnerSideNav from '@/components/layout/OwnerSideNav'
+import { getAuthUser } from '@/utils/apiClient'
+
 import DemandForecastChart from '../../modules/ai/components/DemandForecastChart'
 import PriceRecommendationWidget from '../../modules/ai/components/PriceRecommendationWidget'
 import ReorderSuggestionList from '../../modules/ai/components/ReorderSuggestionList'
@@ -69,6 +75,9 @@ export default function AiOverviewPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
+    const user = getAuthUser()
+    const isOwner = user?.role_id === 7
+
     // Until there is a backend endpoint for price recommendations, keep them from demo helper
     // --- API LOGIC PRESERVED ---
     const demoInsights = fetchDemoAiInsights()
@@ -90,25 +99,99 @@ export default function AiOverviewPage() {
             .then(([predictions, reorder, pricing, insights, churn, segments]) => {
                 if (!isMounted) return
 
-                const mappedDemand = (predictions || []).map(p => ({
-                    category: p.target_id || p.type || 'Item',
-                    month: (p.created_at || '').slice(0, 10),
-                    expectedJobs: Number(p.predicted_value) || 0,
+                const safePredictions = Array.isArray(predictions)
+                    ? predictions
+                    : Array.isArray(predictions?.predictions)
+                        ? predictions.predictions
+                        : Array.isArray(predictions?.data)
+                            ? predictions.data
+                            : []
+
+                const safeReorder = Array.isArray(reorder)
+                    ? reorder
+                    : Array.isArray(reorder?.inventory_analysis)
+                        ? reorder.inventory_analysis
+                        : Array.isArray(reorder?.data)
+                            ? reorder.data
+                            : []
+
+                const safePricing = Array.isArray(pricing)
+                    ? pricing
+                    : Array.isArray(pricing?.pricing_analysis)
+                        ? pricing.pricing_analysis
+                        : Array.isArray(pricing?.data)
+                            ? pricing.data
+                            : []
+
+                const safeInsights = Array.isArray(insights)
+                    ? insights
+                    : Array.isArray(insights?.customer_segments)
+                        ? insights.customer_segments
+                        : Array.isArray(insights?.data)
+                            ? insights.data
+                            : []
+
+                const safeChurn = Array.isArray(churn)
+                    ? churn
+                    : Array.isArray(churn?.churn_analysis)
+                        ? churn.churn_analysis
+                        : Array.isArray(churn?.data)
+                            ? churn.data
+                            : []
+
+                const safeSegments = Array.isArray(segments)
+                    ? segments
+                    : Array.isArray(segments?.customer_segments)
+                        ? segments.customer_segments
+                        : Array.isArray(segments?.data)
+                            ? segments.data
+                            : []
+
+                const mappedDemand = safePredictions.map(p => ({
+                    category: p.material_name || p.category || 'Item',
+                    month: 'Next 30 days',
+                    expectedJobs: Number(p.predicted_demand ?? p.predicted_value ?? 0),
                 }))
 
-                const mappedPricing = (pricing || []).map(p => ({
-                    item: `Price range ${p.target_id}`,
-                    currentPrice: Number(p.target_id) || 0,
-                    suggestedPrice: Number(p.predicted_value) || 0,
-                    reason: `Acceptance ${(Number(p.confidence || 0) * 100).toFixed(0)}%`,
+                const mappedReorder = safeReorder.map(r => ({
+                    item: r.material_name || r.material_id || 'Item',
+                    priority: typeof r.days_until_reorder === 'number'
+                        ? (r.days_until_reorder <= 0 ? 'Reorder now' : `${r.days_until_reorder} days`)
+                        : (r.priority || r.reorder_status || 'Monitor'),
+                }))
+
+                const mappedPricing = safePricing.map(p => ({
+                    item: p.item || `Price range ${p.target_id ?? p.price_range ?? ''}`.trim(),
+                    currentPrice: Number(p.currentPrice ?? p.price_range ?? p.target_id ?? 0),
+                    suggestedPrice: Number(p.suggestedPrice ?? p.avg_price ?? p.predicted_value ?? 0),
+                    reason: p.reason || `Acceptance ${((Number(p.acceptance_rate ?? p.confidence ?? 0)) * 100).toFixed(0)}%`,
+                }))
+
+                const mappedInsights = safeInsights.map(c => ({
+                    id: c.customer_id,
+                    name: c.customer_name,
+                    total_orders: c.frequency ?? c.total_orders ?? 0,
+                    total_spent: c.monetary ?? c.total_spent ?? 0,
+                }))
+
+                const mappedChurn = safeChurn.map(c => ({
+                    ...c,
+                    predicted_value: (typeof c.churn_probability === 'number'
+                        ? c.churn_probability
+                        : (Number(c.predicted_value) || 0) / 100),
+                }))
+
+                const mappedSegments = (safeSegments.length ? safeSegments : safeInsights).map(s => ({
+                    ...s,
+                    predicted_value: s.segment || s.predicted_value,
                 }))
 
                 setDemandData(mappedDemand)
-                setReorderData(reorder || [])
+                setReorderData(mappedReorder)
                 setPriceData(mappedPricing.length > 0 ? mappedPricing : demoPriceRecommendations)
-                setCustomerInsights(insights || [])
-                setChurnData(churn || [])
-                setSegmentData(segments || [])
+                setCustomerInsights(mappedInsights)
+                setChurnData(mappedChurn)
+                setSegmentData(mappedSegments)
 
             })
             .catch(err => {
@@ -128,8 +211,15 @@ export default function AiOverviewPage() {
 
     return (
         // Blue/Purple light gradient background
-        <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-4 py-8 sm:px-6 lg:px-8 space-y-8 font-sans">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-0 pb-10 font-sans">
+            {isOwner ? <OwnerTopNav /> : <MarketingTopNav />}
+
+            {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
+            <div className="px-3 sm:px-4 md:px-6 lg:px-8 pt-8">
+              <div className="flex gap-6">
+                <OwnerSideNav />
+
+                <main className="flex-1 space-y-8 max-w-7xl mx-auto">
 
                 {/* HEADER CARD - Strong Blue Theme */}
                 <div className="rounded-3xl border border-blue-200 bg-white/95 backdrop-blur-xl p-8 shadow-2xl shadow-blue-300/50">
@@ -248,6 +338,8 @@ export default function AiOverviewPage() {
 
                 </div>
 
+                </main>
+              </div>
             </div>
         </div>
     )

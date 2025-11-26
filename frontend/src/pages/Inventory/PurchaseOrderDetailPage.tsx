@@ -4,6 +4,8 @@ import InventoryTopNav from '@/components/layout/InventoryTopNav'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fetchPurchaseOrder, createPurchaseOrder, updatePurchaseOrder, fetchSuppliers } from '../../api/apiClient'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import ControllerTopNav from '@/components/layout/ControllerTopNav'
+import { getAuthUser } from '@/utils/apiClient'
 
 export default function PurchaseOrderDetailPage() {
   const { id } = useParams()
@@ -18,6 +20,10 @@ export default function PurchaseOrderDetailPage() {
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const user = getAuthUser()
+  const isController = user?.role_id === 4
+  const isOwner = user?.role_id === 7
 
   useEffect(() => {
     if (!id || isNew) return
@@ -91,7 +97,13 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <InventoryTopNav />
+      {isOwner ? (
+        <OwnerTopNav />
+      ) : isController ? (
+        <ControllerTopNav />
+      ) : (
+        <InventoryTopNav />
+      )}
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

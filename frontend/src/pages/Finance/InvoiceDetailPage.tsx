@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import FinanceTopNav from '@/components/layout/FinanceTopNav'
 import { fetchInvoice } from '@/api/apiClient'
 
 export default function InvoiceDetailPage() {
@@ -60,6 +61,7 @@ export default function InvoiceDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <FinanceTopNav />
       <OwnerTopNav />
       <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
         <div className="flex items-center justify-between gap-3">

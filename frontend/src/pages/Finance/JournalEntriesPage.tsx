@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import PosTopNav from '@/components/layout/PosTopNav'
+import FinanceTopNav from '@/components/layout/FinanceTopNav'
+import OwnerSideNav from '@/components/layout/OwnerSideNav'
 import { getAuthUser } from '@/utils/apiClient'
 
 // Reverting to the original import path, which may cause a compilation error
@@ -159,8 +161,16 @@ export default function JournalEntriesPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Accountant nav renders only for accountant role based on its internal role check */}
+      <FinanceTopNav />
       {isPosRole ? <PosTopNav /> : <OwnerTopNav />}
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+      
+      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-8">
+        <div className="flex gap-6">
+          <OwnerSideNav />
+
+          <main className="flex-1 space-y-8 max-w-7xl mx-auto">
         
         {/* Header Section - Light card with blue gradient top */}
         <div className="rounded-3xl shadow-2xl overflow-hidden bg-white border border-slate-200">
@@ -300,6 +310,8 @@ export default function JournalEntriesPage() {
               </div>
             </div>
           )}
+        </div>
+          </main>
         </div>
       </div>
     </div>

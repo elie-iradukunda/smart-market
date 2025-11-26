@@ -51,6 +51,28 @@ export async function fetchLead(id: number | string) {
   return res.json()
 }
 
+// Marketing: record ad performance for a campaign
+export async function recordAdPerformance(payload: { campaign_id: number | string; impressions: number; clicks: number; conversions: number; cost_spent: number; date: string }) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/ad-performance`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.error || data.message || 'Failed to record ad performance')
+  }
+
+  return data
+}
+
 // CRM: single quote detail (used by technician to see materials for an order)
 export async function fetchQuote(id: number | string) {
   const token = getAuthToken()
@@ -1133,6 +1155,34 @@ export function fetchDemoCampaigns() {
     { id: 'CMP-BACK2SCHOOL', name: 'Back to School Banners', channel: 'Facebook/Instagram', budget: 500.0, status: 'Active' },
     { id: 'CMP-CHRISTMAS', name: 'Christmas Promo', channel: 'WhatsApp Broadcast', budget: 300.0, status: 'Planned' }
   ];
+}
+
+// Marketing: create campaign
+export async function createCampaign(payload: { name: string; channel: string; budget: number }) {
+  const token = getAuthToken()
+  if (!token) {
+    throw new Error('Not authenticated')
+  }
+
+  const res = await fetch(`${API_BASE}/campaigns`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      name: payload.name,
+      platform: payload.channel,
+      budget: payload.budget,
+    }),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error((data as any).message || (data as any).error || 'Failed to create campaign')
+  }
+
+  return data
 }
 
 // Marketing: campaigns from backend

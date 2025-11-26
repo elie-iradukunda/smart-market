@@ -4,6 +4,8 @@ import { fetchPayments, recordPayment, fetchInvoices } from '../../api/apiClient
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
 import PosTopNav from '@/components/layout/PosTopNav'
+import FinanceTopNav from '@/components/layout/FinanceTopNav'
+import OwnerSideNav from '@/components/layout/OwnerSideNav'
 import { getAuthUser } from '@/utils/apiClient'
 
 export default function PaymentsPage() {
@@ -133,8 +135,16 @@ export default function PaymentsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Accountant nav renders only for accountant role based on its internal role check */}
+      <FinanceTopNav />
       {isController ? <ControllerTopNav /> : isPosRole ? <PosTopNav /> : <OwnerTopNav />}
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+
+      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-8">
+        <div className="flex gap-6">
+          <OwnerSideNav />
+
+          <main className="flex-1 space-y-6 max-w-7xl mx-auto">
 
       {/* Header card with blue accent, similar to other finance pages */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xl">
@@ -271,6 +281,8 @@ export default function PaymentsPage() {
           )}
         </div>
       </div>
+          </main>
+        </div>
       </div>
     </div>
   )

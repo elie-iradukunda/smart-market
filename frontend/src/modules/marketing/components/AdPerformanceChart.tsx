@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { fetchCampaignPerformance } from '../../../api/apiClient'
 
-export default function AdPerformanceChart({ campaignId }) {
+export default function AdPerformanceChart({ campaignId, reloadKey }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -30,7 +30,7 @@ export default function AdPerformanceChart({ campaignId }) {
     return () => {
       isMounted = false
     }
-  }, [campaignId])
+  }, [campaignId, reloadKey])
 
   return (
     <div className="rounded border border-gray-200 bg-white p-4 text-sm">
