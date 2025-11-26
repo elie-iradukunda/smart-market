@@ -10,6 +10,8 @@ import socketService from './services/socketService.js';
 import authRoutes from './routes/auth.js';
 import orderRoutes from './routes/orders.js';
 import customerRoutes from './routes/customers.js';
+import leadsRoutes from './routes/leads.js';
+import quotesRoutes from './routes/quotes.js';
 import inventoryRoutes from './routes/inventory.js';
 import productionRoutes from './routes/production.js';
 import financeRoutes from './routes/finance.js';
@@ -54,6 +56,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', customerRoutes);
+app.use('/api', leadsRoutes);
+app.use('/api', quotesRoutes);
 app.use('/api', inventoryRoutes);
 app.use('/api', productionRoutes);
 app.use('/api', financeRoutes);
@@ -71,6 +75,8 @@ app.use('/payments', paymentRoutes);
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
+
+
 
 // Error handling
 app.use((err, req, res, next) => {

@@ -7,33 +7,38 @@ import {
   createJournalEntry, getJournalEntries,
   getChartOfAccounts,
 } from '../controllers/financeController.js';
-import { authenticateToken, checkPermission } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
+import rbacMiddleware from '../../middleware/rbac.js';
 import { auditLog } from '../middleware/audit.js';
 
 const router = express.Router();
 
+// Apply RBAC middleware to all routes
+router.use(authenticateToken, rbacMiddleware);
+
 // Invoice CRUD
-router.post('/invoices', authenticateToken, checkPermission('invoice.create'), auditLog('CREATE', 'invoices'), createInvoice);
-router.get('/invoices', authenticateToken, checkPermission('invoice.create'), getInvoices);
-router.get('/invoices/:id', authenticateToken, checkPermission('invoice.create'), getInvoice);
-router.put('/invoices/:id', authenticateToken, checkPermission('invoice.create'), auditLog('UPDATE', 'invoices'), updateInvoice);
+router.post('/invoices', auditLog('CREATE', 'invoices'), createInvoice);
+router.get('/invoices', getInvoices);
+router.get('/invoices/:id', getInvoice);
+router.put('/invoices/:id', auditLog('UPDATE', 'invoices'), updateInvoice);
 
 // Payment CRUD
-router.get('/payments', authenticateToken, checkPermission('payment.create'), getPayments);
+router.get('/payments', getPayments);
 
 // Lanari Payment Gateway
-router.post('/payments/lanari', authenticateToken, checkPermission('payment.create'), auditLog('CREATE', 'payments'), processLanariPayment);
-router.get('/payments/:payment_id/status', authenticateToken, checkPermission('payment.create'), checkPaymentStatus);
+router.post('/payments/lanari', auditLog('CREATE', 'payments'), processLanariPayment);
+// router.put('/payments/:payment_id/refund', auditLog('UPDATE', 'payments'), processPaymentRefund); // TODO: Implement refund function
+router.get('/payments/:payment_id/status', checkPaymentStatus);
 
 // POS Sales CRUD
-router.post('/pos-sales', authenticateToken, checkPermission('pos.create'), auditLog('CREATE', 'pos_sales'), createPOSSale);
-router.get('/pos-sales', authenticateToken, checkPermission('pos.create'), getPOSSales);
+router.post('/pos-sales', auditLog('CREATE', 'pos_sales'), createPOSSale);
+router.get('/pos-sales', getPOSSales);
 
 // Journal Entries CRUD
-router.post('/journal-entries', authenticateToken, checkPermission('journal.create'), auditLog('CREATE', 'journal_entries'), createJournalEntry);
-router.get('/journal-entries', authenticateToken, checkPermission('journal.create'), getJournalEntries);
+router.post('/journal-entries', auditLog('CREATE', 'journal_entries'), createJournalEntry);
+router.get('/journal-entries', getJournalEntries);
 
 // Chart of accounts
-router.get('/chart-of-accounts', authenticateToken, checkPermission('journal.create'), getChartOfAccounts);
+router.get('/chart-of-accounts', getChartOfAccounts);
 
 export default router;
