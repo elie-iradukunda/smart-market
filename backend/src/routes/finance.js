@@ -2,6 +2,7 @@ import express from 'express';
 import { 
   createInvoice, getInvoices, getInvoice, updateInvoice,
   recordPayment, getPayments, 
+  processLanariPayment, checkPaymentStatus,
   createPOSSale, getPOSSales,
   createJournalEntry, getJournalEntries,
   getChartOfAccounts,
@@ -18,8 +19,11 @@ router.get('/invoices/:id', authenticateToken, checkPermission('invoice.create')
 router.put('/invoices/:id', authenticateToken, checkPermission('invoice.create'), auditLog('UPDATE', 'invoices'), updateInvoice);
 
 // Payment CRUD
-router.post('/payments', authenticateToken, checkPermission('payment.create'), auditLog('CREATE', 'payments'), recordPayment);
 router.get('/payments', authenticateToken, checkPermission('payment.create'), getPayments);
+
+// Lanari Payment Gateway
+router.post('/payments/lanari', authenticateToken, checkPermission('payment.create'), auditLog('CREATE', 'payments'), processLanariPayment);
+router.get('/payments/:payment_id/status', authenticateToken, checkPermission('payment.create'), checkPaymentStatus);
 
 // POS Sales CRUD
 router.post('/pos-sales', authenticateToken, checkPermission('pos.create'), auditLog('CREATE', 'pos_sales'), createPOSSale);
