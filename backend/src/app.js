@@ -314,6 +314,44 @@ app.delete('/api/roles/:role_id/permissions/:permission_id', async (req, res) =>
   }
 });
 
+// Issue materials to order
+app.post('/api/orders/:id/issue-materials', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { items } = req.body || {};
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'No materials provided to issue' });
+    }
+
+    const [order] = await pool.execute('SELECT id FROM orders WHERE id = ?', [id]);
+    if (order.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    for (const row of items) {
+      if (!row) continue;
+      const materialId = Number(row.material_id || row.materialId);
+      const qty = Number(row.quantity || row.qty || 0);
+      if (!materialId || !Number.isFinite(qty) || qty <= 0) continue;
+
+      await pool.execute(
+        'UPDATE materials SET current_stock = current_stock - ? WHERE id = ?',
+        [qty, materialId]
+      );
+
+      await pool.execute(
+        'INSERT INTO stock_movements (material_id, type, quantity, reference, user_id) VALUES (?, ?, ?, ?, ?)',
+        [materialId, 'issue', qty, `ORDER-${id}`, 1]
+      );
+    }
+
+    res.json({ message: 'Materials issued for order' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to issue materials for order' });
+  }
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', orderRoutes);
