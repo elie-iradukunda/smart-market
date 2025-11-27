@@ -1,5 +1,6 @@
 import express from 'express';
-import { authenticateToken, checkPermission } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
+import rbacMiddleware from '../../middleware/rbac.js';
 import { 
   broadcastToAllCustomers, 
   broadcastToSegment,
@@ -9,12 +10,15 @@ import {
 
 const router = express.Router();
 
+// Apply RBAC middleware to all routes
+router.use(authenticateToken, rbacMiddleware);
+
 // Broadcast marketing messages
-router.post('/broadcast/all', authenticateToken, checkPermission('campaign.create'), broadcastToAllCustomers);
-router.post('/broadcast/segment', authenticateToken, checkPermission('campaign.create'), broadcastToSegment);
+router.post('/broadcast/all', broadcastToAllCustomers);
+router.post('/broadcast/segment', broadcastToSegment);
 
 // Campaign tracking
-router.get('/campaigns', authenticateToken, checkPermission('campaign.view'), getCampaigns);
-router.get('/campaigns/:id', authenticateToken, checkPermission('campaign.view'), getCampaign);
+router.get('/campaigns', getCampaigns);
+router.get('/campaigns/:id', getCampaign);
 
 export default router;

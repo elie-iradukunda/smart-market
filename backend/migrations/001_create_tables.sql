@@ -62,11 +62,13 @@ CREATE TABLE quotes (
 CREATE TABLE quote_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     quote_id INT,
+    material_id INT,
     description VARCHAR(255),
     unit_price DECIMAL(12,2),
     quantity INT,
     total DECIMAL(12,2),
-    FOREIGN KEY (quote_id) REFERENCES quotes(id)
+    FOREIGN KEY (quote_id) REFERENCES quotes(id),
+    FOREIGN KEY (material_id) REFERENCES materials(id)
 );
 
 CREATE TABLE artwork_files (
@@ -151,6 +153,17 @@ CREATE TABLE purchase_orders (
     FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
 );
 
+CREATE TABLE purchase_order_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    purchase_order_id INT,
+    material_id INT,
+    quantity DECIMAL(12,2),
+    unit_price DECIMAL(12,2),
+    total DECIMAL(12,2),
+    FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id),
+    FOREIGN KEY (material_id) REFERENCES materials(id)
+);
+
 CREATE TABLE stock_movements (
     id INT AUTO_INCREMENT PRIMARY KEY,
     material_id INT,
@@ -181,6 +194,10 @@ CREATE TABLE payments (
     user_id INT,
     reference VARCHAR(120),
     status ENUM('pending','completed','failed') DEFAULT 'completed',
+    gateway VARCHAR(50) DEFAULT 'cash',
+    gateway_transaction_id VARCHAR(255),
+    gateway_response TEXT,
+    customer_phone VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (invoice_id) REFERENCES invoices(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
@@ -241,16 +258,9 @@ CREATE TABLE campaigns (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE ad_performance (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    campaign_id INT,
-    impressions INT DEFAULT 0,
-    clicks INT DEFAULT 0,
-    conversions INT DEFAULT 0,
-    cost_spent DECIMAL(12,2) DEFAULT 0,
-    date DATE,
-    FOREIGN KEY (campaign_id) REFERENCES campaigns(id)
-);
+
+
+
 
 -- Communications removed - using email only
 
@@ -274,3 +284,120 @@ CREATE TABLE audit_logs (
     ip_address VARCHAR(50),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- Seed roles
+INSERT INTO roles (name, description) VALUES
+  ('owner',              'Business owner / managing director with full access'),
+  ('sys_admin',          'System administrator managing users, roles and settings'),
+  ('accountant',         'Finance user managing invoices, payments, and journals'),
+  ('controller',         'Operations/finance controller overseeing KPIs'),
+  ('reception',          'Front desk / receptionist handling incoming jobs'),
+  ('technician',         'Production technician working on work orders'),
+  ('production_manager', 'Production manager overseeing work orders and pipeline'),
+  ('inventory_manager',  'Storekeeper / inventory manager'),
+  ('sales_rep',          'Sales/CRM user managing leads, quotes and customers'),
+  ('marketing_manager',  'Marketing manager managing campaigns and performance'),
+  ('pos_cashier',        'POS cashier recording counter sales'),
+  ('support_agent',      'Support/communications agent using unified inbox');
+
+-- Seed permissions
+INSERT INTO permissions (code, description) VALUES
+  ('user.manage',          'Create and manage user accounts'),
+  ('role.manage',          'Create and manage roles and permissions'),
+  ('audit.view',           'View audit logs'),
+  ('settings.manage',      'Manage system-wide settings'),
+  ('customer.manage',      'Create and manage customers'),
+  ('customer.view',        'View customers'),
+  ('lead.manage',          'Create and manage leads'),
+  ('quote.manage',         'Create and manage quotes and quote items'),
+  ('quote.view',           'View quotes'),
+  ('quote.approve',        'Approve quotes to convert to orders'),
+  ('order.update',         'Update order status'),
+  ('order.view',           'View orders'),
+  ('workorder.create',     'Create work orders'),
+  ('workorder.update',     'Update work orders'),
+  ('workorder.view',       'View work orders'),
+  ('worklog.create',       'Log time and materials on work orders'),
+  ('inventory.manage',     'Manage materials, suppliers, and purchase orders'),
+  ('material.view',        'View materials and stock levels'),
+  ('supplier.view',        'View suppliers'),
+  ('invoice.create',       'Create invoices'),
+  ('invoice.view',         'View invoices'),
+  ('invoice.send',         'Send invoices to customers'),
+  ('payment.create',       'Record payments'),
+  ('payment.view',         'View payments'),
+  ('payment.refund',       'Process payment refunds'),
+  ('pos.create',           'Create POS sales'),
+  ('journal.create',       'Create journal entries'),
+  ('report.view',          'View financial and operational reports'),
+  ('campaign.manage',      'Manage marketing campaigns'),
+  ('campaign.launch',      'Launch marketing campaigns'),
+
+  ('conversation.view',    'View conversations'),
+  ('message.send',         'Send replies to customers'),
+  ('ai.view',              'View AI predictions and insights'),
+  ('file.upload',          'Upload files and artwork'),
+  ('file.view',            'View uploaded files');
+
+-- Role permission assignments (optimized approach)
+-- Owner: Full system access
+INSERT INTO role_permissions (role_id, permission_id) SELECT 1, id FROM permissions;
+
+-- System Admin: User & system management
+INSERT INTO role_permissions (role_id, permission_id) SELECT 2, id FROM permissions 
+WHERE code IN ('user.manage','role.manage','audit.view','settings.manage','report.view');
+
+-- Accountant: Finance operations
+INSERT INTO role_permissions (role_id, permission_id) SELECT 3, id FROM permissions 
+WHERE code IN ('invoice.create','invoice.view','invoice.send','payment.create','payment.view','payment.refund','journal.create','report.view','customer.view');
+
+-- Controller: Operations oversight
+INSERT INTO role_permissions (role_id, permission_id) SELECT 4, id FROM permissions 
+WHERE code IN ('order.view','workorder.view','invoice.view','payment.view','report.view','material.view','supplier.view','ai.view');
+
+-- Reception: Front desk operations
+INSERT INTO role_permissions (role_id, permission_id) SELECT 5, id FROM permissions 
+WHERE code IN ('customer.manage','lead.manage','quote.manage','quote.view','order.view','file.upload','file.view');
+
+-- Technician: Production work
+INSERT INTO role_permissions (role_id, permission_id) SELECT 6, id FROM permissions 
+WHERE code IN ('workorder.view','worklog.create','material.view','file.view');
+
+-- Production Manager: Production oversight
+INSERT INTO role_permissions (role_id, permission_id) SELECT 7, id FROM permissions 
+WHERE code IN ('workorder.create','workorder.update','workorder.view','worklog.create','order.update','material.view','supplier.view','report.view','file.view');
+
+-- Inventory Manager: Stock control
+INSERT INTO role_permissions (role_id, permission_id) SELECT 8, id FROM permissions 
+WHERE code IN ('inventory.manage','material.view','supplier.view','report.view');
+
+-- Sales Rep: Sales process
+INSERT INTO role_permissions (role_id, permission_id) SELECT 9, id FROM permissions 
+WHERE code IN ('customer.manage','lead.manage','quote.manage','quote.view','quote.approve','order.view','file.upload','file.view');
+
+-- Marketing Manager: Marketing operations
+INSERT INTO role_permissions (role_id, permission_id) SELECT 10, id FROM permissions 
+WHERE code IN ('campaign.manage','campaign.launch','customer.view','report.view','ai.view');
+
+-- POS Cashier: Point of sale
+INSERT INTO role_permissions (role_id, permission_id) SELECT 11, id FROM permissions 
+WHERE code IN ('pos.create','customer.view','payment.create');
+
+-- Support Agent: Customer support
+INSERT INTO role_permissions (role_id, permission_id) SELECT 12, id FROM permissions 
+WHERE code IN ('conversation.view','message.send','customer.view','file.view');
+
+-- Seed users
+INSERT INTO users (name, email, phone, password_hash, role_id, status) VALUES
+  ('Owner',        'owner@topdesign.com',        '+250700000001', '$2b$10$y46HLKs9u4vtr9MbN9iIqeTbqWY6fqqH5tlupdrWypdZW2nkKioS.', 1, 'active'),
+  ('Sys Admin',    'sysadmin@topdesign.com',     '+250700000002', '$2b$10$y46HLKs9u4vtr9MbN9iIqeTbqWY6fqqH5tlupdrWypdZW2nkKioS.', 2, 'active'),
+  ('Accountant',   'accountant@topdesign.com',   '+250700000003', '$2b$10$3vur6LuS/v7Ffx78D8YG5ecrVSfyA8oADp4nu7oyF9Kw2gLxHPFSO', 3, 'active'),
+  ('Controller',   'controller@topdesign.com',   '+250700000004', '$2b$10$y46HLKs9u4vtr9MbN9iIqeTbqWY6fqqH5tlupdrWypdZW2nkKioS.', 4, 'active'),
+  ('Reception',    'reception@topdesign.com',    '+250700000005', '$2b$10$y46HLKs9u4vtr9MbN9iIqeTbqWY6fqqH5tlupdrWypdZW2nkKioS.', 5, 'active'),
+  ('Technician 1', 'tech1@topdesign.com',        '+250700000006', '$2b$10$y46HLKs9u4vtr9MbN9iIqeTbqWY6fqqH5tlupdrWypdZW2nkKioS.', 6, 'active'),
+  ('Prod Manager', 'prod.manager@topdesign.com', '+250700000007', '$2b$10$y46HLKs9u4vtr9MbN9iIqeTbqWY6fqqH5tlupdrWypdZW2nkKioS.', 7, 'active'),
+  ('Storekeeper',  'store@topdesign.com',        '+250700000008', '$2b$10$y46HLKs9u4vtr9MbN9iIqeTbqWY6fqqH5tlupdrWypdZW2nkKioS.', 8, 'active'),
+  ('Sales Rep',    'sales@topdesign.com',        '+250700000009', '$2b$10$y46HLKs9u4vtr9MbN9iIqeTbqWY6fqqH5tlupdrWypdZW2nkKioS.', 9, 'active'),
+  ('Marketing',    'marketing@topdesign.com',    '+250700000010', '$2b$10$y46HLKs9u4vtr9MbN9iIqeTbqWY6fqqH5tlupdrWypdZW2nkKioS.', 10, 'active'),
+  ('Cashier',      'cashier@topdesign.com',      '+250700000011', '$2b$10$y46HLKs9u4vtr9MbN9iIqeTbqWY6fqqH5tlupdrWypdZW2nkKioS.', 11, 'active'),
+  ('Support',      'support@topdesign.com',      '+250700000012', '$2b$10$y46HLKs9u4vtr9MbN9iIqeTbqWY6fqqH5tlupdrWypdZW2nkKioS.', 12, 'active');

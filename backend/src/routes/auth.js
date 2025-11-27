@@ -11,22 +11,28 @@ import {
   resetPassword,
 } from '../controllers/authController.js';
 
-import { authenticateToken, checkPermission } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
+import rbacMiddleware from '../../middleware/rbac.js';
 
 const router = express.Router();
 
+// Public routes (no authentication required)
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 
-// User CRUD routes
-// View/list users requires user.view; create/update/delete require user.manage
-router.post('/users', authenticateToken, checkPermission('user.create'), createUser);
-router.get('/users', authenticateToken, checkPermission('user.view'), getUsers);
-router.get('/users/:id', authenticateToken, checkPermission('user.view'), getUser);
-router.put('/users/:id', authenticateToken, checkPermission('user.create'), updateUser);
-router.delete('/users/:id', authenticateToken, checkPermission('user.create'), deleteUser);
+// Protected routes with RBAC
+router.use(authenticateToken, rbacMiddleware);
 
-router.put('/users/:id/password', authenticateToken, changePassword);
+// User CRUD routes
+router.post('/users', createUser);
+router.get('/users', getUsers);
+router.get('/users/:id', getUser);
+router.put('/users/:id', updateUser);
+router.delete('/users/:id', deleteUser);
+router.put('/users/:id/password', changePassword);
+router.put('/users/{id}/password', changePassword);
+
+
 
 export default router;

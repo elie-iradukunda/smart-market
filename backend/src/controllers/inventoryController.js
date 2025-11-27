@@ -70,11 +70,9 @@ export const getMaterials = async (req, res) => {
   try {
     const [materials] = await pool.execute(`
       SELECT m.*, 
-             COUNT(DISTINCT sm.id) as stock_movements_count,
-             COUNT(DISTINCT poi.id) as purchase_order_items_count
+             COUNT(DISTINCT sm.id) as stock_movements_count
       FROM materials m
       LEFT JOIN stock_movements sm ON m.id = sm.material_id
-      LEFT JOIN purchase_order_items poi ON m.id = poi.material_id
       GROUP BY m.id
       ORDER BY m.name
     `);
@@ -166,8 +164,7 @@ export const updateMaterial = async (req, res) => {
             // Update material
             await connection.execute(
                 `UPDATE materials 
-                 SET name = ?, unit = ?, category = ?, reorder_level = ?,
-                     updated_at = CURRENT_TIMESTAMP
+                 SET name = ?, unit = ?, category = ?, reorder_level = ?
                  WHERE id = ?`,
                 [
                     name.trim(),
@@ -243,19 +240,7 @@ export const deleteMaterial = async (req, res) => {
                 });
             }
 
-            // Check if material is used in purchase order items
-            const [purchaseOrderItems] = await connection.execute(
-                'SELECT id FROM purchase_order_items WHERE material_id = ? LIMIT 1',
-                [id]
-            );
 
-            if (purchaseOrderItems.length > 0) {
-                await connection.rollback();
-                return res.status(400).json({ 
-                    success: false,
-                    error: 'Cannot delete material with associated purchase orders' 
-                });
-            }
 
             // Delete material
             await connection.execute(
@@ -295,27 +280,21 @@ export const createPurchaseOrder = async (req, res) => {
   try {
     const { 
       supplier_id, 
-      reference_number,
-      order_date,
-      expected_delivery,
-      delivery_address,
-      payment_terms,
-      notes,
-      status = 'draft',
-      items = []
+      total,
+      status = 'pending'
     } = req.body;
 
     // Validate required fields
-    if (!supplier_id || !Array.isArray(items) || items.length === 0) {
+    if (!supplier_id || !total) {
       return res.status(400).json({ 
         success: false,
-        error: 'Supplier ID and at least one order item are required' 
+        error: 'Supplier ID and total are required' 
       });
     }
 
     // Check if supplier exists
     const [supplier] = await connection.execute(
-      'SELECT id, name, email FROM suppliers WHERE id = ?', 
+      'SELECT id, name FROM suppliers WHERE id = ?', 
       [supplier_id]
     );
     
@@ -326,125 +305,20 @@ export const createPurchaseOrder = async (req, res) => {
       });
     }
 
-    // Calculate totals
-    const subtotal = items.reduce((sum, item) => {
-      return sum + (parseFloat(item.quantity) * parseFloat(item.unit_price) || 0);
-    }, 0);
-    
-    const tax = subtotal * 0.18; // 18% tax
-    const total = subtotal + tax;
-
     await connection.beginTransaction();
 
     try {
       // Create the purchase order
       const [result] = await connection.execute(
-        `INSERT INTO purchase_orders 
-         (supplier_id, reference_number, order_date, expected_delivery, 
-          delivery_address, payment_terms, notes, status, subtotal, tax, total) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          supplier_id,
-          reference_number || `PO-${Date.now().toString().slice(-6)}`,
-          order_date || new Date().toISOString().split('T')[0],
-          expected_delivery || null,
-          delivery_address || null,
-          payment_terms || 'net_30',
-          notes || null,
-          status,
-          subtotal,
-          tax,
-          total
-        ]
+        `INSERT INTO purchase_orders (supplier_id, total, status) VALUES (?, ?, ?)`,
+        [supplier_id, total, status]
       );
 
       const poId = result.insertId;
 
-      // Insert PO items
-      for (const item of items) {
-        await connection.execute(
-          `INSERT INTO purchase_order_items 
-           (purchase_order_id, material_id, quantity, unit_price, total) 
-           VALUES (?, ?, ?, ?, ?)`,
-          [
-            poId,
-            item.material_id,
-            parseFloat(item.quantity) || 0,
-            parseFloat(item.unit_price) || 0,
-            (parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0)
-          ]
-        );
-      }
-
-      // Get the full PO with items for email
-      const [poItems] = await connection.execute(`
-        SELECT 
-          po.id as po_id,
-          po.reference_number,
-          po.order_date,
-          po.expected_delivery,
-          po.delivery_address,
-          po.payment_terms,
-          po.notes,
-          po.subtotal,
-          po.tax,
-          po.total,
-          poi.quantity,
-          poi.unit_price,
-          m.name as material_name,
-          m.unit as material_unit
-        FROM purchase_orders po
-        JOIN purchase_order_items poi ON po.id = poi.purchase_order_id
-        JOIN materials m ON poi.material_id = m.id
-        WHERE po.id = ?
-      `, [poId]);
-
       await connection.commit();
 
-      // Send email notification if supplier has an email
-      if (supplier[0].email) {
-        try {
-          const poData = {
-            po_number: poItems[0].reference_number || `PO-${poId}`,
-            order_date: poItems[0].order_date 
-              ? new Date(poItems[0].order_date).toLocaleDateString() 
-              : new Date().toLocaleDateString(),
-            expected_delivery: poItems[0].expected_delivery 
-              ? new Date(poItems[0].expected_delivery).toLocaleDateString() 
-              : null,
-            delivery_address: poItems[0].delivery_address || '',
-            payment_terms: poItems[0].payment_terms || 'Net 30',
-            notes: poItems[0].notes || '',
-            subtotal: parseFloat(poItems[0].subtotal) || 0,
-            tax: parseFloat(poItems[0].tax) || 0,
-            total_amount: parseFloat(poItems[0].total) || 0,
-            tax_rate: 18, // 18% tax
-            items: poItems.map(item => ({
-              name: item.material_name,
-              description: item.material_description || '',
-              quantity: parseFloat(item.quantity) || 0,
-              unit_price: parseFloat(item.unit_price) || 0
-            })),
-            supplier_name: supplier[0].name || 'Supplier',
-            admin_email: process.env.ADMIN_EMAIL || 'admin@smartmarket.com',
-            company_name: 'Smart Market',
-            company_phone: process.env.COMPANY_PHONE || '+250 700 000 000',
-            company_address: process.env.COMPANY_ADDRESS || 'Kigali, Rwanda'
-          };
-
-          await emailService.sendPurchaseOrder(supplier[0].email, poData);
-        } catch (emailError) {
-          console.error('Failed to send PO email to supplier:', {
-            error: emailError.message,
-            stack: emailError.stack,
-            poId,
-            supplierEmail: supplier[0].email
-          });
-          // Don't fail the request if email sending fails
-        }
-      }
-
-      // Get the created PO with all details
+      // Get the created PO
       const [createdPO] = await connection.execute(
         'SELECT * FROM purchase_orders WHERE id = ?',
         [poId]
@@ -453,10 +327,7 @@ export const createPurchaseOrder = async (req, res) => {
       res.status(201).json({
         success: true,
         message: 'Purchase order created successfully',
-        data: {
-          ...createdPO[0],
-          items: poItems
-        }
+        data: createdPO[0]
       });
 
     } catch (error) {
@@ -516,29 +387,17 @@ export const getPurchaseOrders = async (req, res) => {
                 po.*, 
                 s.name as supplier_name,
                 s.contact as supplier_contact,
-                s.email as supplier_email
+                s.rating as supplier_rating
              FROM purchase_orders po
              LEFT JOIN suppliers s ON po.supplier_id = s.id
              ${whereClause}
-             ORDER BY po.order_date DESC, po.id DESC
+             ORDER BY po.created_at DESC, po.id DESC
              LIMIT ? OFFSET ?`,
             [...params, limit, offset]
         );
 
-        // Get items for each purchase order
-        const ordersWithItems = await Promise.all(orders.map(async (order) => {
-            const [items] = await pool.query(
-                `SELECT 
-                    poi.*,
-                    m.name as material_name,
-                    m.unit as material_unit
-                 FROM purchase_order_items poi
-                 LEFT JOIN materials m ON poi.material_id = m.id
-                 WHERE poi.purchase_order_id = ?`,
-                [order.id]
-            );
-            return { ...order, items };
-        }));
+        // Return orders without items since we simplified the schema
+        const ordersWithItems = orders;
 
         res.json({
             success: true,
@@ -572,9 +431,7 @@ export const getPurchaseOrder = async (req, res) => {
                 po.*, 
                 s.name as supplier_name,
                 s.contact as supplier_contact,
-                s.email as supplier_email,
-                s.phone as supplier_phone,
-                s.address as supplier_address
+                s.rating as supplier_rating
              FROM purchase_orders po
              LEFT JOIN suppliers s ON po.supplier_id = s.id
              WHERE po.id = ?`,
@@ -590,25 +447,9 @@ export const getPurchaseOrder = async (req, res) => {
 
         const order = orders[0];
 
-        // Get purchase order items with material details
-        const [items] = await pool.query(
-            `SELECT 
-                poi.*,
-                m.name as material_name,
-                m.unit as material_unit,
-                m.category as material_category
-             FROM purchase_order_items poi
-             LEFT JOIN materials m ON poi.material_id = m.id
-             WHERE poi.purchase_order_id = ?`,
-            [id]
-        );
-
         res.json({
             success: true,
-            data: {
-                ...order,
-                items
-            }
+            data: order
         });
     } catch (error) {
         console.error('Error fetching purchase order:', error);
@@ -683,24 +524,7 @@ export const updatePurchaseOrder = async (req, res) => {
                 );
             }
 
-            // Update or add items if provided
-            if (Array.isArray(items)) {
-                // Delete existing items
-                await connection.execute(
-                    'DELETE FROM purchase_order_items WHERE purchase_order_id = ?',
-                    [id]
-                );
 
-                // Add new items
-                for (const item of items) {
-                    await connection.execute(
-                        `INSERT INTO purchase_order_items 
-                         (purchase_order_id, material_id, quantity, unit_price)
-                         VALUES (?, ?, ?, ?)`,
-                        [id, item.material_id, item.quantity, item.unit_price]
-                    );
-                }
-            }
 
             await connection.commit();
 
@@ -740,15 +564,20 @@ export const createStockMovement = async (req, res) => {
   try {
     const { 
       material_id, 
+      type,
       movement_type, 
       quantity, 
+      reference, 
       reference_id, 
       reference_type,
       notes 
     } = req.body;
 
+    // Use 'type' field (from schema) or fallback to 'movement_type'
+    const movementType = type || movement_type;
+
     // Validate required fields
-    if (!material_id || !movement_type || !quantity) {
+    if (!material_id || !movementType || !quantity) {
       return res.status(400).json({ 
         success: false,
         error: 'Material ID, movement type, and quantity are required' 
@@ -777,7 +606,7 @@ export const createStockMovement = async (req, res) => {
       let newStock = currentStock;
 
       // Handle different movement types
-      switch (movement_type) {
+      switch (movementType) {
         case 'in':
           newStock = currentStock + movementQty;
           break;
@@ -805,15 +634,13 @@ export const createStockMovement = async (req, res) => {
       // Record the movement
       const [result] = await connection.execute(
         `INSERT INTO stock_movements 
-         (material_id, movement_type, quantity, reference_id, reference_type, notes, user_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         (material_id, type, quantity, reference, user_id)
+         VALUES (?, ?, ?, ?, ?)`,
         [
           material_id,
-          movement_type,
+          movementType,
           movementQty,
-          reference_id || null,
-          reference_type || null,
-          notes || null,
+          reference || reference_id || null,
           req.user?.id || null
         ]
       );
@@ -948,7 +775,7 @@ export const getStockMovements = async (req, res) => {
 export const createSupplier = async (req, res) => {
     const connection = await pool.getConnection();
     try {
-        const { name, contact, email, phone, address, tax_id, payment_terms, notes } = req.body;
+        const { name, contact, rating } = req.body;
 
         // Validate required fields
         if (!name || !contact) {
@@ -977,19 +804,8 @@ export const createSupplier = async (req, res) => {
 
             // Create supplier
             const [result] = await connection.execute(
-                `INSERT INTO suppliers 
-                 (name, contact, email, phone, address, tax_id, payment_terms, notes)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                [
-                    name.trim(),
-                    contact,
-                    email || null,
-                    phone || null,
-                    address || null,
-                    tax_id || null,
-                    payment_terms || 'net_30',
-                    notes || null
-                ]
+                `INSERT INTO suppliers (name, contact, rating) VALUES (?, ?, ?)`,
+                [name.trim(), contact, rating || 0]
             );
 
             await connection.commit();
@@ -1107,7 +923,7 @@ export const updateSupplier = async (req, res) => {
     const connection = await pool.getConnection();
     try {
         const { id } = req.params;
-        const { name, contact, email, phone, address, tax_id, payment_terms, notes } = req.body;
+        const { name, contact, rating } = req.body;
 
         await connection.beginTransaction();
 
@@ -1128,22 +944,8 @@ export const updateSupplier = async (req, res) => {
 
             // Update supplier
             await connection.execute(
-                `UPDATE suppliers 
-                 SET name = ?, contact = ?, email = ?, phone = ?, 
-                     address = ?, tax_id = ?, payment_terms = ?, notes = ?,
-                     updated_at = CURRENT_TIMESTAMP
-                 WHERE id = ?`,
-                [
-                    name,
-                    contact,
-                    email || null,
-                    phone || null,
-                    address || null,
-                    tax_id || null,
-                    payment_terms || 'net_30',
-                    notes || null,
-                    id
-                ]
+                `UPDATE suppliers SET name = ?, contact = ?, rating = ? WHERE id = ?`,
+                [name, contact, rating || 0, id]
             );
 
             await connection.commit();

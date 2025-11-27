@@ -1,11 +1,15 @@
 import express from 'express';
 import { upload } from '../middleware/upload.js';
-import { authenticateToken, checkPermission } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
+import rbacMiddleware from '../../middleware/rbac.js';
 import pool from '../config/database.js';
 
 const router = express.Router();
 
-router.post('/upload/artwork', authenticateToken, checkPermission('file.upload'), upload.single('artwork'), async (req, res) => {
+// Apply RBAC middleware to all routes
+router.use(authenticateToken, rbacMiddleware);
+
+router.post('/upload/artwork', upload.single('artwork'), async (req, res) => {
   try {
     const { quote_id, order_id } = req.body;
     
@@ -27,7 +31,7 @@ router.post('/upload/artwork', authenticateToken, checkPermission('file.upload')
   }
 });
 
-router.get('/files/:id', authenticateToken, async (req, res) => {
+router.get('/files/:id', async (req, res) => {
   try {
     const [files] = await pool.execute('SELECT * FROM artwork_files WHERE id = ?', [req.params.id]);
     if (files.length === 0) {

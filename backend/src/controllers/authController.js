@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../config/database.js';
 import emailService from '../services/emailService.js';
+import config from '../config/settings.js';
 
 export const login = async (req, res) => {
   try {
@@ -154,7 +155,7 @@ export const deleteUser = async (req, res) => {
 
 export const changePassword = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.params['{id}'];
     const { currentPassword, newPassword } = req.body;
     
     const [user] = await pool.execute('SELECT password_hash, email, name FROM users WHERE id = ?', [id]);
@@ -225,7 +226,7 @@ export const forgotPassword = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    const frontendBase = process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
+    const frontendBase = config.getBaseUrl(req);
     const resetLink = `${frontendBase}/reset-password?token=${encodeURIComponent(token)}`;
 
     const subject = '🔐 Reset your Smart Market password';
