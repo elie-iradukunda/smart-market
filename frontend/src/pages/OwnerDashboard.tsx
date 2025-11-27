@@ -1,7 +1,8 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { clearAuth } from '@/utils/apiClient'
+import { clearAuth, getAuthUser } from '@/utils/apiClient'
+
 import { fetchUsers, createWorkOrder, fetchDemoOrders } from '@/api/apiClient'
 
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
@@ -69,6 +70,14 @@ const GroupCard = ({ title, children, iconName, iconColor = 'text-cyan-400', ani
 
 export default function OwnerDashboard() {
   const navigate = useNavigate()
+  const user = getAuthUser()
+
+  // Guard: only admin/owner role (role_id === 1) may access this dashboard
+  if (!user || user.role_id !== 1) {
+    navigate('/login')
+    return null
+  }
+
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
   const [workOrder, setWorkOrder] = useState({ orderId: '', stage: 'Design', assignedTo: '' })
@@ -135,163 +144,241 @@ export default function OwnerDashboard() {
   }
 
   return (
-    // Custom blue background and font
-    <div className="min-h-screen font-['Inter',_sans-serif] bg-gray-50/50">
+    // Dashboard shell: Owner top navbar + sidebar + main content
+    <div className="min-h-screen font-['Inter',_sans-serif] bg-slate-50">
       <OwnerTopNav />
-      {/* --- Main Content Area --- */}
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-12">
-        
-        {/* --- Hero Section: Clean Title Block with Blue Gradient Accent --- */}
-        <div className="rounded-3xl border border-gray-200 bg-white shadow-2xl p-8 lg:p-12 overflow-hidden relative">
-          
-          {/* Subtle Blue/Cyan Gradient Accent */}
-          <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-r from-blue-100/50 to-cyan-50/50 rounded-t-3xl z-0 opacity-50"></div>
+      {/* Full-width shell with smaller side padding so content starts closer to the left */}
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-4">
 
-          <div className="relative z-10">
-            <p className="text-base font-semibold uppercase tracking-widest text-blue-600">Business Control</p>
-            <h1 className="mt-2 text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-tight">
-              Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-cyan-500">Enterprise Platform</span>
-            </h1>
-            <p className="mt-5 text-lg text-gray-600 max-w-4xl">
-              Access and monitor all core operations, finance, and team performance to drive your business forward.
-            </p>
-          </div>
-        </div>
-
-        {/* --- Main Feature Grid --- */}
-        <div className="space-y-8">
-
-          {/* Group 1: Finance & Performance */}
-          <GroupCard title="Financial Performance" iconName="banknote" iconColor="text-green-500" animationDelay="delay-100">
-            <DashboardLink to="/finance/reports" label="Finance Reports" IconName="banknote" iconColorClass="text-green-500" />
-            <DashboardLink to="/finance/invoices" label="Invoices" IconName="file-text" />
-            <DashboardLink to="/finance/payments" label="Payments" IconName="file-text" />
-            <DashboardLink to="/pos/sales-history" label="POS Sales History" IconName="shopping-cart" />
-            <DashboardLink to="/finance/journals" label="Journal Entries" IconName="file-text" />
-          </GroupCard>
-
-          {/* Group 2: Operations & Inventory */}
-          <GroupCard title="Operations & Production" iconName="factory" iconColor="text-orange-500" animationDelay="delay-200">
-            <DashboardLink to="/orders" label="Customer Orders" IconName="shopping-cart" />
-            <DashboardLink to="/production/work-orders" label="Work Orders" IconName="factory" iconColorClass="text-orange-500" />
-            <DashboardLink to="/inventory/materials" label="Raw Materials" IconName="shopping-cart" />
-            <DashboardLink to="/inventory/purchase-orders" label="Purchase Orders" IconName="file-text" />
-          </GroupCard>
-
-          {/* Group: Create work / assign tasks */}
-          <div className="rounded-2xl border border-blue-100 bg-white/95 backdrop-blur-sm p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <div className="flex items-center gap-2">
-                <Icon name="briefcase" className="w-6 h-6 text-blue-500" />
-                <h3 className="text-lg font-bold text-gray-900 tracking-tight">Create Work / Assign Task</h3>
-              </div>
-              <span className="text-[11px] uppercase tracking-wide text-blue-500">Production</span>
+        <div className="flex gap-6">
+          {/* Sidebar */}
+          <aside className="hidden md:flex w-64 flex-col rounded-3xl bg-white shadow-xl border border-slate-100 py-6 px-4 space-y-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Workspace</p>
+              <h2 className="mt-2 text-lg font-bold text-slate-900">Owner Control</h2>
             </div>
-            <p className="text-xs text-gray-600">
-              Create a work order for an existing customer order and assign it to a technician or controller.
-            </p>
-            <form onSubmit={handleCreateWorkOrder} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end text-xs">
-              <div className="flex flex-col gap-1">
-                <label className="font-medium text-gray-700">Order</label>
-                <select
-                  value={workOrder.orderId}
-                  onChange={(e) => setWorkOrder({ ...workOrder, orderId: e.target.value })}
-                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">Select order</option>
-                  {orders.map((o: any) => (
-                    <option key={o.id} value={o.id}>
-                      #{o.id} - {o.customer}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="font-medium text-gray-700">Stage</label>
-                <select
-                  value={workOrder.stage}
-                  onChange={(e) => setWorkOrder({ ...workOrder, stage: e.target.value })}
-                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="Design">Design</option>
-                  <option value="Print">Print</option>
-                  <option value="Finish">Finish</option>
-                  <option value="QC">QC</option>
-                  <option value="Complete">Complete</option>
-                </select>
+            <nav className="flex-1 space-y-1 text-sm">
+              <DashboardLink to="/dashboard/owner" label="Dashboard" IconName="file-text" />
+              <DashboardLink to="/orders" label="Operations" IconName="shopping-cart" />
+              <DashboardLink to="/finance/reports" label="Finance" IconName="banknote" />
+              <DashboardLink to="/crm/leads" label="Sales" IconName="users" />
+              <DashboardLink to="/admin/users" label="Team" IconName="users" />
+              <DashboardLink to="/admin/system-settings" label="Settings" IconName="settings" />
+            </nav>
+
+            <button
+              onClick={handleLogout}
+              className="mt-auto inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-black transition"
+            >
+              Sign out
+            </button>
+          </aside>
+
+          {/* Main content area */}
+          <main className="flex-1 space-y-6">
+            {/* Top header row */}
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Dashboard</h1>
+                <p className="mt-1 text-sm text-slate-500">
+                  Today&apos;s overview of sales, production, and team activity for TOP Design.
+                </p>
               </div>
-              <div className="flex flex-col gap-1">
-                <label className="font-medium text-gray-700">Assign to user</label>
-                <select
-                  value={workOrder.assignedTo}
-                  onChange={(e) => setWorkOrder({ ...workOrder, assignedTo: e.target.value })}
-                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">Select user</option>
-                  {users.map((u: any) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name || u.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="sm:col-span-3 flex flex-col gap-2 mt-1">
-                {woError && (
-                  <p className="text-[11px] text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-1">{woError}</p>
-                )}
-                {woSuccess && !woError && (
-                  <p className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-2 py-1">{woSuccess}</p>
-                )}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="hidden sm:flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500 shadow-sm">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span>System healthy</span>
+                </div>
                 <button
-                  type="submit"
-                  disabled={woSaving}
-                  className="inline-flex items-center justify-center self-start rounded-full bg-blue-600 px-4 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+                  onClick={handleLogout}
+                  className="sm:hidden inline-flex items-center rounded-full border border-red-100 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100"
                 >
-                  {woSaving ? 'Saving…' : 'Create work order'}
+                  Logout
                 </button>
               </div>
-            </form>
-          </div>
+            </div>
 
-          {/* Group 3: Sales, Marketing & AI (Combined into a 2-column layout) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            <GroupCard title="Sales & Customer Relations" iconName="users" iconColor="text-blue-500" animationDelay="delay-300">
-              <DashboardLink to="/crm/leads" label="Sales Leads" IconName="users" />
-              <DashboardLink to="/crm/quotes" label="Quotes Management" IconName="file-text" />
-              <DashboardLink to="/orders" label="Sales Orders" IconName="shopping-cart" iconColorClass="text-blue-500" />
-              <DashboardLink to="/marketing/campaigns" label="Marketing Campaigns" IconName="megaphone" />
-              <DashboardLink to="/marketing/ad-performance" label="Ad Performance" IconName="megaphone" />
-            </GroupCard>
-            
-            <div className="space-y-6">
-              {/* AI & Insights Card */}
-              {/* Added transition/animation classes */}
-              <div className="rounded-2xl border border-gray-100 bg-white/90 backdrop-blur-sm p-6 shadow-xl transition duration-500 hover:shadow-2xl transform hover:-translate-y-0.5 animate-fadeIn delay-400">
-                <div className="flex items-center space-x-3 mb-4">
-                  <Icon name="cpu" className="w-7 h-7 text-purple-600" />
-                  <h3 className="text-xl font-bold text-gray-900 tracking-tight">AI & Core Insights</h3>
+            {/* Hero + AI card row */}
+            <div className="grid gap-6 lg:grid-cols-[2.1fr,1.4fr] items-stretch">
+              {/* Hero Section */}
+              <div className="rounded-3xl border border-slate-200 bg-white shadow-2xl p-7 lg:p-9 overflow-hidden relative">
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute -top-24 -right-16 h-56 w-56 rounded-full bg-cyan-400/20 blur-3xl" />
+                  <div className="absolute -bottom-24 -left-10 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
                 </div>
-                {/* AI Button with Gradient (Prominent CTA) */}
-                <Link
-                  to="/ai/overview"
-                  className="flex items-center justify-center rounded-xl px-4 py-3 font-extrabold text-white tracking-wider text-lg bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 transition shadow-lg transform hover:scale-[1.01]"
-                >
-                  <span className="mr-2 text-xl">🚀</span> Launch AI Overview
-                </Link>
+
+                <div className="relative z-10">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">Business Control</p>
+                  <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 leading-tight">
+                    Your
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-cyan-500 to-emerald-500">
+                      Enterprise Platform
+                    </span>
+                  </h2>
+                  <p className="mt-4 text-sm sm:text-base text-slate-600 max-w-xl">
+                    Monitor finance, production and customer pipelines in one clean owner workspace.
+                  </p>
+
+                  <dl className="mt-6 grid gap-4 sm:grid-cols-3 text-xs sm:text-sm">
+                    <div className="rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100 shadow-sm">
+                      <dt className="text-[11px] font-medium text-slate-500">Open work orders</dt>
+                      <dd className="mt-1 text-xl font-bold text-slate-900">13</dd>
+                    </div>
+                    <div className="rounded-2xl bg-emerald-50 px-4 py-3 border border-emerald-100 shadow-sm">
+                      <dt className="text-[11px] font-medium text-emerald-700">Invoices unpaid</dt>
+                      <dd className="mt-1 text-xl font-bold text-emerald-900">$3,200</dd>
+                    </div>
+                    <div className="rounded-2xl bg-amber-50 px-4 py-3 border border-amber-200 shadow-sm">
+                      <dt className="text-[11px] font-medium text-amber-700">Materials at risk</dt>
+                      <dd className="mt-1 text-xl font-bold text-amber-900">2</dd>
+                    </div>
+                  </dl>
+                </div>
               </div>
 
-              {/* Team & Admin Card */}
-              <GroupCard title="Team & Administration" iconName="settings" iconColor="text-gray-600" animationDelay="delay-500">
-                <DashboardLink to="/communications/inbox" label="Team Inbox" IconName="briefcase" />
-                <DashboardLink to="/admin/users" label="Manage Users" IconName="users" />
-                <DashboardLink to="/admin/roles" label="Roles & Permissions" IconName="settings" />
-                <DashboardLink to="/admin/audit-logs" label="Audit Logs" IconName="file-text" />
-                <DashboardLink to="/admin/system-settings" label="System Settings" IconName="settings" />
-              </GroupCard>
+              {/* AI / insights card */}
+              <div className="space-y-4">
+                <div className="rounded-3xl border border-slate-200 bg-slate-900 shadow-2xl relative overflow-hidden p-6 flex flex-col justify-between min-h-[220px]">
+                  <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_#38bdf8_0,_transparent_60%),_radial-gradient(circle_at_bottom,_#a855f7_0,_transparent_55%)]" />
+                  <div className="relative z-10 space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">AI & Insights</p>
+                    <p className="text-lg font-semibold text-white">Run AI overview & reports</p>
+                    <p className="text-xs text-slate-200 max-w-xs">
+                      Use AI to surface anomalies in orders, cashflow and production before they become problems.
+                    </p>
+                  </div>
+                  <div className="mt-4 relative z-10 flex flex-wrap gap-2">
+                    <Link
+                      to="/ai/overview"
+                      className="inline-flex items-center rounded-full bg-gradient-to-r from-purple-500 to-cyan-400 px-4 py-1.5 text-xs font-semibold text-white shadow-lg hover:from-purple-600 hover:to-cyan-500"
+                    >
+                      <span className="mr-1.5">🚀</span> Launch AI Overview
+                    </Link>
+                    <Link
+                      to="/finance/reports"
+                      className="inline-flex items-center rounded-full border border-slate-500/60 bg-slate-800/60 px-3 py-1.5 text-[11px] font-medium text-slate-100 hover:bg-slate-700"
+                    >
+                      View Finance reports
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+
+            {/* Existing groups / cards below, unchanged in logic */}
+            <div className="space-y-8">
+              <GroupCard title="Financial Performance" iconName="banknote" iconColor="text-green-500" animationDelay="delay-100">
+                <DashboardLink to="/finance/reports" label="Finance Reports" IconName="banknote" iconColorClass="text-green-500" />
+                <DashboardLink to="/finance/invoices" label="Invoices" IconName="file-text" />
+                <DashboardLink to="/finance/payments" label="Payments" IconName="file-text" />
+                <DashboardLink to="/pos/sales-history" label="POS Sales History" IconName="shopping-cart" />
+                <DashboardLink to="/finance/journals" label="Journal Entries" IconName="file-text" />
+              </GroupCard>
+
+              <GroupCard title="Operations & Production" iconName="factory" iconColor="text-orange-500" animationDelay="delay-200">
+                <DashboardLink to="/orders" label="Customer Orders" IconName="shopping-cart" />
+                <DashboardLink to="/production/work-orders" label="Work Orders" IconName="factory" iconColorClass="text-orange-500" />
+                <DashboardLink to="/inventory/materials" label="Raw Materials" IconName="shopping-cart" />
+                <DashboardLink to="/inventory/purchase-orders" label="Purchase Orders" IconName="file-text" />
+              </GroupCard>
+
+              <div className="rounded-2xl border border-blue-100 bg-white/95 backdrop-blur-sm p-6 shadow-xl space-y-4">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Icon name="briefcase" className="w-6 h-6 text-blue-500" />
+                    <h3 className="text-lg font-bold text-gray-900 tracking-tight">Create Work / Assign Task</h3>
+                  </div>
+                  <span className="text-[11px] uppercase tracking-wide text-blue-500">Production</span>
+                </div>
+                <p className="text-xs text-gray-600">
+                  Create a work order for an existing customer order and assign it to a technician or controller.
+                </p>
+                <form onSubmit={handleCreateWorkOrder} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end text-xs">
+                  <div className="flex flex-col gap-1">
+                    <label className="font-medium text-gray-700">Order</label>
+                    <select
+                      value={workOrder.orderId}
+                      onChange={(e) => setWorkOrder({ ...workOrder, orderId: e.target.value })}
+                      className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">Select order</option>
+                      {orders.map((o: any) => (
+                        <option key={o.id} value={o.id}>
+                          #{o.id} - {o.customer}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="font-medium text-gray-700">Stage</label>
+                    <select
+                      value={workOrder.stage}
+                      onChange={(e) => setWorkOrder({ ...workOrder, stage: e.target.value })}
+                      className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="Design">Design</option>
+                      <option value="Print">Print</option>
+                      <option value="Finish">Finish</option>
+                      <option value="QC">QC</option>
+                      <option value="Complete">Complete</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="font-medium text-gray-700">Assign to user</label>
+                    <select
+                      value={workOrder.assignedTo}
+                      onChange={(e) => setWorkOrder({ ...workOrder, assignedTo: e.target.value })}
+                      className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">Select user</option>
+                      {users.map((u: any) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name || u.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="sm:col-span-3 flex flex-col gap-2 mt-1">
+                    {woError && (
+                      <p className="text-[11px] text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-1">{woError}</p>
+                    )}
+                    {woSuccess && !woError && (
+                      <p className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-2 py-1">{woSuccess}</p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={woSaving}
+                      className="inline-flex items-center justify-center self-start rounded-full bg-blue-600 px-4 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+                    >
+                      {woSaving ? 'Saving…' : 'Create work order'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <GroupCard title="Sales & Customer Relations" iconName="users" iconColor="text-blue-500" animationDelay="delay-300">
+                  <DashboardLink to="/crm/leads" label="Sales Leads" IconName="users" />
+                  <DashboardLink to="/crm/quotes" label="Quotes Management" IconName="file-text" />
+                  <DashboardLink to="/orders" label="Sales Orders" IconName="shopping-cart" iconColorClass="text-blue-500" />
+                  <DashboardLink to="/marketing/campaigns" label="Marketing Campaigns" IconName="megaphone" />
+                  <DashboardLink to="/marketing/ad-performance" label="Ad Performance" IconName="megaphone" />
+                </GroupCard>
+
+                <div className="space-y-6">
+                  <GroupCard title="Team & Administration" iconName="settings" iconColor="text-gray-600" animationDelay="delay-500">
+                    <DashboardLink to="/communications/inbox" label="Team Inbox" IconName="briefcase" />
+                    <DashboardLink to="/admin/users" label="Manage Users" IconName="users" />
+                    <DashboardLink to="/admin/roles" label="Roles & Permissions" IconName="settings" />
+                    <DashboardLink to="/admin/audit-logs" label="Audit Logs" IconName="file-text" />
+                    <DashboardLink to="/admin/system-settings" label="System Settings" IconName="settings" />
+                  </GroupCard>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     </div>

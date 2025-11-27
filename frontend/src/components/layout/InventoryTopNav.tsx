@@ -8,9 +8,8 @@ export default function InventoryTopNav() {
   const user = getAuthUser()
   const isInventoryRole =
     user?.role_id === 8 ||
-    user?.role_id === 7 ||
     user?.role_id === 1 ||
-    user?.role_id === 6 // Manager, Owner, Admin, and Inventory Controller
+    user?.role_id === 6 // Manager, Owner/Admin, and Inventory Controller
 
   const handleLogout = () => {
     clearAuth()

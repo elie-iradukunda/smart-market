@@ -14,7 +14,7 @@ export default function LeadDetailPage() {
   const [error, setError] = useState<string | null>(null)
 
   const user = getAuthUser()
-  const isReception = user?.role_id === 5
+  const isReception = user?.role_id === 2
 
   // Parse route id like "L-12" to numeric backend id 12
   const numericId = React.useMemo(() => {
@@ -61,8 +61,14 @@ export default function LeadDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-      <SalesTopNav />
+      {isReception ? (
+        <ReceptionTopNav />
+      ) : (
+        <>
+          <OwnerTopNav />
+          <SalesTopNav />
+        </>
+      )}
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
         {loading && (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-sm text-slate-600">

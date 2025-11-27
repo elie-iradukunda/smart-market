@@ -93,62 +93,27 @@ export const createLead = async (req, res) => {
     // Support both direct customer_id and UI payload with full customer details
     const { customer_id, customer_name, name, phone, email, address, source, channel, items } = req.body;
 
-    // Simplified sources for actual business use
-    const allowedSources = ['walkin', 'phone', 'email', 'referral', 'web'];
-    let normalizedSource = (source || '').toLowerCase();
-    if (!allowedSources.includes(normalizedSource)) {
-      normalizedSource = 'walkin'; // Default to walk-in
-    }
-
-    // Simplified channels - no social media
-    const allowedChannels = ['direct', 'phone', 'email', 'web'];
-    let normalizedChannel = (channel || '').toLowerCase();
-    if (!allowedChannels.includes(normalizedChannel)) {
-      normalizedChannel = 'direct'; // Default to direct contact
-    }
-
-    let resolvedCustomerId = customer_id;
-
+    // For now we require an existing customer_id; UI can ensure customer is created first
+    const resolvedCustomerId = customer_id;
     if (!resolvedCustomerId) {
-      const effectiveName = customer_name || name;
-      if (!effectiveName) {
-        return res.status(400).json({ error: 'Customer name is required to create a lead' });
-      }
-
-      // Try to find existing customer by email or phone first (if provided)
-      if (email || phone) {
-        const [existingCustomer] = await pool.execute(
-          'SELECT id FROM customers WHERE email = ? OR phone = ? LIMIT 1',
-          [email || null, phone || null]
-        );
-        if (existingCustomer.length > 0) {
-          resolvedCustomerId = existingCustomer[0].id;
-        }
-      }
-
-      // If still not resolved, create a full customer record using lead details
-      if (!resolvedCustomerId) {
-        const [created] = await pool.execute(
-          'INSERT INTO customers (name, phone, email, address, source) VALUES (?, ?, ?, ?, ?)',
-          [
-            effectiveName,
-            phone || null,
-            email || null,
-            address || null,
-            normalizedSource,
-          ]
-        );
-        resolvedCustomerId = created.insertId;
-      }
+      return res.status(400).json({ error: 'customer_id is required to create a lead' });
     }
 
-    // Check for duplicate lead (same customer)
+    // Make sure customer exists
+    const [customerRows] = await pool.execute('SELECT id FROM customers WHERE id = ?', [resolvedCustomerId]);
+    if (customerRows.length === 0) {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    const normalizedChannel = channel || 'unknown';
+
+    // Prevent duplicate lead for same customer and channel
     const [existing] = await pool.execute(
-      'SELECT id FROM leads WHERE customer_id = ?',
-      [resolvedCustomerId]
+      'SELECT id FROM leads WHERE customer_id = ? AND channel = ?',
+      [resolvedCustomerId, normalizedChannel]
     );
     if (existing.length > 0) {
-      return res.status(409).json({ error: 'Lead already exists for this customer' });
+      return res.status(409).json({ error: 'Lead already exists for this customer and channel' });
     }
 
     const [result] = await pool.execute(
@@ -213,6 +178,7 @@ export const getLead = async (req, res) => {
 
     res.json({ ...lead[0], items });
   } catch (error) {
+    console.error('Get lead error:', error);
     res.status(500).json({ error: 'Failed to fetch lead' });
   }
 };

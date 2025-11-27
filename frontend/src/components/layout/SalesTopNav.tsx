@@ -2,11 +2,17 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Users, FileText, ListOrdered } from 'lucide-react'
+import { getAuthUser } from '@/utils/apiClient'
 
 const linkBase =
   'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold transition-colors'
 
 export default function SalesTopNav() {
+  const user = getAuthUser()
+  const isSalesRep = user?.role_id === 9
+
+  if (!isSalesRep) return null
+
   const links = [
     { to: '/dashboard/sales', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/crm/leads', label: 'Leads', icon: Users },

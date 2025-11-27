@@ -136,10 +136,10 @@ export const approveQuote = async (req, res) => {
       // Do not rethrow; quote + order creation succeeded.
     }
 
-    res.json({ message: 'Quote approved, order created and materials reserved from stock' });
-
     // Send approval notification to customer
     const [customerData] = await pool.execute('SELECT email, name FROM customers WHERE id = ?', [quote[0].customer_id]);
+    let customerEmailSent = false;
+    let adminEmailSent = false;
     
     if (customerData.length > 0 && customerData[0].email) {
       try {
@@ -149,6 +149,7 @@ export const approveQuote = async (req, res) => {
           total_amount: quote[0].total_amount
         });
         console.log(`Quote approval email sent to ${customerData[0].email}`);
+        customerEmailSent = true;
       } catch (emailError) {
         console.error('Failed to send quote approval email:', emailError);
       }
@@ -162,11 +163,19 @@ export const approveQuote = async (req, res) => {
         total_amount: quote[0].total_amount
       });
       console.log('Order notification sent to admin');
+      adminEmailSent = true;
     } catch (emailError) {
       console.error('Failed to send admin notification:', emailError);
     }
     
-    res.json({ message: 'Quote approved and order created' });
+    // Send a single response after all operations are complete
+    res.json({ 
+      message: 'Quote approved, order created and materials reserved from stock',
+      notifications: {
+        customerEmail: customerEmailSent ? 'sent' : 'failed',
+        adminEmail: adminEmailSent ? 'sent' : 'failed'
+      }
+    });
 
   } catch (error) {
     res.status(500).json({ error: 'Quote approval failed' });

@@ -1,9 +1,11 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
-import { fetchPayments, recordPayment, fetchInvoices } from '../../api/apiClient'
+import { fetchPayments, recordPayment, fetchInvoices, initiateLanariPayment, checkLanariPaymentStatus } from '../../api/apiClient'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
 import PosTopNav from '@/components/layout/PosTopNav'
+import FinanceTopNav from '@/components/layout/FinanceTopNav'
+import OwnerSideNav from '@/components/layout/OwnerSideNav'
 import { getAuthUser } from '@/utils/apiClient'
 
 export default function PaymentsPage() {
@@ -11,6 +13,8 @@ export default function PaymentsPage() {
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [formSuccess, setFormSuccess] = useState<string | null>(null)
   const [methodFilter, setMethodFilter] = useState('All')
   const [dateFilter, setDateFilter] = useState('')
   const [creating, setCreating] = useState(false)
@@ -18,6 +22,13 @@ export default function PaymentsPage() {
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState('cash')
   const [reference, setReference] = useState('')
+
+  const [lanariInvoiceId, setLanariInvoiceId] = useState('')
+  const [lanariAmount, setLanariAmount] = useState('')
+  const [lanariPhone, setLanariPhone] = useState('')
+  const [lanariStatus, setLanariStatus] = useState<string | null>(null)
+  const [lanariPaymentId, setLanariPaymentId] = useState<number | null>(null)
+  const [lanariLoading, setLanariLoading] = useState(false)
 
   const reloadPayments = () => {
     setLoading(true)
@@ -62,9 +73,22 @@ export default function PaymentsPage() {
 
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!invoiceId || !amount) return
+    setFormError(null)
+    setFormSuccess(null)
+
+    if (!invoiceId) {
+      setFormError('Please select an invoice to pay. If you do not see it, create an invoice first.')
+      return
+    }
+    if (!amount) {
+      setFormError('Please enter an amount to record.')
+      return
+    }
     const amountNumber = Number(amount)
-    if (!amountNumber || amountNumber <= 0) return
+    if (!amountNumber || amountNumber <= 0) {
+      setFormError('Payment amount must be greater than zero.')
+      return
+    }
 
     setCreating(true)
     setError(null)
@@ -79,9 +103,12 @@ export default function PaymentsPage() {
       setAmount('')
       setMethod('cash')
       setReference('')
+      setFormSuccess('Payment recorded successfully.')
       reloadPayments()
     } catch (err: any) {
-      setError(err.message || 'Failed to record payment')
+      const msg = err.message || 'Failed to record payment'
+      setError(msg)
+      setFormError(msg)
     } finally {
       setCreating(false)
     }
@@ -127,14 +154,29 @@ export default function PaymentsPage() {
     return status !== 'paid'
   })
 
+  const selectedInvoice = invoiceId
+    ? openInvoices.find((inv: any) => String(inv.id) === String(invoiceId)) ||
+      invoices.find((inv: any) => String(inv.id) === String(invoiceId))
+    : null
+
+  const isFormValid = !!invoiceId && !!amount && Number(amount) > 0
+
   const user = getAuthUser()
   const isController = user?.role_id === 4
   const isPosRole = user?.role_id === 5 || user?.role_id === 11
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Accountant nav renders only for accountant role based on its internal role check */}
+      <FinanceTopNav />
       {isController ? <ControllerTopNav /> : isPosRole ? <PosTopNav /> : <OwnerTopNav />}
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+
+      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-8">
+        <div className="flex gap-6">
+          <OwnerSideNav />
+
+          <main className="flex-1 space-y-6 max-w-7xl mx-auto">
 
       {/* Header card with blue accent, similar to other finance pages */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xl">
@@ -157,6 +199,20 @@ export default function PaymentsPage() {
             <p className="mt-1 text-xl font-semibold text-gray-900">3</p>
           </div>
         </div>
+
+        {selectedInvoice && (
+          <div className="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/40 px-4 py-3 text-xs flex flex-wrap items-center gap-3">
+            <div className="flex flex-col">
+              <span className="font-semibold text-gray-800">
+                Paying invoice #{selectedInvoice.id}
+              </span>
+              <span className="text-[11px] text-gray-600">
+                Customer: {selectedInvoice.customer_name || 'Customer'} · Amount: {formatCurrency(Number(selectedInvoice.amount || 0))} · Status: {(selectedInvoice.status || '').toUpperCase()}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Quick Record Payment form */}
         <form
           onSubmit={handleRecordPayment}
@@ -165,7 +221,11 @@ export default function PaymentsPage() {
           <span className="font-semibold text-gray-800 mr-1">Record payment:</span>
           <select
             value={invoiceId}
-            onChange={(e) => setInvoiceId(e.target.value)}
+            onChange={(e) => {
+              setInvoiceId(e.target.value)
+              setFormError(null)
+              setFormSuccess(null)
+            }}
             className="w-56 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <option value="">Select invoice (customer / amount)</option>
@@ -180,13 +240,21 @@ export default function PaymentsPage() {
             min="0"
             step="0.01"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => {
+              setAmount(e.target.value)
+              setFormError(null)
+              setFormSuccess(null)
+            }}
             placeholder="Amount"
             className="w-24 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
           <select
             value={method}
-            onChange={(e) => setMethod(e.target.value)}
+            onChange={(e) => {
+              setMethod(e.target.value)
+              setFormError(null)
+              setFormSuccess(null)
+            }}
             className="rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <option value="cash">Cash</option>
@@ -203,12 +271,23 @@ export default function PaymentsPage() {
           />
           <button
             type="submit"
-            disabled={creating}
-            className="ml-auto rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
+            disabled={creating || !isFormValid}
+            className="ml-auto rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {creating ? 'Saving…' : 'Save payment'}
           </button>
         </form>
+
+        {formError && (
+          <p className="mt-2 rounded-lg bg-red-50 border border-red-200 px-3 py-1.5 text-[11px] text-red-700">
+            {formError}
+          </p>
+        )}
+        {formSuccess && !formError && (
+          <p className="mt-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-[11px] text-emerald-700">
+            {formSuccess}
+          </p>
+        )}
       </div>
 
       {/* Table card */}
@@ -271,6 +350,130 @@ export default function PaymentsPage() {
           )}
         </div>
       </div>
+
+      {/* Lanari mobile money payment panel */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+          <div>
+            <p className="text-sm font-medium text-gray-900">Lanari mobile money payment</p>
+            <p className="text-xs text-gray-500">Initiate a customer payment via Lanari (USSD / MoMo) and track its status.</p>
+          </div>
+        </div>
+
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault()
+            setLanariStatus(null)
+
+            if (!lanariInvoiceId) {
+              setLanariStatus('Select an invoice first.')
+              return
+            }
+            const amt = Number(lanariAmount || 0)
+            if (!amt || amt <= 0) {
+              setLanariStatus('Enter a valid amount to charge.')
+              return
+            }
+            if (!lanariPhone) {
+              setLanariStatus('Enter the customer phone number for mobile money/USSD.')
+              return
+            }
+
+            setLanariLoading(true)
+            try {
+              const resp = await initiateLanariPayment({
+                invoice_id: Number(lanariInvoiceId),
+                amount: amt,
+                customer_phone: lanariPhone,
+              })
+              setLanariPaymentId(resp.payment_id)
+              setLanariStatus(resp.message || 'Lanari payment initiated. Waiting for customer confirmation...')
+              reloadPayments()
+            } catch (err: any) {
+              setLanariStatus(err.message || 'Failed to initiate Lanari payment')
+            } finally {
+              setLanariLoading(false)
+            }
+          }}
+          className="flex flex-wrap items-center gap-2 rounded-2xl border border-amber-100 bg-amber-50/40 px-3 py-2 text-xs"
+        >
+          <span className="font-semibold text-gray-800 mr-1">Lanari payment:</span>
+          <select
+            value={lanariInvoiceId}
+            onChange={(e) => {
+              const val = e.target.value
+              setLanariInvoiceId(val)
+              const inv = openInvoices.find((i: any) => String(i.id) === String(val))
+              if (inv) {
+                setLanariAmount(String(inv.amount || ''))
+              }
+            }}
+            className="w-56 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          >
+            <option value="">Select invoice</option>
+            {openInvoices.map((inv: any) => (
+              <option key={inv.id} value={inv.id}>
+                #{inv.id} - {inv.customer_name || 'Customer'} - ${inv.amount || 0}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={lanariAmount}
+            onChange={(e) => setLanariAmount(e.target.value)}
+            placeholder="Amount"
+            className="w-24 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          />
+          <input
+            type="tel"
+            value={lanariPhone}
+            onChange={(e) => setLanariPhone(e.target.value)}
+            placeholder="Customer phone (e.g. 078...)"
+            className="w-40 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          />
+          <button
+            type="submit"
+            disabled={lanariLoading}
+            className="ml-auto rounded-full bg-amber-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {lanariLoading ? 'Sending…' : 'Initiate Lanari payment'}
+          </button>
+        </form>
+
+        {lanariPaymentId && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+            <span className="text-gray-700">Payment ID: {lanariPaymentId}</span>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!lanariPaymentId) return
+                try {
+                  const status = await checkLanariPaymentStatus(lanariPaymentId)
+                  setLanariStatus(
+                    `Gateway status: ${status.gateway_status || 'unknown'} · Payment status: ${status.payment_status || 'unknown'}`
+                  )
+                  reloadPayments()
+                } catch (err: any) {
+                  setLanariStatus(err.message || 'Failed to check payment status')
+                }
+              }}
+              className="inline-flex items-center rounded-full bg-white px-3 py-1 border border-amber-200 text-amber-800 hover:bg-amber-50"
+            >
+              Check status
+            </button>
+          </div>
+        )}
+
+        {lanariStatus && (
+          <p className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-1.5 text-[11px] text-amber-800">
+            {lanariStatus}
+          </p>
+        )}
+      </div>
+          </main>
+        </div>
       </div>
     </div>
   )

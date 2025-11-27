@@ -4,6 +4,8 @@ import InventoryTopNav from '@/components/layout/InventoryTopNav'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fetchMaterial, createMaterial, updateMaterial, deleteMaterial } from '../../api/apiClient'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import OwnerSideNav from '@/components/layout/OwnerSideNav'
+import { getAuthUser } from '@/utils/apiClient'
 
 export default function MaterialDetailPage() {
   const { sku } = useParams()
@@ -90,8 +92,19 @@ export default function MaterialDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <InventoryTopNav />
-      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+      {(() => {
+        const user = getAuthUser()
+        const isOwner = user?.role_id === 1
+        if (isOwner) return <OwnerTopNav />
+        return <InventoryTopNav />
+      })()}
+
+      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-6">
+        <div className="flex gap-6">
+          <OwnerSideNav />
+
+          <main className="flex-1 space-y-6 max-w-4xl mx-auto">
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Material</p>
@@ -178,6 +191,8 @@ export default function MaterialDetailPage() {
           </div>
         </form>
       </div>
+          </main>
+        </div>
       </div>
     </div>
   )

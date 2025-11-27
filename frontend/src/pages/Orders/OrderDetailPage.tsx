@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
-import { fetchOrder, createInvoice, recordPayment, updateOrderStatus } from '../../api/apiClient'
+import { fetchOrder, createInvoice, recordPayment, updateOrderStatus, initiateLanariPayment, checkLanariPaymentStatus } from '../../api/apiClient'
 
 import { CheckCircle, Clock, DollarSign, Package, Truck, User } from 'lucide-react'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
@@ -53,6 +53,10 @@ export default function OrderDetailPage() {
   const [paymentReference, setPaymentReference] = useState('')
   const [processingPayment, setProcessingPayment] = useState(false)
   const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null)
+  const [lanariPhone, setLanariPhone] = useState('')
+  const [lanariStatus, setLanariStatus] = useState<string | null>(null)
+  const [lanariPaymentId, setLanariPaymentId] = useState<number | null>(null)
+  const [lanariLoading, setLanariLoading] = useState(false)
 
   // Production stages (visual labels) and matching backend status codes
   const stages = ['Design', 'Pre-Press', 'Print', 'Finishing', 'QA', 'Ready', 'Delivered']
@@ -127,6 +131,45 @@ export default function OrderDetailPage() {
     }
   }
 
+  const handleLanariPayment = async () => {
+    if (!order) return
+    const amountNumber = Number(paymentAmount || 0)
+    if (!amountNumber || amountNumber <= 0) {
+      setError('Please enter a valid payment amount')
+      return
+    }
+    if (!lanariPhone) {
+      setError('Enter customer phone number for Lanari payment')
+      return
+    }
+
+    setLanariLoading(true)
+    setError(null)
+    setLanariStatus(null)
+
+    try {
+      let currentInvoiceId = invoiceId
+      if (!currentInvoiceId) {
+        const invoice = await createInvoice({ order_id: order.id, amount: amountNumber })
+        currentInvoiceId = invoice.id
+        setInvoiceId(invoice.id)
+      }
+
+      const resp = await initiateLanariPayment({
+        invoice_id: currentInvoiceId,
+        amount: amountNumber,
+        customer_phone: lanariPhone,
+      })
+
+      setLanariPaymentId(resp.payment_id)
+      setLanariStatus(resp.message || 'Lanari payment initiated. Ask customer to confirm on their phone.')
+    } catch (err: any) {
+      setLanariStatus(err.message || 'Failed to initiate Lanari payment')
+    } finally {
+      setLanariLoading(false)
+    }
+  }
+
   const handleAdvanceStage = async () => {
     if (!order) return
     if (currentStageIndex >= stageStatusCodes.length - 1) return
@@ -145,7 +188,7 @@ export default function OrderDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50">
         {isController ? <ControllerTopNav /> : isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-        <SalesTopNav />
+        {!isReception && <SalesTopNav />}
         <div className="max-w-6xl mx-auto flex items-center justify-center p-8">
           <span className="animate-spin mr-3 text-indigo-600">🌀</span>
           <p className="text-lg text-gray-600">Loading Order Details for ID: {id}...</p>
@@ -158,7 +201,7 @@ export default function OrderDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50">
         {isController ? <ControllerTopNav /> : isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-        <SalesTopNav />
+        {!isReception && <SalesTopNav />}
         <div className="max-w-6xl mx-auto flex flex-col items-center justify-center p-8 text-red-700 bg-red-50 border border-red-200 rounded-3xl shadow-md mt-8">
           <Package className="h-8 w-8 mb-3" />
           <p className="text-xl font-semibold">Error Loading Order</p>
@@ -181,7 +224,7 @@ export default function OrderDetailPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       {isController ? <ControllerTopNav /> : isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-      <SalesTopNav />
+      {!isReception && <SalesTopNav />}
       <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
         
         {/* Section 1: Header and Key Metrics Card */}
@@ -343,6 +386,53 @@ export default function OrderDetailPage() {
                       placeholder="Receipt no, transaction ID, etc."
                     />
                   </div>
+                </div>
+                {/* Lanari shortcut */}
+                <div className="mt-4 space-y-2 border-t border-slate-200 pt-3 text-xs">
+                  <p className="font-semibold text-slate-700">Or request customer to pay via Lanari (USSD / MoMo)</p>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[11px] font-medium text-slate-600">Customer phone</label>
+                    <input
+                      type="tel"
+                      value={lanariPhone}
+                      onChange={(e) => setLanariPhone(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      placeholder="e.g. 078..."
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={handleLanariPayment}
+                      disabled={lanariLoading}
+                      className="inline-flex items-center rounded-full bg-amber-600 px-3 py-2 text-[11px] font-semibold text-white shadow-sm hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {lanariLoading ? 'Sending Lanari request…' : 'Pay via Lanari (USSD/MoMo)'}
+                    </button>
+                    {lanariPaymentId && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const status = await checkLanariPaymentStatus(lanariPaymentId)
+                            setLanariStatus(
+                              `Gateway status: ${status.gateway_status || 'unknown'} · Payment status: ${status.payment_status || 'unknown'}`
+                            )
+                          } catch (err: any) {
+                            setLanariStatus(err.message || 'Failed to check Lanari payment status')
+                          }
+                        }}
+                        className="inline-flex items-center rounded-full bg-white px-3 py-2 text-[11px] font-semibold text-amber-700 border border-amber-300 hover:bg-amber-50"
+                      >
+                        Check Lanari status
+                      </button>
+                    )}
+                  </div>
+                  {lanariStatus && (
+                    <p className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] text-amber-800">
+                      {lanariStatus}
+                    </p>
+                  )}
                 </div>
                  
                 {/* Action Button */}

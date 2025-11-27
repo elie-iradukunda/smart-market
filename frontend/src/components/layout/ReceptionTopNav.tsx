@@ -6,7 +6,7 @@ import { clearAuth, currentUserHasPermission, getAuthUser } from '@/utils/apiCli
 export default function ReceptionTopNav() {
   const navigate = useNavigate()
   const user = getAuthUser()
-  const isReception = user?.role_id === 5
+  const isReception = user?.role_id === 2
 
   const handleLogout = () => {
     clearAuth()

@@ -1,6 +1,5 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
-import { fetchConversationMessages } from '@/api/apiClient'
 
 export default function MessageThread({ conversationId }) {
   const [messages, setMessages] = useState([])
@@ -9,27 +8,29 @@ export default function MessageThread({ conversationId }) {
 
   useEffect(() => {
     if (!conversationId) return
-    let isMounted = true
     setLoading(true)
     setError(null)
 
-    fetchConversationMessages(conversationId)
-      .then((data) => {
-        if (!isMounted) return
-        setMessages(Array.isArray(data) ? data : [])
-      })
-      .catch((err) => {
-        if (!isMounted) return
-        setError(err.message || 'Failed to load messages')
-      })
-      .finally(() => {
-        if (!isMounted) return
-        setLoading(false)
-      })
+    // Temporary demo messages until backend conversations API is implemented
+    const demoMessages = [
+      {
+        id: 1,
+        sender: 'customer',
+        message: 'Hi, I wanted to confirm the status of my order.',
+        channel: 'WhatsApp',
+        timestamp: new Date().toISOString(),
+      },
+      {
+        id: 2,
+        sender: 'staff',
+        message: 'Thanks for reaching out. Your order is in finishing and should be ready this afternoon.',
+        channel: 'WhatsApp',
+        timestamp: new Date().toISOString(),
+      },
+    ]
 
-    return () => {
-      isMounted = false
-    }
+    setMessages(demoMessages)
+    setLoading(false)
   }, [conversationId])
 
   return (

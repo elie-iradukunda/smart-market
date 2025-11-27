@@ -1,13 +1,88 @@
 // @ts-nocheck
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { clearAuth, currentUserHasPermission } from '@/utils/apiClient'
+import { clearAuth, currentUserHasPermission, getAuthUser } from '@/utils/apiClient'
 import MarketingTopNav from '@/components/layout/MarketingTopNav'
+import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import OwnerSideNav from '@/components/layout/OwnerSideNav'
 import CampaignPerformanceWidget from '../modules/dashboards/components/CampaignPerformanceWidget'
 import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
+import { fetchCampaigns, fetchDemoLeads, fetchFinancialOverview } from '@/api/apiClient'
 
 export default function MarketingDashboard() {
   const navigate = useNavigate()
+
+  const user = getAuthUser()
+  const isOwner = user?.role_id === 1
+
+  const [activeCampaigns, setActiveCampaigns] = useState<number | null>(null)
+  const [leadsThisMonth, setLeadsThisMonth] = useState<number | null>(null)
+  const [roas, setRoas] = useState<string | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadMetrics() {
+      try {
+        const [campaigns, leads, financial] = await Promise.all([
+          fetchCampaigns().catch(() => []),
+          // Leads endpoint already exists and is mapped via fetchDemoLeads
+          fetchDemoLeads().catch(() => []),
+          fetchFinancialOverview().catch(() => null),
+        ])
+
+        if (!isMounted) return
+
+        const campaignList = Array.isArray(campaigns) ? campaigns : []
+        const leadsList = Array.isArray(leads) ? leads : []
+
+        // Active campaigns: if a status field exists, count only non-completed ones, otherwise total
+        const active = campaignList.filter(c => {
+          const status = (c.status || c.state || '').toString().toLowerCase()
+          if (!status) return true
+          return !['completed', 'inactive', 'ended', 'paused'].includes(status)
+        }).length
+
+        setActiveCampaigns(active)
+
+        // Leads this month: if created_at is present, filter last 30 days; otherwise use total count
+        const now = new Date()
+        const thirtyDaysAgo = new Date(now)
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+        const leadsCount = leadsList.filter(l => {
+          if (!l.created_at) return true
+          const d = new Date(l.created_at)
+          if (Number.isNaN(d.getTime())) return true
+          return d >= thirtyDaysAgo && d <= now
+        }).length
+
+        setLeadsThisMonth(leadsCount)
+
+        // ROAS: total revenue (last 30 days) / total campaign budget
+        const totalRevenue = financial ? Number(financial.total_revenue) || 0 : 0
+        const totalBudget = campaignList.reduce((sum, c) => sum + (Number(c.budget) || 0), 0)
+
+        if (totalRevenue > 0 && totalBudget > 0) {
+          const ratio = totalRevenue / totalBudget
+          setRoas(`${ratio.toFixed(1)}x`)
+        } else {
+          setRoas(null)
+        }
+      } catch {
+        if (!isMounted) return
+        setActiveCampaigns(null)
+        setLeadsThisMonth(null)
+        setRoas(null)
+      }
+    }
+
+    loadMetrics()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const handleLogout = () => {
     clearAuth()
@@ -15,8 +90,14 @@ export default function MarketingDashboard() {
   }
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50 px-0 pb-10">
-      <MarketingTopNav />
-      <div className="mx-auto max-w-7xl space-y-8 px-4 pt-6 sm:px-6 lg:px-8">
+      {isOwner ? <OwnerTopNav /> : <MarketingTopNav />}
+
+      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 pt-6">
+        <div className="flex gap-6">
+          <OwnerSideNav />
+
+          <main className="flex-1 space-y-8 max-w-7xl mx-auto">
         {/* Top bar with logout */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-sm font-semibold text-gray-500">Marketing</h2>
@@ -46,15 +127,21 @@ export default function MarketingDashboard() {
             <dl className="mt-8 grid gap-4 sm:grid-cols-3 text-sm">
               <div className="rounded-xl bg-white/80 px-4 py-3 border border-gray-100 shadow-lg">
                 <dt className="text-xs font-medium text-gray-500">Active campaigns</dt>
-                <dd className="mt-1 text-2xl font-bold text-gray-900">--</dd>
+                <dd className="mt-1 text-2xl font-bold text-gray-900">
+                  {activeCampaigns === null ? '--' : activeCampaigns}
+                </dd>
               </div>
               <div className="rounded-xl bg-white/80 px-4 py-3 border border-gray-100 shadow-lg">
                 <dt className="text-xs font-medium text-gray-500">Leads this month</dt>
-                <dd className="mt-1 text-2xl font-bold text-gray-900">--</dd>
+                <dd className="mt-1 text-2xl font-bold text-gray-900">
+                  {leadsThisMonth === null ? '--' : leadsThisMonth}
+                </dd>
               </div>
               <div className="rounded-xl bg-fuchsia-50/90 px-4 py-3 border border-fuchsia-200 shadow-lg ring-1 ring-fuchsia-500/10">
                 <dt className="text-xs font-medium text-fuchsia-700">ROAS</dt>
-                <dd className="mt-1 text-2xl font-bold text-fuchsia-800">--</dd>
+                <dd className="mt-1 text-2xl font-bold text-fuchsia-800">
+                  {roas || '--'}
+                </dd>
               </div>
             </dl>
           </div>
@@ -126,6 +213,8 @@ export default function MarketingDashboard() {
               </div>
             )}
           </div>
+        </div>
+          </main>
         </div>
       </div>
     </div>

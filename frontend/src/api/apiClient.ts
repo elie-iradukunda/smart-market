@@ -1,5 +1,28 @@
 import { getAuthToken } from '@/utils/apiClient'
 
+// Types for supplier product fields
+interface SupplierMaterial {
+  material_id?: number;
+  material_name?: string;
+  material_notes?: string;
+}
+
+export interface Supplier extends SupplierMaterial {
+  id: number;
+  name: string;
+  contact: string;
+  email: string;
+  phone: string;
+  address: string;
+  tax_id: string;
+  payment_terms: string;
+  rating: number;
+  notes: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 const API_BASE = 'http://localhost:3000/api'
 
 // CRM: leads list (used by LeadsPage)
@@ -49,6 +72,46 @@ export async function fetchLead(id: number | string) {
   }
 
   return res.json()
+}
+
+// Finance: Lanari mobile money payment
+export async function initiateLanariPayment(payload: { invoice_id: number | string; amount: number; customer_phone: string }) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/payments/lanari`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to initiate Lanari payment')
+  }
+
+  return data
+}
+
+export async function checkLanariPaymentStatus(paymentId: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/payments/${paymentId}/status`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to check Lanari payment status')
+  }
+
+  return data
 }
 
 // CRM: single quote detail (used by technician to see materials for an order)
@@ -129,6 +192,27 @@ export async function fetchCustomers() {
   return res.json()
 }
 
+// Materials: fetch all materials
+export async function fetchMaterials() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/materials`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch materials')
+  }
+
+  const response = await res.json()
+  // Return the data array from the response
+  return response.data || []
+}
+
 // Inventory: suppliers list
 export async function fetchSuppliers() {
   const token = getAuthToken()
@@ -145,7 +229,9 @@ export async function fetchSuppliers() {
     throw new Error(data.error || 'Failed to fetch suppliers')
   }
 
-  return res.json()
+  const response = await res.json()
+  // Return the data array from the response
+  return response.data || []
 }
 
 // Inventory: single supplier
@@ -168,7 +254,7 @@ export async function fetchSupplier(id: number | string) {
 }
 
 // Inventory: create supplier
-export async function createSupplier(payload: any) {
+export async function createSupplier(payload: Omit<Supplier, 'id' | 'created_at' | 'updated_at'>) {
   const token = getAuthToken()
   if (!token) throw new Error('Not authenticated')
 
@@ -234,7 +320,7 @@ export async function approveQuote(id: number | string) {
 }
 
 // Inventory: update supplier
-export async function updateSupplier(id: number | string, payload: any) {
+export async function updateSupplier(id: number | string, payload: Partial<Omit<Supplier, 'id' | 'created_at' | 'updated_at'>>) {
   const token = getAuthToken()
   if (!token) throw new Error('Not authenticated')
 
@@ -291,7 +377,9 @@ export async function fetchStockMovements() {
     throw new Error(data.error || 'Failed to fetch stock movements')
   }
 
-  return res.json()
+  const response = await res.json()
+  // Handle both array responses and { data: [...] } responses
+  return Array.isArray(response) ? response : (response.data || [])
 }
 
 export async function createStockMovement(payload: any) {
@@ -307,12 +395,13 @@ export async function createStockMovement(payload: any) {
     body: JSON.stringify(payload),
   })
 
-  const data = await res.json().catch(() => ({}))
+  const response = await res.json().catch(() => ({}))
   if (!res.ok) {
-    throw new Error(data.message || data.error || 'Failed to record stock movement')
+    throw new Error(response.message || response.error || 'Failed to record stock movement')
   }
 
-  return data
+  // Return the created stock movement data
+  return response.data || response
 }
 
 // Production: update order status
@@ -692,6 +781,28 @@ export async function createQuote(payload: any) {
   return data
 }
 
+// Marketing: record ad performance metrics for a campaign
+export async function recordAdPerformance(payload: any) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/ad-performance`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to record ad performance')
+  }
+
+  return data
+}
+
 // Admin: audit logs (expects backend GET /api/audit-logs)
 export async function fetchAuditLogs() {
   const token = getAuthToken()
@@ -736,25 +847,6 @@ export async function updateRolePermissions(roleId: number | string, permissionI
 }
 
 // Inventory: materials list
-export async function fetchMaterials() {
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Not authenticated')
-  }
-
-  const res = await fetch(`${API_BASE}/materials`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}))
-    throw new Error(data.error || 'Failed to fetch materials')
-  }
-
-  return res.json()
-}
 
 // Inventory: purchase orders list
 export async function fetchPurchaseOrders() {
@@ -772,7 +864,9 @@ export async function fetchPurchaseOrders() {
     throw new Error(data.error || 'Failed to fetch purchase orders')
   }
 
-  return res.json()
+  const response = await res.json()
+  // Handle both array responses and { data: [...] } responses
+  return Array.isArray(response) ? response : (response.data || [])
 }
 
 // Inventory: single purchase order
@@ -791,7 +885,9 @@ export async function fetchPurchaseOrder(id: number | string) {
     throw new Error(data.error || 'Failed to fetch purchase order')
   }
 
-  return res.json()
+  const response = await res.json()
+  // Return the purchase order data, handling both direct and nested response.data
+  return response.data || response
 }
 
 // Inventory: create purchase order
@@ -808,12 +904,13 @@ export async function createPurchaseOrder(payload: any) {
     body: JSON.stringify(payload),
   })
 
-  const data = await res.json().catch(() => ({}))
+  const response = await res.json().catch(() => ({}))
   if (!res.ok) {
-    throw new Error(data.message || data.error || 'Failed to create purchase order')
+    throw new Error(response.message || response.error || 'Failed to create purchase order')
   }
 
-  return data
+  // Return the created purchase order data
+  return response.data || response
 }
 
 // Inventory: update purchase order
@@ -1133,6 +1230,34 @@ export function fetchDemoCampaigns() {
     { id: 'CMP-BACK2SCHOOL', name: 'Back to School Banners', channel: 'Facebook/Instagram', budget: 500.0, status: 'Active' },
     { id: 'CMP-CHRISTMAS', name: 'Christmas Promo', channel: 'WhatsApp Broadcast', budget: 300.0, status: 'Planned' }
   ];
+}
+
+// Marketing: create campaign
+export async function createCampaign(payload: { name: string; channel: string; budget: number }) {
+  const token = getAuthToken()
+  if (!token) {
+    throw new Error('Not authenticated')
+  }
+
+  const res = await fetch(`${API_BASE}/campaigns`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      name: payload.name,
+      platform: payload.channel,
+      budget: payload.budget,
+    }),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error((data as any).message || (data as any).error || 'Failed to create campaign')
+  }
+
+  return data
 }
 
 // Marketing: campaigns from backend
