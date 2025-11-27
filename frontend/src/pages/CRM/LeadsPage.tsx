@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { fetchDemoLeads, createLead, fetchMaterials } from '../../api/apiClient'
+import { fetchDemoLeads, createLead, fetchMaterials, createCustomer } from '../../api/apiClient'
 
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
@@ -131,14 +131,22 @@ export default function LeadsPage() {
         return
       }
 
-      await createLead({
-        customer_name: newLead.name || newLead.company,
+      // Step 1: create or register the customer in backend so we have a customer_id
+      const customerPayload: any = {
+        name: newLead.name || newLead.company || 'Lead customer',
         phone: newLead.phone || null,
         email: newLead.email || null,
         address: newLead.address || null,
         source,
+      }
+
+      const createdCustomer = await createCustomer(customerPayload)
+      const customerId = createdCustomer.id
+
+      // Step 2: create the lead linked to that customer and attach requested materials
+      await createLead({
+        customer_id: customerId,
         channel,
-        status: 'New',
         items,
       })
 
@@ -173,7 +181,7 @@ export default function LeadsPage() {
   const isReception = user?.role_id === 2
   const isMarketing = user?.role_id === 4
 
-  const isOwner = user?.role_id === 7
+  const isOwner = user?.role_id === 1
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -364,7 +372,7 @@ export default function LeadsPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-xl">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <p className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight">Recent Leads</p>
-                
+
                 {/* Search Input */}
                 <input
                   type="text"
@@ -372,106 +380,15 @@ export default function LeadsPage() {
                   className="w-full sm:max-w-xs rounded-full border border-slate-300 bg-white px-4 py-2 text-sm text-slate-800 placeholder-slate-400 
                            focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition duration-150 shadow-sm"
                 />
-                <input
-                  type="text"
-                  placeholder="Address (optional)"
-                  value={newLead.address}
-                  onChange={(e) => setNewLead({ ...newLead, address: e.target.value })}
-                  className="min-w-[150px] rounded-full border border-blue-200/70 bg-white/95 px-3 py-1.5 text-[11px] text-slate-900 placeholder-blue-300 focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                />
-                <select
-                  value={newLead.channel}
-                  onChange={(e) => setNewLead({ ...newLead, channel: e.target.value })}
-                  className="rounded-full border border-blue-200/70 bg-blue-950/50 px-3 py-1.5 text-[11px] text-blue-50 focus:outline-none focus:ring-1 focus:ring-cyan-300"
-                >
-                  <option value="Walk-in">Walk-in</option>
-                  <option value="Phone">Phone</option>
-                  <option value="WhatsApp">WhatsApp</option>
-                  <option value="Facebook">Facebook</option>
-                  <option value="Email">Email</option>
-                </select>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="inline-flex items-center rounded-full bg-cyan-500 px-4 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {creating ? 'Saving...' : 'Add Lead'}
-                </button>
-              </form>
-
-              {/* Simple requested materials section for this lead */}
-              <div className="mt-3 rounded-2xl border border-blue-200/40 bg-blue-900/10 px-3 py-3 text-[11px] text-blue-50">
-                <p className="font-semibold mb-1">Requested materials (optional)</p>
-                {materialsError && (
-                  <p className="mb-2 rounded-md bg-red-50/80 px-2 py-1 text-[10px] text-red-800 border border-red-200">
-                    {materialsError}
-                  </p>
-                )}
-                {loadingMaterials && (
-                  <p className="mb-2 text-[10px] text-blue-100">Loading materials list…</p>
-                )}
-                <div className="space-y-1">
-                  {leadItems.map((row, index) => (
-                    <div
-                      key={index}
-                      className="grid gap-1 sm:grid-cols-[minmax(0,2.2fr)_minmax(0,0.8fr)] items-center"
-                    >
-                      <select
-                        className="rounded-full border border-blue-200/60 bg-white/95 px-2 py-1.5 text-[11px] text-slate-900"
-                        value={row.material_id}
-                        onChange={(e) => {
-                          const next = [...leadItems]
-                          next[index] = { ...next[index], material_id: e.target.value }
-                          setLeadItems(next)
-                        }}
-                      >
-                        <option value="">Select material / product</option>
-                        {materials.map((m: any) => (
-                          <option key={m.id} value={String(m.id)}>
-                            {m.name || m.material_name || m.sku || `Material ${m.id}`}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        min="0"
-                        className="rounded-full border border-blue-200/60 bg-white/95 px-2 py-1.5 text-[11px] text-slate-900"
-                        placeholder="Qty"
-                        value={row.quantity}
-                        onChange={(e) => {
-                          const next = [...leadItems]
-                          next[index] = { ...next[index], quantity: e.target.value }
-                          setLeadItems(next)
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-1 text-[10px] text-blue-100/80">
-                  These items will be saved on the lead so quotes and production can see what the customer requested.
-                </p>
               </div>
+
+              {/* TODO: Leads table content goes here */}
             </div>
 
-          </div>
-
-          {/* Visual side card */}
-          <div className="rounded-3xl overflow-hidden border border-blue-100/60 bg-blue-900 shadow-[0_20px_60px_rgba(15,23,42,0.45)] relative">
-            <img
-              src="https://images.pexels.com/photos/1181555/pexels-photo-1181555.jpeg?auto=compress&cs=tinysrgb&w=1200"
-              alt="Customer communications on laptop and phone"
-              className="h-full w-full object-cover opacity-70"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
-            <div className="absolute inset-0 flex flex-col justify-end p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Live Communications</p>
-              <p className="mt-2 text-sm sm:text-base text-slate-50 max-w-xs">
-                Every enquiry, from WhatsApp to website forms, appears here with a clear owner and status.
-              </p>
-            </div>
           </main>
         </div>
       </div>
     </div>
-  )
+  
+)
 }

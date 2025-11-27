@@ -19,6 +19,7 @@ router.get('/invoices/:id', authenticateToken, checkPermission('invoice.create')
 router.put('/invoices/:id', authenticateToken, checkPermission('invoice.create'), auditLog('UPDATE', 'invoices'), updateInvoice);
 
 // Payment CRUD
+router.post('/payments', authenticateToken, checkPermission('payment.create'), auditLog('CREATE', 'payments'), recordPayment);
 router.get('/payments', authenticateToken, checkPermission('payment.create'), getPayments);
 
 // Lanari Payment Gateway

@@ -94,7 +94,7 @@ export default function MaterialDetailPage() {
     <div className="min-h-screen bg-gray-50">
       {(() => {
         const user = getAuthUser()
-        const isOwner = user?.role_id === 7
+        const isOwner = user?.role_id === 1
         if (isOwner) return <OwnerTopNav />
         return <InventoryTopNav />
       })()}

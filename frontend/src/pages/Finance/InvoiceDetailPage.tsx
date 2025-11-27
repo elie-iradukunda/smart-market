@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import FinanceTopNav from '@/components/layout/FinanceTopNav'
+import OwnerSideNav from '@/components/layout/OwnerSideNav'
 import { fetchInvoice } from '@/api/apiClient'
 
 export default function InvoiceDetailPage() {
@@ -62,7 +64,13 @@ export default function InvoiceDetailPage() {
     <div className="min-h-screen bg-slate-50">
       <FinanceTopNav />
       <OwnerTopNav />
-      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+
+      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-8">
+        <div className="flex gap-6 max-w-5xl mx-auto">
+          <OwnerSideNav />
+
+          <main className="flex-1 space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Invoice</p>
@@ -121,6 +129,8 @@ export default function InvoiceDetailPage() {
             </div>
           </div>
         )}
+          </main>
+        </div>
       </div>
     </div>
   )

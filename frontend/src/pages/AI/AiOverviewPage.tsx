@@ -76,7 +76,7 @@ export default function AiOverviewPage() {
     const [error, setError] = useState(null)
 
     const user = getAuthUser()
-    const isOwner = user?.role_id === 7
+    const isOwner = user?.role_id === 1
 
     // Until there is a backend endpoint for price recommendations, keep them from demo helper
     // --- API LOGIC PRESERVED ---

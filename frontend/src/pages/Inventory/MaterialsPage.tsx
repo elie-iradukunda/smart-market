@@ -24,11 +24,15 @@ export default function MaterialsPage() {
     fetchMaterials()
       .then((data) => {
         if (!isMounted) return
-        setMaterials(data || [])
+        // Ensure data is an array, default to empty array if not
+        const materialsData = Array.isArray(data) ? data : [];
+        setMaterials(materialsData);
       })
       .catch((err) => {
         if (!isMounted) return
+        console.error('Error fetching materials:', err);
         setError(err.message || 'Failed to load materials')
+        setMaterials([]); // Ensure materials is always an array
       })
       .finally(() => {
         if (!isMounted) return
@@ -42,8 +46,8 @@ export default function MaterialsPage() {
 
   const user = getAuthUser()
   const isController = user?.role_id === 4
-  const isTechnician = user?.role_id === 5
-  const isOwner = user?.role_id === 7
+  const isTechnician = user?.role_id === 7
+  const isOwner = user?.role_id === 1
 
   // Helper function to dynamically color stock levels (example logic)
   const getStockColor = (qty) => {

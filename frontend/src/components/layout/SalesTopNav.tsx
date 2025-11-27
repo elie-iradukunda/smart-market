@@ -2,6 +2,7 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Users, FileText, ListOrdered } from 'lucide-react'
+import { getAuthUser } from '@/utils/apiClient'
 
 const linkBase =
   'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold transition-colors'

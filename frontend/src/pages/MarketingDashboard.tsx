@@ -1,8 +1,10 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { clearAuth, currentUserHasPermission } from '@/utils/apiClient'
+import { clearAuth, currentUserHasPermission, getAuthUser } from '@/utils/apiClient'
 import MarketingTopNav from '@/components/layout/MarketingTopNav'
+import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import OwnerSideNav from '@/components/layout/OwnerSideNav'
 import CampaignPerformanceWidget from '../modules/dashboards/components/CampaignPerformanceWidget'
 import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
 import { fetchCampaigns, fetchDemoLeads, fetchFinancialOverview } from '@/api/apiClient'
@@ -11,7 +13,7 @@ export default function MarketingDashboard() {
   const navigate = useNavigate()
 
   const user = getAuthUser()
-  const isOwner = user?.role_id === 7
+  const isOwner = user?.role_id === 1
 
   const [activeCampaigns, setActiveCampaigns] = useState<number | null>(null)
   const [leadsThisMonth, setLeadsThisMonth] = useState<number | null>(null)
@@ -88,8 +90,14 @@ export default function MarketingDashboard() {
   }
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50 px-0 pb-10">
-      <MarketingTopNav />
-      <div className="mx-auto max-w-7xl space-y-8 px-4 pt-6 sm:px-6 lg:px-8">
+      {isOwner ? <OwnerTopNav /> : <MarketingTopNav />}
+
+      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 pt-6">
+        <div className="flex gap-6">
+          <OwnerSideNav />
+
+          <main className="flex-1 space-y-8 max-w-7xl mx-auto">
         {/* Top bar with logout */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-sm font-semibold text-gray-500">Marketing</h2>
@@ -205,6 +213,8 @@ export default function MarketingDashboard() {
               </div>
             )}
           </div>
+        </div>
+          </main>
         </div>
       </div>
     </div>

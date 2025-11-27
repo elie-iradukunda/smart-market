@@ -13,7 +13,7 @@ export default function CampaignDetailPage() {
   const [error, setError] = useState<string | null>(null)
 
   const user = getAuthUser()
-  const isOwner = user?.role_id === 7
+  const isOwner = user?.role_id === 1
 
   useEffect(() => {
     if (!id) return

@@ -126,7 +126,7 @@ export default function UsersPage() {
   }
 
   const authUser = getAuthUser()
-  const isOwner = authUser?.role_id === 7
+  const isOwner = authUser?.role_id === 1
 
   return (
     // Gradient background like other admin pages, no navbar

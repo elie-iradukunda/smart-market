@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
 import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
+import OwnerSideNav from '@/components/layout/OwnerSideNav'
 import { getAuthUser } from '@/utils/apiClient'
 import { fetchCustomer, fetchChurnPredictions, fetchSegmentPredictions } from '../../api/apiClient'
 
@@ -55,11 +56,18 @@ export default function CustomerDetailPage() {
   const user = getAuthUser()
   const isController = user?.role_id === 4
   const isReception = user?.role_id === 2
+  const isOwner = user?.role_id === 1
 
   return (
     <div className="min-h-screen bg-slate-50">
       {isController ? <ControllerTopNav /> : isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+
+      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav only for owner/admin (role_id 1). */}
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-8">
+        <div className="flex gap-6 max-w-7xl mx-auto">
+          {isOwner && <OwnerSideNav />}
+
+          <main className="flex-1 space-y-8">
         {/* Header card */}
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl flex flex-col md:flex-row md:items-start md:justify-between gap-8">
           <div className="flex-1 min-w-0">
@@ -173,6 +181,8 @@ export default function CustomerDetailPage() {
             <p className="text-sm font-semibold text-red-700">{error}</p>
           </div>
         )}
+          </main>
+        </div>
       </div>
     </div>
   )

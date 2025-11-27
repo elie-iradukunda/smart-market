@@ -1,7 +1,8 @@
 // @ts-nocheck
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { clearAuth, currentUserHasPermission } from '@/utils/apiClient'
+import { clearAuth, currentUserHasPermission, getAuthUser } from '@/utils/apiClient'
+
 import AdminTopNav from '@/components/layout/AdminTopNav'
 
 import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
@@ -11,6 +12,13 @@ import CampaignPerformanceWidget from '../modules/dashboards/components/Campaign
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
+
+  const user = getAuthUser()
+  // If this is the owner/admin role (role_id === 1), do not show AdminDashboard; redirect to owner dashboard instead
+  if (user && user.role_id === 1) {
+    navigate('/dashboard/owner')
+    return null
+  }
 
   const canViewReports = currentUserHasPermission('report.view')
   const canViewCampaigns = currentUserHasPermission('campaign.view') || currentUserHasPermission('campaign.manage')

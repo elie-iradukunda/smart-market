@@ -118,7 +118,7 @@ export default function WorkOrderDetailPage() {
 
   // --- Conditional Rendering: Loading & Error ---
   const currentUser = getAuthUser()
-  const isOwner = currentUser?.role_id === 7
+  const isOwner = currentUser?.role_id === 1
 
   if (loading) {
     return (

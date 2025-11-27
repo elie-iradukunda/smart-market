@@ -161,8 +161,8 @@ export function getDashboardPathForRole(roleId: number | null | undefined): stri
   switch (roleId) {
     case 7: // Super Admin
       return '/dashboard/owner'
-    case 1: // Admin
-      return '/dashboard/admin'
+    case 1: // Admin / Owner
+      return '/dashboard/owner'
     case 2: // Receptionist
       return '/dashboard/reception'
     case 3: // Accountant

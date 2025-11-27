@@ -198,6 +198,30 @@ export const checkPaymentStatus = async (req, res) => {
         status: 'completed',
         transaction_id: payment[0].gateway_transaction_id
       });
+
+      // Send payment confirmation email for completed Lanari payment
+      try {
+        const [customer] = await pool.execute(`
+          SELECT c.email, c.name, i.id as invoice_id
+          FROM customers c 
+          JOIN orders o ON c.id = o.customer_id 
+          JOIN invoices i ON o.id = i.order_id
+          WHERE i.id = ?
+        `, [payment[0].invoice_id]);
+
+        if (customer.length > 0 && customer[0].email) {
+          await emailService.sendPaymentConfirmation(customer[0].email, {
+            payment_id: payment[0].id,
+            invoice_id: payment[0].invoice_id,
+            amount: payment[0].amount,
+            method: payment[0].method || 'lanari',
+            status: status
+          });
+          console.log(`Lanari payment confirmation email sent to ${customer[0].email}`);
+        }
+      } catch (emailError) {
+        console.error('Failed to send Lanari payment confirmation email:', emailError);
+      }
     }
     
     res.json({

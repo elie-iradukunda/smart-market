@@ -21,7 +21,7 @@ export default function AdPerformancePage() {
   const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
 
   const user = getAuthUser()
-  const isOwner = user?.role_id === 7
+  const isOwner = user?.role_id === 1
 
   useEffect(() => {
     let isMounted = true
