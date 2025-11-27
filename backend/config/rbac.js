@@ -110,14 +110,17 @@ const ROUTE_PERMISSIONS = {
   // Inventory
   'GET /materials': [PERMISSIONS.MATERIAL_VIEW],
   'POST /materials': [PERMISSIONS.INVENTORY_MANAGE],
+  'GET /materials/:id': [PERMISSIONS.MATERIAL_VIEW],
   'PUT /materials/:id': [PERMISSIONS.INVENTORY_MANAGE],
   'DELETE /materials/:id': [PERMISSIONS.INVENTORY_MANAGE],
   'GET /suppliers': [PERMISSIONS.SUPPLIER_VIEW],
   'POST /suppliers': [PERMISSIONS.INVENTORY_MANAGE],
+  'GET /suppliers/:id': [PERMISSIONS.SUPPLIER_VIEW],
   'PUT /suppliers/:id': [PERMISSIONS.INVENTORY_MANAGE],
   'DELETE /suppliers/:id': [PERMISSIONS.INVENTORY_MANAGE],
   'GET /purchase-orders': [PERMISSIONS.INVENTORY_MANAGE],
   'POST /purchase-orders': [PERMISSIONS.INVENTORY_MANAGE],
+  'GET /purchase-orders/:id': [PERMISSIONS.INVENTORY_MANAGE],
   'PUT /purchase-orders/:id': [PERMISSIONS.INVENTORY_MANAGE],
   'GET /stock-movements': [PERMISSIONS.INVENTORY_MANAGE],
   'POST /stock-movements': [PERMISSIONS.INVENTORY_MANAGE],
@@ -125,13 +128,18 @@ const ROUTE_PERMISSIONS = {
   // Finance
   'GET /invoices': [PERMISSIONS.INVOICE_VIEW],
   'POST /invoices': [PERMISSIONS.INVOICE_CREATE],
+  'GET /invoices/:id': [PERMISSIONS.INVOICE_VIEW],
   'PUT /invoices/:id': [PERMISSIONS.INVOICE_CREATE],
   'POST /invoices/:id/send': [PERMISSIONS.INVOICE_SEND],
   'GET /payments': [PERMISSIONS.PAYMENT_VIEW],
+  'GET /payments/:id': [PERMISSIONS.PAYMENT_VIEW],
+  'POST /payments/lanari': [PERMISSIONS.PAYMENT_CREATE],
+  'PUT /payments/:payment_id/refund': [PERMISSIONS.PAYMENT_REFUND],
   'POST /pos-sales': [PERMISSIONS.POS_CREATE],
   'GET /pos-sales': [PERMISSIONS.POS_CREATE],
   'POST /journal-entries': [PERMISSIONS.JOURNAL_CREATE],
   'GET /journal-entries': [PERMISSIONS.JOURNAL_CREATE],
+  'GET /journal-entries/:id': [PERMISSIONS.JOURNAL_CREATE],
   'GET /chart-of-accounts': [PERMISSIONS.JOURNAL_CREATE],
   
   // Marketing
@@ -158,7 +166,12 @@ const ROUTE_PERMISSIONS = {
   
   // Files
   'POST /upload/artwork': [PERMISSIONS.FILE_UPLOAD],
-  'GET /files/:id': [PERMISSIONS.FILE_VIEW]
+  'GET /files/:id': [PERMISSIONS.FILE_VIEW],
+  
+  // Payment routes (mounted at /payments)
+  'GET /': [PERMISSIONS.PAYMENT_VIEW],
+  'POST /lanari': [PERMISSIONS.PAYMENT_CREATE],
+  'PUT /:payment_id/refund': [PERMISSIONS.PAYMENT_REFUND]
 };
 
 // Role permission matrix
