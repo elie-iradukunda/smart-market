@@ -16,7 +16,7 @@ export default function CampaignsPage() {
   const navigate = useNavigate()
 
   const user = getAuthUser()
-  const isOwner = user?.role_id === 7
+  const isOwner = user?.role_id === 1
 
   useEffect(() => {
     let isMounted = true

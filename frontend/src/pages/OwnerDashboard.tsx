@@ -1,7 +1,8 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { clearAuth } from '@/utils/apiClient'
+import { clearAuth, getAuthUser } from '@/utils/apiClient'
+
 import { fetchUsers, createWorkOrder, fetchDemoOrders } from '@/api/apiClient'
 
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
@@ -69,6 +70,14 @@ const GroupCard = ({ title, children, iconName, iconColor = 'text-cyan-400', ani
 
 export default function OwnerDashboard() {
   const navigate = useNavigate()
+  const user = getAuthUser()
+
+  // Guard: only admin/owner role (role_id === 1) may access this dashboard
+  if (!user || user.role_id !== 1) {
+    navigate('/login')
+    return null
+  }
+
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
   const [workOrder, setWorkOrder] = useState({ orderId: '', stage: 'Design', assignedTo: '' })

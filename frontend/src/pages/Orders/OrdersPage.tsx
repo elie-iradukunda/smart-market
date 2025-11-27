@@ -167,8 +167,8 @@ export default function OrdersPage() {
         const user = getAuthUser()
         const isController = user?.role_id === 4
         const isReception = user?.role_id === 2
-        const isTechnician = user?.role_id === 5
-        const isOwner = user?.role_id === 7
+        const isTechnician = user?.role_id === 7
+        const isOwner = user?.role_id === 1
         if (isController) return <ControllerTopNav />
         if (isReception) return <ReceptionTopNav />
         if (isTechnician) return <TechnicianTopNav />
@@ -176,17 +176,22 @@ export default function OrdersPage() {
       })()}
       {(() => {
         const user = getAuthUser()
-        const isOwner = user?.role_id === 7
+        const isOwner = user?.role_id === 1
         const isReception = user?.role_id === 2
-        const isTechnician = user?.role_id === 5
+        const isTechnician = user?.role_id === 7
         if (isOwner || isTechnician || isReception) return null
         return <SalesTopNav />
       })()}
 
-      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
+      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav only for owner/admin (role_id 1). */}
       <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-6">
         <div className="flex gap-6">
-          <OwnerSideNav />
+          {(() => {
+            const user = getAuthUser()
+            const isOwner = user?.role_id === 1
+            if (isOwner) return <OwnerSideNav />
+            return null
+          })()}
 
           <main className="flex-1 space-y-8 max-w-7xl mx-auto">
             {/* Header Section - Modern, Elevated Card with Blue Accent */}

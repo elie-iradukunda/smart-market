@@ -8,7 +8,7 @@ const linkBase =
 
 export default function OwnerSideNav() {
   const user = getAuthUser()
-  if (!user || user.role_id !== 7) return null
+  if (!user || user.role_id !== 1) return null
 
   return (
     <aside className="hidden md:flex w-64 flex-col rounded-3xl bg-white shadow-xl border border-slate-100 py-6 px-4 space-y-6">

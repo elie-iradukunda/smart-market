@@ -125,8 +125,8 @@ export default function WorkOrdersBoardPage() {
     return (
         // 1. Apply the light gradient background for a modern feel
         <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-0 pb-10 font-sans">
-            {/* Owner sees OwnerTopNav; technicians see TechnicianTopNav; others currently see no extra nav here */}
-            {currentUser?.role_id === 7 ? <OwnerTopNav /> : <TechnicianTopNav />}
+            {/* Owner (role_id 1) sees OwnerTopNav; technicians see TechnicianTopNav; others currently see no extra nav here */}
+            {currentUser?.role_id === 1 ? <OwnerTopNav /> : <TechnicianTopNav />}
 
             {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
             <div className="px-3 sm:px-4 md:px-6 lg:px-8 pt-8">

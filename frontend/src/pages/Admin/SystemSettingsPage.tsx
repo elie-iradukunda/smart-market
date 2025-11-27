@@ -6,7 +6,7 @@ import OwnerSideNav from '@/components/layout/OwnerSideNav'
 
 export default function SystemSettingsPage() {
   const user = getAuthUser()
-  const isOwner = user?.role_id === 7
+  const isOwner = user?.role_id === 1
 
   if (!isOwner) {
     // Non-super-admins shouldn't see this page navbar-wise; just render body without extra navs

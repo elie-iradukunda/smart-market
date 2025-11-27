@@ -139,49 +139,54 @@ export default function FinancialReportsPage() {
         <OwnerTopNav />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-8">
+        <div className="flex gap-6 max-w-7xl mx-auto">
+          <OwnerSideNav />
 
-        {/* Header Card - light card with blue/green accent */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl">
-          <p className="text-sm font-semibold uppercase tracking-wider text-green-700">Financial Overview</p>
-          <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
-            Executive <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600">Reports</span>
-          </h1>
-          <p className="mt-3 text-base text-gray-600 max-w-xl">
-            High-level financial KPIs for the management team. Use the filters to switch periods and report types.
-          </p>
-        </div>
+          <main className="flex-1 space-y-8">
+            {/* Header Card - light card with blue/green accent */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl">
+              <p className="text-sm font-semibold uppercase tracking-wider text-green-700">Financial Overview</p>
+              <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
+                Executive <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600">Reports</span>
+              </h1>
+              <p className="mt-3 text-base text-gray-600 max-w-xl">
+                High-level financial KPIs for the management team. Use the filters to switch periods and report types.
+              </p>
+            </div>
 
-        {/* Filters and KPI Cards Container - Applying the clean aesthetic */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl space-y-6">
+            {/* Filters and KPI Cards Container - Applying the clean aesthetic */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl space-y-6">
+              {error && (
+                <p className="mb-3 rounded-lg bg-red-50 p-2 text-xs text-red-700 border border-red-200">{error}</p>
+              )}
 
-          {error && (
-            <p className="mb-3 rounded-lg bg-red-50 p-2 text-xs text-red-700 border border-red-200">{error}</p>
-          )}
+              {/* Report Filters component */}
+              <ReportFilters />
 
-          {/* Report Filters component */}
-          <ReportFilters />
-
-          {/* KPI Grid - Enhanced card style */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {kpis.map((kpi) => (
-              <div
-                key={kpi.label}
-                className="rounded-xl border border-gray-100 bg-gray-50/70 p-5 transition hover:shadow-md"
-              >
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{kpi.label}</p>
-                <div className="flex items-end justify-between mt-1">
-                  <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
-                  <span className={`text-sm font-medium ${getTrendColor(kpi.trend)}`}>
-                    {kpi.trend}
-                  </span>
-                </div>
+              {/* KPI Grid - Enhanced card style */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {kpis.map((kpi) => (
+                  <div
+                    key={kpi.label}
+                    className="rounded-xl border border-gray-100 bg-gray-50/70 p-5 transition hover:shadow-md"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{kpi.label}</p>
+                    <div className="flex items-end justify-between mt-1">
+                      <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
+                      <span className={`text-sm font-medium ${getTrendColor(kpi.trend)}`}>
+                        {kpi.trend}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Placeholder for the main report content (e.g., P&L, Balance Sheet) */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-inner mt-4" />
+              {/* Placeholder for the main report content (e.g., P&L, Balance Sheet) */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-inner mt-4" />
+            </div>
+          </main>
         </div>
       </div>
     </div>

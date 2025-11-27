@@ -49,7 +49,7 @@ export default function PurchaseOrdersPage() {
 
   const user = getAuthUser()
   const isController = user?.role_id === 4
-  const isOwner = user?.role_id === 7
+  const isOwner = user?.role_id === 1
 
   return (
     <div className="min-h-screen bg-gray-50">

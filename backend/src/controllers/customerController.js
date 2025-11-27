@@ -93,11 +93,27 @@ export const createLead = async (req, res) => {
     // Support both direct customer_id and UI payload with full customer details
     const { customer_id, customer_name, name, phone, email, address, source, channel, items } = req.body;
 
-      'SELECT id FROM leads WHERE customer_id = ?',
-      [resolvedCustomerId]
+    // For now we require an existing customer_id; UI can ensure customer is created first
+    const resolvedCustomerId = customer_id;
+    if (!resolvedCustomerId) {
+      return res.status(400).json({ error: 'customer_id is required to create a lead' });
+    }
+
+    // Make sure customer exists
+    const [customerRows] = await pool.execute('SELECT id FROM customers WHERE id = ?', [resolvedCustomerId]);
+    if (customerRows.length === 0) {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    const normalizedChannel = channel || 'unknown';
+
+    // Prevent duplicate lead for same customer and channel
+    const [existing] = await pool.execute(
+      'SELECT id FROM leads WHERE customer_id = ? AND channel = ?',
+      [resolvedCustomerId, normalizedChannel]
     );
     if (existing.length > 0) {
-      return res.status(409).json({ error: 'Lead already exists for this customer' });
+      return res.status(409).json({ error: 'Lead already exists for this customer and channel' });
     }
 
     const [result] = await pool.execute(
