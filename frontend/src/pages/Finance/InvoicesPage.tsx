@@ -2,11 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
-import ControllerTopNav from '@/components/layout/ControllerTopNav'
-import PosTopNav from '@/components/layout/PosTopNav'
-import FinanceTopNav from '@/components/layout/FinanceTopNav'
-import OwnerSideNav from '@/components/layout/OwnerSideNav'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { getAuthUser } from '@/utils/apiClient'
 
 import {
@@ -37,7 +33,7 @@ const formatCurrency = (amount) => {
 // Helper to style the Invoice Status pill
 const getInvoiceStatusClasses = (status) => {
   if (!status) return 'bg-gray-100 text-gray-800 ring-gray-500/20'
-  
+
   switch (status.toLowerCase()) {
     case 'paid':
       return 'bg-green-100 text-green-800 ring-green-500/20 font-bold'
@@ -47,7 +43,7 @@ const getInvoiceStatusClasses = (status) => {
       return 'bg-gray-100 text-gray-800 ring-gray-500/20'
     case 'overdue':
       // Strong, noticeable red for overdue status
-      return 'bg-red-100 text-red-800 ring-red-500/20 font-bold animate-pulse' 
+      return 'bg-red-100 text-red-800 ring-red-500/20 font-bold animate-pulse'
     default:
       return 'bg-amber-100 text-amber-800 ring-amber-500/20'
   }
@@ -72,7 +68,7 @@ const InvoiceStatusPill = ({ status }) => {
   }
 
   return (
-    <span 
+    <span
       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset transition duration-300 ${getInvoiceStatusClasses(statusText)}`}
     >
       <Icon className="h-3 w-3 mr-1.5" />
@@ -120,18 +116,18 @@ export default function InvoicesPage() {
       .then((data) => {
         const processedData = Array.isArray(data)
           ? data.map((inv) => {
-              const rawAmount = inv.amount
-              const amountNum =
-                typeof rawAmount === 'number'
-                  ? rawAmount
-                  : parseFloat(rawAmount || '0')
-              return {
-                ...inv,
-                amount: isNaN(amountNum) ? 0 : amountNum,
-                status: inv.status || 'Draft',
-                due_date: inv.due_date || 'N/A',
-              }
-            })
+            const rawAmount = inv.amount
+            const amountNum =
+              typeof rawAmount === 'number'
+                ? rawAmount
+                : parseFloat(rawAmount || '0')
+            return {
+              ...inv,
+              amount: isNaN(amountNum) ? 0 : amountNum,
+              status: inv.status || 'Draft',
+              due_date: inv.due_date || 'N/A',
+            }
+          })
           : []
         setInvoices(processedData)
       })
@@ -156,18 +152,18 @@ export default function InvoicesPage() {
         if (!isMounted) return
         const processedData = Array.isArray(data)
           ? data.map((inv) => {
-              const rawAmount = inv.amount
-              const amountNum =
-                typeof rawAmount === 'number'
-                  ? rawAmount
-                  : parseFloat(rawAmount || '0')
-              return {
-                ...inv,
-                amount: isNaN(amountNum) ? 0 : amountNum,
-                status: inv.status || 'Draft',
-                due_date: inv.due_date || 'N/A',
-              }
-            })
+            const rawAmount = inv.amount
+            const amountNum =
+              typeof rawAmount === 'number'
+                ? rawAmount
+                : parseFloat(rawAmount || '0')
+            return {
+              ...inv,
+              amount: isNaN(amountNum) ? 0 : amountNum,
+              status: inv.status || 'Draft',
+              due_date: inv.due_date || 'N/A',
+            }
+          })
           : []
         setInvoices(processedData)
       })
@@ -189,16 +185,16 @@ export default function InvoicesPage() {
         if (!isMounted) return
         const processed = Array.isArray(orders)
           ? orders.map((o: any) => {
-              const rawTotal = o.total
-              const totalNum =
-                typeof rawTotal === 'number'
-                  ? rawTotal
-                  : parseFloat(rawTotal || '0')
-              return {
-                ...o,
-                total: isNaN(totalNum) ? 0 : totalNum,
-              }
-            })
+            const rawTotal = o.total
+            const totalNum =
+              typeof rawTotal === 'number'
+                ? rawTotal
+                : parseFloat(rawTotal || '0')
+            return {
+              ...o,
+              total: isNaN(totalNum) ? 0 : totalNum,
+            }
+          })
           : []
         setOrdersReady(processed)
       })
@@ -229,14 +225,14 @@ export default function InvoicesPage() {
     const status = (inv.status || '').toLowerCase()
     const matchesStatus =
       statusFilter === 'All' || status === statusFilter.toLowerCase()
-      
+
     const term = (search || '').toLowerCase()
     const matchesSearch =
       !term ||
       (inv.customer_name || '').toLowerCase().includes(term) ||
       String(inv.id).toLowerCase().includes(term) ||
       String(inv.order_number).toLowerCase().includes(term)
-      
+
     return matchesStatus && matchesSearch
   })
 
@@ -250,7 +246,7 @@ export default function InvoicesPage() {
         </div>
       )
     }
-    
+
     if (loading) {
       return (
         <div className="p-10 flex items-center justify-center">
@@ -261,18 +257,18 @@ export default function InvoicesPage() {
     }
 
     if (filtered.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center p-10 text-gray-500">
-                <FileText className="h-10 w-10 mb-4 text-gray-400" />
-                <p className="text-lg font-semibold">No matching invoices found.</p>
-                <p className="text-sm mt-1">Try adjusting your filters or search term.</p>
-            </div>
-        )
+      return (
+        <div className="flex flex-col items-center justify-center p-10 text-gray-500">
+          <FileText className="h-10 w-10 mb-4 text-gray-400" />
+          <p className="text-lg font-semibold">No matching invoices found.</p>
+          <p className="text-sm mt-1">Try adjusting your filters or search term.</p>
+        </div>
+      )
     }
 
     return null
   }
-  
+
   const user = getAuthUser()
   const isController = user?.role_id === 4
   const isPosRole = user?.role_id === 5 || user?.role_id === 11
@@ -339,321 +335,306 @@ export default function InvoicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Accountant nav renders only for accountant role based on its internal role check */}
-      <FinanceTopNav />
-      {/* Existing role-based navs for other finance roles */}
-      {isController ? <ControllerTopNav /> : isPosRole ? <PosTopNav /> : <OwnerTopNav />}
-      
-      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
-      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-8">
-        <div className="flex gap-6">
-          <OwnerSideNav />
-
-          <main className="flex-1 space-y-8 max-w-7xl mx-auto">
-        
-        {/* Header Section - Light card with blue gradient top */}
-        <div className="rounded-3xl shadow-2xl overflow-hidden bg-white border border-slate-200">
-            <div className="bg-gradient-to-r from-indigo-700 via-blue-600 to-cyan-500 text-white p-6 transition duration-500">
-                <p className="text-sm font-bold uppercase tracking-widest text-indigo-200">
-                    <DollarSign className="inline h-4 w-4 mr-2" />
-                    Accounts Receivable
-                </p>
-                <h1 className="mt-1 text-4xl font-extrabold leading-tight">
-                    Financial Invoices
-                </h1>
-                <p className="mt-2 text-base text-indigo-300 max-w-xl">
-                    Track all billing records. Monitor open, paid, and overdue invoices to maintain a healthy cash flow.
-                </p>
-            </div>
-          
-            {/* Metrics Grid (light background for contrast and readability) */}
-            <div className="bg-white p-6 pt-3">
-                <p className="text-lg font-semibold text-gray-800 mb-4">Overview Metrics</p>
-                <div className="grid gap-4 md:grid-cols-4 text-sm">
-                    <MetricCard
-                      title="Open Invoices"
-                      value={openCount}
-                      icon={Clock}
-                      colorClass="bg-blue-50 border-blue-200"
-                      description="Total number pending payment."
-                    />
-                    <MetricCard
-                      title="Total Open Amount"
-                      value={formatCurrency(totalAmountOpen)}
-                      icon={DollarSign}
-                      colorClass="bg-indigo-50 border-indigo-200"
-                      description="Total revenue outstanding."
-                    />
-                    <MetricCard
-                      title="Overdue Invoices"
-                      value={overdueCount}
-                      icon={AlertTriangle}
-                      colorClass="bg-red-50 border-red-300"
-                      description="Immediate action required."
-                    />
-                    <MetricCard
-                      title="Total Records"
-                      value={invoices.length}
-                      icon={FileText}
-                      colorClass="bg-gray-50 border-gray-200"
-                      description="All invoices generated to date."
-                    />
-                </div>
-            </div>
+    <DashboardLayout>
+      {/* Header Section - Light card with blue gradient top */}
+      <div className="rounded-3xl shadow-2xl overflow-hidden bg-white border border-slate-200">
+        <div className="bg-gradient-to-r from-indigo-700 via-blue-600 to-cyan-500 text-white p-6 transition duration-500">
+          <p className="text-sm font-bold uppercase tracking-widest text-indigo-200">
+            <DollarSign className="inline h-4 w-4 mr-2" />
+            Accounts Receivable
+          </p>
+          <h1 className="mt-1 text-4xl font-extrabold leading-tight">
+            Financial Invoices
+          </h1>
+          <p className="mt-2 text-base text-indigo-300 max-w-xl">
+            Track all billing records. Monitor open, paid, and overdue invoices to maintain a healthy cash flow.
+          </p>
         </div>
 
-        {/* Delivered orders ready for invoicing */}
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-            <p className="text-lg font-semibold text-gray-900">Delivered Orders Ready for Invoicing</p>
-            {ordersLoading && (
-              <div className="flex items-center text-xs text-gray-500">
-                <Loader className="h-4 w-4 mr-1 animate-spin text-indigo-500" />
-                Loading orders...
-              </div>
-            )}
+        {/* Metrics Grid (light background for contrast and readability) */}
+        <div className="bg-white p-6 pt-3">
+          <p className="text-lg font-semibold text-gray-800 mb-4">Overview Metrics</p>
+          <div className="grid gap-4 md:grid-cols-4 text-sm">
+            <MetricCard
+              title="Open Invoices"
+              value={openCount}
+              icon={Clock}
+              colorClass="bg-blue-50 border-blue-200"
+              description="Total number pending payment."
+            />
+            <MetricCard
+              title="Total Open Amount"
+              value={formatCurrency(totalAmountOpen)}
+              icon={DollarSign}
+              colorClass="bg-indigo-50 border-indigo-200"
+              description="Total revenue outstanding."
+            />
+            <MetricCard
+              title="Overdue Invoices"
+              value={overdueCount}
+              icon={AlertTriangle}
+              colorClass="bg-red-50 border-red-300"
+              description="Immediate action required."
+            />
+            <MetricCard
+              title="Total Records"
+              value={invoices.length}
+              icon={FileText}
+              colorClass="bg-gray-50 border-gray-200"
+              description="All invoices generated to date."
+            />
           </div>
-          {selectedOrder && (
-            <div className="px-6 pt-4 pb-2 border-b border-slate-100 bg-slate-50/60">
-              <form
-                onSubmit={handleSubmitOrderInvoice}
-                className="flex flex-wrap items-center gap-3 text-sm"
-              >
-                <div className="text-gray-700 font-medium">
-                  Creating invoice for order
-                  <span className="ml-1 font-bold text-indigo-700">#{selectedOrder.id}</span>
-                  <span className="ml-2 text-gray-500">({selectedOrder.customer})</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-xs text-gray-500">Amount</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={invoiceFormAmount}
-                    onChange={(e) => setInvoiceFormAmount(e.target.value)}
-                    className="w-28 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
-                </div>
-                <div className="flex items-center gap-2 ml-auto">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedOrder(null)
-                      setInvoiceFormAmount('')
-                    }}
-                    className="rounded-full border border-gray-300 px-3 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={creating}
-                    className="rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
-                  >
-                    {creating ? 'Saving…' : 'Save invoice'}
-                  </button>
-                </div>
-              </form>
+        </div>
+      </div>
+
+      {/* Delivered orders ready for invoicing */}
+      <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+          <p className="text-lg font-semibold text-gray-900">Delivered Orders Ready for Invoicing</p>
+          {ordersLoading && (
+            <div className="flex items-center text-xs text-gray-500">
+              <Loader className="h-4 w-4 mr-1 animate-spin text-indigo-500" />
+              Loading orders...
             </div>
           )}
-          {ordersError ? (
-            <div className="p-6 flex items-center text-sm text-red-600 bg-red-50 border-t border-red-100">
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              {ordersError}
+        </div>
+        {selectedOrder && (
+          <div className="px-6 pt-4 pb-2 border-b border-slate-100 bg-slate-50/60">
+            <form
+              onSubmit={handleSubmitOrderInvoice}
+              className="flex flex-wrap items-center gap-3 text-sm"
+            >
+              <div className="text-gray-700 font-medium">
+                Creating invoice for order
+                <span className="ml-1 font-bold text-indigo-700">#{selectedOrder.id}</span>
+                <span className="ml-2 text-gray-500">({selectedOrder.customer})</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-500">Amount</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={invoiceFormAmount}
+                  onChange={(e) => setInvoiceFormAmount(e.target.value)}
+                  className="w-28 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedOrder(null)
+                    setInvoiceFormAmount('')
+                  }}
+                  className="rounded-full border border-gray-300 px-3 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
+                >
+                  {creating ? 'Saving…' : 'Save invoice'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+        {ordersError ? (
+          <div className="p-6 flex items-center text-sm text-red-600 bg-red-50 border-t border-red-100">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            {ordersError}
+          </div>
+        ) : deliveredOrders.length === 0 ? (
+          <div className="p-6 text-sm text-gray-500 flex items-center justify-center">
+            <FileText className="h-5 w-5 mr-2 text-gray-400" />
+            No delivered orders waiting for invoices.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Order ID
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Total
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Payment Status
+                  </th>
+                  <th className="px-4 py-2" />
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {deliveredOrders.map((order: any) => (
+                  <tr key={order.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">#{order.id}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{order.customer}</td>
+                    <td className="px-4 py-3 text-sm text-right">{formatCurrency(order.total)}</td>
+                    <td className="px-4 py-3 text-xs text-gray-600 capitalize">{order.paymentStatus}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => handleCreateInvoiceFromOrder(order)}
+                        disabled={creating}
+                        className="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
+                      >
+                        <FileText className="h-3 w-3 mr-1" />
+                        Create invoice
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Invoice List and Filters */}
+      <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+
+            <p className="text-xl font-semibold text-gray-900">Invoice List ({filtered.length})</p>
+
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto">
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-200"
+              >
+                <option value="All">All Statuses</option>
+                <option value="Draft">Draft</option>
+                <option value="Sent">Sent</option>
+                <option value="Paid">Paid</option>
+                <option value="Overdue">Overdue</option>
+              </select>
+
+              {/* Search Input */}
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search customer, ID, or Order..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-2 text-sm text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition duration-200"
+                />
+              </div>
+
+              {/* Quick create invoice form */}
+              <form
+                onSubmit={handleCreateInvoice}
+                className="flex flex-wrap items-center gap-2 border border-indigo-100 rounded-2xl px-3 py-2 bg-indigo-50/40"
+              >
+                <input
+                  type="number"
+                  min="1"
+                  value={newOrderId}
+                  onChange={(e) => setNewOrderId(e.target.value)}
+                  placeholder="Order ID"
+                  className="w-20 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={newAmount}
+                  onChange={(e) => setNewAmount(e.target.value)}
+                  placeholder="Amount"
+                  className="w-24 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
+                >
+                  {creating ? 'Saving…' : 'New invoice'}
+                </button>
+              </form>
             </div>
-          ) : deliveredOrders.length === 0 ? (
-            <div className="p-6 text-sm text-gray-500 flex items-center justify-center">
-              <FileText className="h-5 w-5 mr-2 text-gray-400" />
-              No delivered orders waiting for invoices.
-            </div>
-          ) : (
+          </div>
+        </div>
+
+        {/* Table Container */}
+        {loading || error || filtered.length === 0 ? (
+          <StateFeedback />
+        ) : (
+          <div className="flow-root">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-slate-50">
+                <thead className="bg-indigo-50/70 border-b border-indigo-200">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Order ID
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                      Invoice #
                     </th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                      <Users className="inline h-4 w-4 mr-2" />
                       Customer
                     </th>
-                    <th className="px-4 py-2 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Total
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                      Due Date
                     </th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Payment Status
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                      Amount
                     </th>
-                    <th className="px-4 py-2" />
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+                      Order #
+                    </th>
                   </tr>
                 </thead>
+
                 <tbody className="bg-white divide-y divide-gray-100">
-                  {deliveredOrders.map((order: any) => (
-                    <tr key={order.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">#{order.id}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{order.customer}</td>
-                      <td className="px-4 py-3 text-sm text-right">{formatCurrency(order.total)}</td>
-                      <td className="px-4 py-3 text-xs text-gray-600 capitalize">{order.paymentStatus}</td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleCreateInvoiceFromOrder(order)}
-                          disabled={creating}
-                          className="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
-                        >
-                          <FileText className="h-3 w-3 mr-1" />
-                          Create invoice
-                        </button>
+                  {filtered.map((inv) => (
+                    <tr
+                      key={inv.id}
+                      onClick={() => navigate(`/finance/invoices/${inv.id}`)}
+                      className="group hover:bg-blue-50/50 transition duration-300 ease-in-out cursor-pointer"
+                    >
+                      {/* Invoice ID/Number */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 group-hover:text-indigo-700">
+                        #{String(inv.id).toUpperCase()}
+                      </td>
+                      {/* Customer */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {inv.customer_name}
+                      </td>
+                      {/* Due Date (Assuming API provides due_date or using default) */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {inv.due_date}
+                      </td>
+                      {/* Amount */}
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                        {formatCurrency(inv.amount)}
+                      </td>
+                      {/* Status */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <InvoiceStatusPill status={inv.status} />
+                      </td>
+                      {/* Order Number */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-500 font-medium hover:text-indigo-700">
+                        #{inv.order_number || 'N/A'}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
-
-        {/* Invoice List and Filters */}
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              
-              <p className="text-xl font-semibold text-gray-900">Invoice List ({filtered.length})</p>
-              
-              <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto">
-                {/* Status Filter */}
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-200"
-                >
-                  <option value="All">All Statuses</option>
-                  <option value="Draft">Draft</option>
-                  <option value="Sent">Sent</option>
-                  <option value="Paid">Paid</option>
-                  <option value="Overdue">Overdue</option>
-                </select>
-                
-                {/* Search Input */}
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search customer, ID, or Order..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-2 text-sm text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition duration-200"
-                  />
-                </div>
-
-                {/* Quick create invoice form */}
-                <form
-                  onSubmit={handleCreateInvoice}
-                  className="flex flex-wrap items-center gap-2 border border-indigo-100 rounded-2xl px-3 py-2 bg-indigo-50/40"
-                >
-                  <input
-                    type="number"
-                    min="1"
-                    value={newOrderId}
-                    onChange={(e) => setNewOrderId(e.target.value)}
-                    placeholder="Order ID"
-                    className="w-20 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={newAmount}
-                    onChange={(e) => setNewAmount(e.target.value)}
-                    placeholder="Amount"
-                    className="w-24 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
-                  <button
-                    type="submit"
-                    disabled={creating}
-                    className="rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
-                  >
-                    {creating ? 'Saving…' : 'New invoice'}
-                  </button>
-                </form>
-              </div>
-            </div>
           </div>
-          
-          {/* Table Container */}
-          {loading || error || filtered.length === 0 ? (
-            <StateFeedback />
-          ) : (
-            <div className="flow-root">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-indigo-50/70 border-b border-indigo-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        Invoice #
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        <Users className="inline h-4 w-4 mr-2" />
-                        Customer
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        Due Date
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        Amount
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        Order #
-                      </th>
-                    </tr>
-                  </thead>
-                  
-                  <tbody className="bg-white divide-y divide-gray-100">
-                    {filtered.map((inv) => (
-                      <tr
-                        key={inv.id}
-                        onClick={() => navigate(`/finance/invoices/${inv.id}`)}
-                        className="group hover:bg-blue-50/50 transition duration-300 ease-in-out cursor-pointer"
-                      >
-                        {/* Invoice ID/Number */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 group-hover:text-indigo-700">
-                          #{String(inv.id).toUpperCase()}
-                        </td>
-                        {/* Customer */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {inv.customer_name}
-                        </td>
-                        {/* Due Date (Assuming API provides due_date or using default) */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {inv.due_date}
-                        </td>
-                        {/* Amount */}
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                          {formatCurrency(inv.amount)}
-                        </td>
-                        {/* Status */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <InvoiceStatusPill status={inv.status} />
-                        </td>
-                        {/* Order Number */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-500 font-medium hover:text-indigo-700">
-                            #{inv.order_number || 'N/A'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-          </main>
-        </div>
+        )}
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

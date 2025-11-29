@@ -178,7 +178,7 @@ export function getDashboardPathForRole(roleId: number | null | undefined): stri
     case 9: // Sales Rep
       return '/dashboard/sales'
     case 10: // Viewer – send to admin overview as read-only user
-      return '/dashboard/admin'
+      return '/dashboard/marketing'
     default:
       // Fallback to admin overview if something is missing
       return '/dashboard/admin'

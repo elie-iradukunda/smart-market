@@ -2,30 +2,26 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
-import { Search } from 'lucide-react'
+import { Search, Menu } from 'lucide-react'
 
 const FINANCE_LINKS = [
   { path: '/dashboard/accountant', label: 'Overview' },
   { path: '/finance/invoices', label: 'Invoices' },
   { path: '/finance/payments', label: 'Payments' },
-  { path: '/finance/journals', label: 'Journal entries' },
+  { path: '/finance/journals', label: 'Journals' },
   { path: '/finance/reports', label: 'Reports' },
-  { path: '/pos/sales-history', label: 'POS history' },
 ]
 
 const SEARCH_ROUTES = [
-  { path: '/dashboard/accountant', label: 'Finance Overview', keywords: ['dashboard', 'home', 'overview'] },
-  { path: '/finance/invoices', label: 'Invoices', keywords: ['invoice', 'invoices', 'bill', 'billing'] },
-  { path: '/finance/payments', label: 'Payments', keywords: ['payment', 'payments', 'pay', 'receipt'] },
-  { path: '/finance/journals', label: 'Journal Entries', keywords: ['journal', 'journals', 'entry', 'entries', 'ledger'] },
-  { path: '/finance/reports', label: 'Financial Reports', keywords: ['report', 'reports', 'financial', 'analytics'] },
-  { path: '/finance/accounts', label: 'Chart of Accounts', keywords: ['accounts', 'chart', 'coa'] },
-  { path: '/pos/sales-history', label: 'POS Sales History', keywords: ['pos', 'sales', 'history', 'terminal'] },
-  { path: '/pos', label: 'POS Terminal', keywords: ['pos', 'terminal', 'cashier', 'register'] },
-  { path: '/finance/search', label: 'Search Finance', keywords: ['search', 'find', 'lookup'] },
+  { path: '/dashboard/accountant', label: 'Overview', keywords: ['overview', 'dashboard', 'home'] },
+  { path: '/finance/invoices', label: 'Invoices', keywords: ['invoice', 'bill', 'receivable'] },
+  { path: '/finance/payments', label: 'Payments', keywords: ['payment', 'receipt', 'money', 'cash'] },
+  { path: '/finance/journals', label: 'Journals', keywords: ['journal', 'entry', 'ledger', 'book'] },
+  { path: '/finance/reports', label: 'Reports', keywords: ['report', 'statement', 'balance', 'profit', 'loss'] },
+  { path: '/finance/accounts', label: 'Accounts', keywords: ['account', 'chart', 'coa'] },
 ]
 
-export default function FinanceTopNav() {
+export default function FinanceTopNav({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const user = getAuthUser()
@@ -66,6 +62,15 @@ export default function FinanceTopNav() {
     <header className="bg-slate-900 text-slate-50 shadow-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-6">
         <div className="flex items-center gap-2">
+          {onMenuClick && (
+            <button
+              type="button"
+              className="lg:hidden -ml-2 p-2 text-slate-200 hover:text-white"
+              onClick={onMenuClick}
+            >
+              <Menu size={24} />
+            </button>
+          )}
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-indigo-400 text-xs font-bold text-slate-900">
             AC
           </span>
@@ -75,7 +80,7 @@ export default function FinanceTopNav() {
           </div>
         </div>
 
-                <nav className="hidden md:flex items-center gap-4 text-xs font-medium">
+        <nav className="hidden md:flex items-center gap-4 text-xs font-medium">
           {FINANCE_LINKS.map((link) => (
             <Link
               key={link.path}
@@ -129,10 +134,10 @@ export default function FinanceTopNav() {
                     route.keywords.some((k) => k.includes(v) || v.includes(k))
                   )
                 }).length === 0 && (
-                  <div className="px-3 py-2 text-slate-500">
-                    No quick links found. Press Enter to search.
-                  </div>
-                )}
+                    <div className="px-3 py-2 text-slate-500">
+                      No quick links found. Press Enter to search.
+                    </div>
+                  )}
               </div>
             )}
           </form>

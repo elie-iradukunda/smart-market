@@ -1,11 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { fetchPayments, recordPayment, fetchInvoices, initiateLanariPayment, checkLanariPaymentStatus } from '../../api/apiClient'
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
-import ControllerTopNav from '@/components/layout/ControllerTopNav'
-import PosTopNav from '@/components/layout/PosTopNav'
-import FinanceTopNav from '@/components/layout/FinanceTopNav'
-import OwnerSideNav from '@/components/layout/OwnerSideNav'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { getAuthUser } from '@/utils/apiClient'
 
 export default function PaymentsPage() {
@@ -156,7 +152,7 @@ export default function PaymentsPage() {
 
   const selectedInvoice = invoiceId
     ? openInvoices.find((inv: any) => String(inv.id) === String(invoiceId)) ||
-      invoices.find((inv: any) => String(inv.id) === String(invoiceId))
+    invoices.find((inv: any) => String(inv.id) === String(invoiceId))
     : null
 
   const isFormValid = !!invoiceId && !!amount && Number(amount) > 0
@@ -166,17 +162,7 @@ export default function PaymentsPage() {
   const isPosRole = user?.role_id === 5 || user?.role_id === 11
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Accountant nav renders only for accountant role based on its internal role check */}
-      <FinanceTopNav />
-      {isController ? <ControllerTopNav /> : isPosRole ? <PosTopNav /> : <OwnerTopNav />}
-
-      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
-      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-8">
-        <div className="flex gap-6">
-          <OwnerSideNav />
-
-          <main className="flex-1 space-y-6 max-w-7xl mx-auto">
+    <DashboardLayout>
 
       {/* Header card with blue accent, similar to other finance pages */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xl">
@@ -472,9 +458,6 @@ export default function PaymentsPage() {
           </p>
         )}
       </div>
-          </main>
-        </div>
-      </div>
-    </div>
+    </DashboardLayout>
   )
 }

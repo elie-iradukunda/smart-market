@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Pencil, Trash2, Plus, Search } from 'lucide-react';
-import InventoryTopNav from '@/components/layout/InventoryTopNav';
-import { 
-  fetchSuppliers, 
-  createSupplier, 
-  updateSupplier, 
-  deleteSupplier, 
-  fetchMaterials 
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import {
+  fetchSuppliers,
+  createSupplier,
+  updateSupplier,
+  deleteSupplier,
+  fetchMaterials
 } from '@/api/apiClient';
 
 // Types
@@ -101,7 +101,7 @@ export default function SuppliersPage() {
         setLoading(true);
         setLoadingMaterials(true);
         setError(null);
-        
+
         const [suppliersResponse, materialsResponse] = await Promise.all([
           fetchSuppliers().catch(err => {
             console.error('Error fetching suppliers:', err);
@@ -116,7 +116,7 @@ export default function SuppliersPage() {
         // Ensure both responses are arrays before setting state
         const suppliersData = Array.isArray(suppliersResponse) ? suppliersResponse : [];
         const materialsData = Array.isArray(materialsResponse) ? materialsResponse : [];
-        
+
         setSuppliers(suppliersData);
         setMaterials(materialsData);
       } catch (err) {
@@ -183,7 +183,7 @@ export default function SuppliersPage() {
     try {
       setSaving(true);
       setError(null);
-      
+
       const supplierData = {
         name: form.name,
         contact: form.contact,
@@ -202,7 +202,7 @@ export default function SuppliersPage() {
 
       if (form.id) {
         const updatedSupplier = await updateSupplier(form.id, supplierData);
-        setSuppliers(prev => 
+        setSuppliers(prev =>
           prev.map(s => s.id === form.id ? { ...updatedSupplier } : s)
         );
       } else {
@@ -226,9 +226,8 @@ export default function SuppliersPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <InventoryTopNav />
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Suppliers</h1>
@@ -239,7 +238,7 @@ export default function SuppliersPage() {
             <input
               type="text"
               placeholder="Search suppliers..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -247,7 +246,7 @@ export default function SuppliersPage() {
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 p-4">
+          <div className="rounded-xl bg-red-50 p-4 border border-red-100">
             <div className="flex">
               <div className="text-red-400">
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -265,7 +264,7 @@ export default function SuppliersPage() {
         )}
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <div id="supplier-form" className="lg:col-span-1 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div id="supplier-form" className="lg:col-span-1 bg-white rounded-3xl shadow-sm border border-gray-200">
             <div className="p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">
                 {form.id ? 'Edit Supplier' : 'Add New Supplier'}
@@ -282,7 +281,7 @@ export default function SuppliersPage() {
                   <input
                     id="name"
                     type="text"
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
                     placeholder="Acme Inc."
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -298,7 +297,7 @@ export default function SuppliersPage() {
                     <input
                       id="contact"
                       type="text"
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
                       placeholder="John Doe"
                       value={form.contact}
                       onChange={(e) => setForm({ ...form, contact: e.target.value })}
@@ -311,7 +310,7 @@ export default function SuppliersPage() {
                     <input
                       id="email"
                       type="email"
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
                       placeholder="contact@example.com"
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -328,7 +327,7 @@ export default function SuppliersPage() {
                     <input
                       id="phone"
                       type="tel"
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
                       placeholder="+250 700 000 000"
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -341,7 +340,7 @@ export default function SuppliersPage() {
                     <input
                       id="tax_id"
                       type="text"
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
                       placeholder="123456789"
                       value={form.tax_id}
                       onChange={(e) => setForm({ ...form, tax_id: e.target.value })}
@@ -356,7 +355,7 @@ export default function SuppliersPage() {
                   <textarea
                     id="address"
                     rows={2}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
                     placeholder="123 Business St, Kigali, Rwanda"
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
@@ -369,7 +368,7 @@ export default function SuppliersPage() {
                   </label>
                   <select
                     id="material_id"
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
                     value={form.material_id || ''}
                     onChange={(e) => handleMaterialChange(Number(e.target.value))}
                     disabled={loadingMaterials}
@@ -390,7 +389,7 @@ export default function SuppliersPage() {
                   <textarea
                     id="material_notes"
                     rows={2}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
                     value={form.material_notes || ''}
                     onChange={(e) => setForm({ ...form, material_notes: e.target.value })}
                     placeholder="Any specific notes about this material from this supplier"
@@ -404,7 +403,7 @@ export default function SuppliersPage() {
                     </label>
                     <select
                       id="payment_terms"
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
                       value={form.payment_terms}
                       onChange={(e) => setForm({ ...form, payment_terms: e.target.value as PaymentTerm })}
                     >
@@ -426,7 +425,7 @@ export default function SuppliersPage() {
                         min="0"
                         max="5"
                         step="0.5"
-                        className="w-20 rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                        className="w-20 rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
                         value={form.rating}
                         onChange={(e) => setForm({ ...form, rating: Number(e.target.value) })}
                       />
@@ -442,7 +441,7 @@ export default function SuppliersPage() {
                   <textarea
                     id="notes"
                     rows={3}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
                     placeholder="Additional information about this supplier..."
                     value={form.notes}
                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
@@ -468,7 +467,7 @@ export default function SuppliersPage() {
                       type="button"
                       onClick={() => setForm(initialFormState)}
                       disabled={saving}
-                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+                      className="inline-flex items-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
                     >
                       Cancel
                     </button>
@@ -476,7 +475,7 @@ export default function SuppliersPage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="inline-flex items-center rounded-md border border-transparent bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+                    className="inline-flex items-center rounded-xl border border-transparent bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
                   >
                     {saving ? (
                       <>
@@ -500,7 +499,7 @@ export default function SuppliersPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
@@ -570,9 +569,8 @@ export default function SuppliersPage() {
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              supplier.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                            }`}>
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${supplier.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                              }`}>
                               {supplier.is_active ? 'Active' : 'Inactive'}
                             </span>
                             <div className="mt-1 flex justify-center">
@@ -657,6 +655,6 @@ export default function SuppliersPage() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

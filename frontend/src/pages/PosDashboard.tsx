@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { fetchPOSSales, fetchMaterials } from '@/api/apiClient'
 import { ShoppingCart, DollarSign, Package, Loader, AlertTriangle } from 'lucide-react'
 
@@ -69,74 +70,94 @@ export default function PosDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-gray-600">Loading POS data...</span>
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader className="w-8 h-8 animate-spin text-purple-600 mr-3" />
+          <span className="text-gray-600 font-medium">Loading POS data...</span>
+        </div>
+      </DashboardLayout>
     )
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64 text-red-600">
-        <AlertTriangle className="w-6 h-6 mr-2" />
-        {error}
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh] text-red-600">
+          <AlertTriangle className="w-6 h-6 mr-2" />
+          {error}
+        </div>
+      </DashboardLayout>
     )
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">POS Dashboard</h1>
+    <DashboardLayout>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">POS Dashboard</h1>
+        <p className="text-sm text-gray-600 mt-1">Point of Sale overview and quick actions</p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow p-6 flex items-center">
-          <div className="p-3 bg-blue-100 rounded-full mr-4">
-            <ShoppingCart className="w-6 h-6 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Today's Sales</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.todaySalesCount}</p>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white rounded-xl shadow-md p-6 border border-purple-100 hover:shadow-lg transition">
+          <div className="flex items-center">
+            <div className="p-3 bg-purple-100 rounded-full mr-4">
+              <ShoppingCart className="w-6 h-6 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Today's Sales</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.todaySalesCount}</p>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 flex items-center">
-          <div className="p-3 bg-green-100 rounded-full mr-4">
-            <DollarSign className="w-6 h-6 text-green-600" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Today's Revenue</p>
-            <p className="text-2xl font-bold text-gray-900">
-              ${stats.todayRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
+        <div className="bg-white rounded-xl shadow-md p-6 border border-green-100 hover:shadow-lg transition">
+          <div className="flex items-center">
+            <div className="p-3 bg-green-100 rounded-full mr-4">
+              <DollarSign className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Today's Revenue</p>
+              <p className="text-3xl font-bold text-gray-900">
+                ${stats.todayRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 flex items-center">
-          <div className="p-3 bg-purple-100 rounded-full mr-4">
-            <Package className="w-6 h-6 text-purple-600" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Available Products</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.availableProducts}</p>
+        <div className="bg-white rounded-xl shadow-md p-6 border border-pink-100 hover:shadow-lg transition">
+          <div className="flex items-center">
+            <div className="p-3 bg-pink-100 rounded-full mr-4">
+              <Package className="w-6 h-6 text-pink-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Available Products</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.availableProducts}</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex gap-4">
-        <Link
-          to="/dashboard/sales"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Go to Sales Dashboard
-        </Link>
-        <Link
-          to="/pos/history"
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-        >
-          View Sales History
-        </Link>
+      {/* Quick Actions */}
+      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <div className="flex flex-wrap gap-4">
+          <Link
+            to="/pos/terminal"
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-pink-700 transition"
+          >
+            <ShoppingCart className="w-5 h-5 mr-2" />
+            Open POS Terminal
+          </Link>
+          <Link
+            to="/pos/history"
+            className="inline-flex items-center px-6 py-3 bg-white text-gray-700 rounded-lg font-semibold border-2 border-gray-300 hover:bg-gray-50 hover:border-purple-300 transition"
+          >
+            View Sales History
+          </Link>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

@@ -1,8 +1,9 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react'
-import InventoryTopNav from '@/components/layout/InventoryTopNav'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import StockAlerts from '../../modules/dashboards/components/StockAlerts'
 import { fetchInventoryReport, fetchStockMovements, fetchPurchaseOrders } from '@/api/apiClient'
+import { BarChart3, AlertTriangle, PackageX, PackageCheck, DollarSign } from 'lucide-react'
 
 export default function InventoryReportsPage() {
   const [materials, setMaterials] = useState<any[]>([])
@@ -61,17 +62,18 @@ export default function InventoryReportsPage() {
   }, [materials])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50/50 via-white to-lime-50/50">
-      <InventoryTopNav />
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <DashboardLayout>
+      <div className="space-y-8">
         {/* Header */}
-        <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-8 sm:p-10 shadow-xl">
-          <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">Inventory reports</p>
-          <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight">
-            Stock health &
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-lime-600">
-              inventory performance
-            </span>
+        <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-10 w-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
+              <BarChart3 size={20} />
+            </div>
+            <p className="text-sm font-semibold uppercase tracking-wider text-purple-700">Analytics</p>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
+            Stock Health & Performance
           </h1>
           <p className="mt-4 text-base text-gray-600 max-w-2xl">
             See low stock, out-of-stock and total quantities so you can plan purchase orders and support production.
@@ -80,30 +82,50 @@ export default function InventoryReportsPage() {
 
         {/* Error message */}
         {error && (
-          <p className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">{error}</p>
+          <div className="rounded-xl bg-red-50 border border-red-200 p-4">
+            <p className="text-sm text-red-700 font-medium flex items-center gap-2">
+              <AlertTriangle size={16} />
+              {error}
+            </p>
+          </div>
         )}
 
         {/* KPI cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <div className="rounded-2xl border border-gray-100 bg-white/95 p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Total materials</p>
-            <p className="mt-2 text-2xl font-bold text-gray-900">{stats.totalMaterials}</p>
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Total materials</p>
+              <PackageCheck size={16} className="text-gray-400" />
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{stats.totalMaterials}</p>
           </div>
-          <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Low stock</p>
-            <p className="mt-2 text-2xl font-bold text-amber-900">{stats.lowStock}</p>
+          <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Low stock</p>
+              <AlertTriangle size={16} className="text-amber-500" />
+            </div>
+            <p className="text-2xl font-bold text-amber-900">{stats.lowStock}</p>
           </div>
-          <div className="rounded-2xl border border-red-100 bg-red-50 p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Out of stock</p>
-            <p className="mt-2 text-2xl font-bold text-red-900">{stats.outOfStock}</p>
+          <div className="rounded-2xl border border-red-100 bg-red-50 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Out of stock</p>
+              <PackageX size={16} className="text-red-500" />
+            </div>
+            <p className="text-2xl font-bold text-red-900">{stats.outOfStock}</p>
           </div>
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Total quantity on hand</p>
-            <p className="mt-2 text-2xl font-bold text-emerald-900">{stats.totalQty}</p>
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Total Qty</p>
+              <PackageCheck size={16} className="text-emerald-500" />
+            </div>
+            <p className="text-2xl font-bold text-emerald-900">{stats.totalQty}</p>
           </div>
-          <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">Total stock value</p>
-            <p className="mt-2 text-2xl font-bold text-indigo-900">
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">Total Value</p>
+              <DollarSign size={16} className="text-indigo-500" />
+            </div>
+            <p className="text-2xl font-bold text-indigo-900">
               {stats.totalValue ? `$${stats.totalValue.toFixed(2)}` : '$0.00'}
             </p>
           </div>
@@ -112,7 +134,8 @@ export default function InventoryReportsPage() {
         {/* Main content: stock alerts + material table */}
         <div className="grid gap-6 lg:grid-cols-3 items-start">
           <div className="lg:col-span-1 space-y-6">
-            <div className="rounded-2xl border border-gray-100 bg-white/95 shadow-md">
+            <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Stock Alerts</h3>
               <StockAlerts />
             </div>
           </div>
@@ -121,39 +144,39 @@ export default function InventoryReportsPage() {
               <h2 className="text-lg font-semibold text-gray-900">Material stock status</h2>
               {loading && <span className="text-xs text-gray-500">Loading…</span>}
             </div>
-            <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white/95 shadow-md">
+            <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white shadow-sm">
               <table className="min-w-full divide-y divide-gray-100 text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50/50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">SKU</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Name</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Current stock</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Reorder level</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">SKU</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Stock</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Reorder</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {materials.map((m) => (
-                    <tr key={m.id || m.sku}>
-                      <td className="px-4 py-2 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{m.sku}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-gray-700 text-xs sm:text-sm">{m.name}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{m.current_stock}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-gray-700 text-xs sm:text-sm">{m.reorder_level}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-xs sm:text-sm">
+                    <tr key={m.id || m.sku} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-3 whitespace-nowrap text-gray-500 font-mono text-xs">{m.sku}</td>
+                      <td className="px-6 py-3 whitespace-nowrap text-gray-900 font-medium">{m.name}</td>
+                      <td className="px-6 py-3 whitespace-nowrap text-gray-900">{m.current_stock}</td>
+                      <td className="px-6 py-3 whitespace-nowrap text-gray-500">{m.reorder_level}</td>
+                      <td className="px-6 py-3 whitespace-nowrap">
                         <span
                           className={
                             m.stock_status === 'out_of_stock'
                               ? 'inline-flex rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700'
                               : m.stock_status === 'low_stock'
-                              ? 'inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700'
-                              : 'inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700'
+                                ? 'inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700'
+                                : 'inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700'
                           }
                         >
                           {m.stock_status === 'out_of_stock'
                             ? 'Out of stock'
                             : m.stock_status === 'low_stock'
-                            ? 'Low stock'
-                            : 'In stock'}
+                              ? 'Low stock'
+                              : 'In stock'}
                         </span>
                       </td>
                     </tr>
@@ -162,7 +185,7 @@ export default function InventoryReportsPage() {
                     <tr>
                       <td
                         colSpan={5}
-                        className="px-4 py-6 text-center text-xs sm:text-sm text-gray-500"
+                        className="px-6 py-8 text-center text-sm text-gray-500"
                       >
                         No materials found in inventory report.
                       </td>
@@ -181,24 +204,24 @@ export default function InventoryReportsPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Recent stock movements</h2>
             </div>
-            <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white/95 shadow-md">
+            <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white shadow-sm">
               <table className="min-w-full divide-y divide-gray-100 text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50/50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Date</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Material</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Type</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Qty</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Material</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Qty</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {movements.map((mv) => (
-                    <tr key={mv.id}>
-                      <td className="px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-gray-700">
+                    <tr key={mv.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-3 whitespace-nowrap text-xs text-gray-500">
                         {mv.movement_date ? new Date(mv.movement_date).toLocaleDateString() : ''}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-gray-900">{mv.material_name || mv.material_id}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-xs sm:text-sm">
+                      <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">{mv.material_name || mv.material_id}</td>
+                      <td className="px-6 py-3 whitespace-nowrap">
                         <span
                           className={
                             mv.type === 'out'
@@ -209,12 +232,12 @@ export default function InventoryReportsPage() {
                           {mv.type === 'out' ? 'Out' : 'In'}
                         </span>
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-gray-900">{mv.quantity}</td>
+                      <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-900">{mv.quantity}</td>
                     </tr>
                   ))}
                   {!loading && movements.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-4 py-6 text-center text-xs sm:text-sm text-gray-500">
+                      <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">
                         No recent stock movements.
                       </td>
                     </tr>
@@ -229,34 +252,34 @@ export default function InventoryReportsPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Latest purchase orders</h2>
             </div>
-            <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white/95 shadow-md">
+            <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white shadow-sm">
               <table className="min-w-full divide-y divide-gray-100 text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50/50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">PO #</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Supplier</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Total</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">PO #</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Supplier</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {purchaseOrders.map((po) => (
-                    <tr key={po.id}>
-                      <td className="px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-gray-900">{po.id}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-gray-700">{po.supplier_name || po.supplier_id}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-xs sm:text-sm">
+                    <tr key={po.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-3 whitespace-nowrap text-xs font-mono text-gray-500">#{po.id}</td>
+                      <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">{po.supplier_name || po.supplier_id}</td>
+                      <td className="px-6 py-3 whitespace-nowrap">
                         <span className="inline-flex rounded-full bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-700">
                           {po.status}
                         </span>
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-gray-900">
+                      <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
                         {po.total_amount != null ? `$${Number(po.total_amount).toFixed(2)}` : '—'}
                       </td>
                     </tr>
                   ))}
                   {!loading && purchaseOrders.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-4 py-6 text-center text-xs sm:text-sm text-gray-500">
+                      <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">
                         No purchase orders found.
                       </td>
                     </tr>
@@ -267,6 +290,6 @@ export default function InventoryReportsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

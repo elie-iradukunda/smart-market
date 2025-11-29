@@ -10,7 +10,8 @@ export default function InventoryControllerSideNav() {
   const user = getAuthUser()
   const location = useLocation()
 
-  if (!user || user.role_id !== 6) return null
+  // Allow Controller (6) and Manager (8)
+  if (!user || (user.role_id !== 6 && user.role_id !== 8)) return null
 
   const isActive = (path: string) => location.pathname === path
 

@@ -1,9 +1,7 @@
-// @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { fetchJournalEntries } from '../../api/apiClient'
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
-import FinanceTopNav from '@/components/layout/FinanceTopNav'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 export default function JournalEntryDetailPage() {
   const { id } = useParams()
@@ -55,33 +53,22 @@ export default function JournalEntryDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <FinanceTopNav />
-        <OwnerTopNav />
-        <div className="px-4 py-6 sm:px-6 lg:px-8">
-          <p className="text-sm text-gray-500">Loading journal entry...</p>
-        </div>
-      </div>
+      <DashboardLayout>
+        <p className="text-sm text-gray-500">Loading journal entry...</p>
+      </DashboardLayout>
     )
   }
 
   if (error || !journal) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <FinanceTopNav />
-        <OwnerTopNav />
-        <div className="px-4 py-6 sm:px-6 lg:px-8">
-          <p className="text-sm text-red-600">{error || 'Journal entry not found'}</p>
-        </div>
-      </div>
+      <DashboardLayout>
+        <p className="text-sm text-red-600">{error || 'Journal entry not found'}</p>
+      </DashboardLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <FinanceTopNav />
-      <OwnerTopNav />
-      <div className="px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <DashboardLayout>
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Journal entry</p>
@@ -129,7 +116,6 @@ export default function JournalEntryDetailPage() {
           <p className="text-gray-700">Total Credit: {totalCredit}</p>
         </div>
       </section>
-      </div>
-    </div>
+    </DashboardLayout>
   )
 }

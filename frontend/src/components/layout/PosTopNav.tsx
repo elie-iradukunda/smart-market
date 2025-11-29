@@ -3,7 +3,9 @@ import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearAuth, currentUserHasPermission, getAuthUser } from '@/utils/apiClient'
 
-export default function PosTopNav() {
+import { Menu } from 'lucide-react'
+
+export default function PosTopNav({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const user = getAuthUser()
   // POS is handled primarily by Sales Rep role (role_id 9)
@@ -20,6 +22,15 @@ export default function PosTopNav() {
     <header className="bg-slate-900 text-slate-100 shadow-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-6">
         <div className="flex items-center gap-2">
+          {onMenuClick && (
+            <button
+              type="button"
+              className="lg:hidden -ml-2 p-2 text-slate-200 hover:text-white"
+              onClick={onMenuClick}
+            >
+              <Menu size={24} />
+            </button>
+          )}
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-xs font-bold text-slate-900">
             POS
           </span>

@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
+import { Menu } from 'lucide-react'
 
 const NAV_LINKS = [
   { path: '/dashboard/owner', label: 'Dashboard' },
@@ -25,7 +26,7 @@ const ROUTE_CANDIDATES: { path: string; label: string; keywords: string[] }[] = 
   { path: '/search', label: 'Global search', keywords: ['search', 'global search'] },
 ]
 
-export default function OwnerTopNav() {
+export default function OwnerTopNav({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
 
@@ -66,6 +67,15 @@ export default function OwnerTopNav() {
         <div className="flex items-center justify-between h-16">
           {/* Logo/Brand */}
           <div className="flex items-center space-x-2">
+            {onMenuClick && (
+              <button
+                type="button"
+                className="lg:hidden -ml-2 p-2 text-blue-100 hover:text-white"
+                onClick={onMenuClick}
+              >
+                <Menu size={24} />
+              </button>
+            )}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="30"

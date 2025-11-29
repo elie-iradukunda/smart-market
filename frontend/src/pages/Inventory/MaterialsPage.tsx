@@ -2,12 +2,9 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchMaterials } from '../../api/apiClient'
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
-import ControllerTopNav from '@/components/layout/ControllerTopNav'
-import InventoryTopNav from '@/components/layout/InventoryTopNav'
-import TechnicianTopNav from '@/components/layout/TechnicianTopNav'
-import OwnerSideNav from '@/components/layout/OwnerSideNav'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { getAuthUser, currentUserHasPermission } from '@/utils/apiClient'
+import { Plus, Search, Package } from 'lucide-react'
 
 export default function MaterialsPage() {
   const [materials, setMaterials] = useState([])
@@ -24,7 +21,6 @@ export default function MaterialsPage() {
     fetchMaterials()
       .then((data) => {
         if (!isMounted) return
-        // Ensure data is an array, default to empty array if not
         const materialsData = Array.isArray(data) ? data : [];
         setMaterials(materialsData);
       })
@@ -32,7 +28,7 @@ export default function MaterialsPage() {
         if (!isMounted) return
         console.error('Error fetching materials:', err);
         setError(err.message || 'Failed to load materials')
-        setMaterials([]); // Ensure materials is always an array
+        setMaterials([]);
       })
       .finally(() => {
         if (!isMounted) return
@@ -44,16 +40,11 @@ export default function MaterialsPage() {
     }
   }, [])
 
-  const user = getAuthUser()
-  const isController = user?.role_id === 4
-  const isTechnician = user?.role_id === 7
-  const isOwner = user?.role_id === 1
-
-  // Helper function to dynamically color stock levels (example logic)
+  // Helper function to dynamically color stock levels
   const getStockColor = (qty) => {
-    if (qty < 20) return 'text-red-700 font-semibold bg-red-100/50';
-    if (qty < 50) return 'text-amber-700 font-medium bg-amber-100/50';
-    return 'text-green-700 font-medium';
+    if (qty < 20) return 'text-red-700 font-semibold bg-red-50 ring-1 ring-inset ring-red-600/20';
+    if (qty < 50) return 'text-amber-700 font-medium bg-amber-50 ring-1 ring-inset ring-amber-600/20';
+    return 'text-emerald-700 font-medium bg-emerald-50 ring-1 ring-inset ring-emerald-600/20';
   };
 
   const filtered = materials.filter((m) => {
@@ -66,111 +57,113 @@ export default function MaterialsPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Owner sees only OwnerTopNav; technicians see TechnicianTopNav; others see InventoryTopNav */}
-      {isOwner ? <OwnerTopNav /> : isTechnician ? <TechnicianTopNav /> : <InventoryTopNav />}
-
-      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
-      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-6">
-        <div className="flex gap-6">
-          <OwnerSideNav />
-
-          <main className="flex-1 space-y-6 max-w-6xl mx-auto">
-
-            {/* Header Card */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl">
-              <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">Inventory Management</p>
-              <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
-                Raw <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Materials</span>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header Card */}
+        <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 mb-2">
+                Inventory
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Raw Materials
               </h1>
-              <p className="mt-3 text-base text-gray-600 max-w-xl">
+              <p className="mt-2 text-gray-500 max-w-xl">
                 Track stock levels for key materials used in production and manage reorder points.
               </p>
             </div>
 
-            {/* Materials Table Card */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
-
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5">
-                <p className="text-lg font-semibold text-slate-900">Current Stock</p>
-
-                <div className="flex w-full sm:w-auto gap-2">
-                  {/* Search Input */}
-                  <input
-                    type="text"
-                    placeholder="Search by name or category"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full sm:max-w-xs rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-800 placeholder-slate-400 
-                                   focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition duration-150"
-                  />
-
-                  {currentUserHasPermission('material.create') && (
-                    <button
-                      type="button"
-                      onClick={() => navigate('/inventory/materials/new')}
-                      className="inline-flex items-center rounded-md bg-emerald-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-emerald-700"
-                    >
-                      + New material
-                    </button>
-                  )}
-                </div>
-
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search materials..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 w-full md:w-64"
+                />
               </div>
-
-              {error && (
-                <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 font-medium border border-red-200">{error}</p>
-              )}
-              {loading ? (
-                <p className="text-sm text-slate-500 py-4">Loading materials...</p>
-              ) : (
-                <div className="overflow-x-auto -mx-6 sm:mx-0">
-
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="bg-indigo-50/80 border-b border-indigo-200">
-                      <tr>
-                        <th className="px-6 py-3 font-semibold text-indigo-700 uppercase tracking-wider text-xs">ID</th>
-                        <th className="px-6 py-3 font-semibold text-indigo-700 uppercase tracking-wider text-xs">Name</th>
-                        <th className="px-6 py-3 font-semibold text-indigo-700 uppercase tracking-wider text-xs">Category</th>
-                        <th className="px-6 py-3 font-semibold text-indigo-700 uppercase tracking-wider text-xs text-right">Stock</th>
-                        <th className="px-6 py-3 font-semibold text-indigo-700 uppercase tracking-wider text-xs">UoM</th>
-                        <th className="px-6 py-3 font-semibold text-indigo-700 uppercase tracking-wider text-xs">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {filtered.map(m => (
-                        <tr key={m.id} className="hover:bg-blue-50/50 transition duration-150 cursor-pointer">
-                          <td className="px-6 py-3 text-slate-500 font-mono text-xs">{m.id}</td>
-
-                          <td className="px-6 py-3 text-slate-900 font-medium">{m.name}</td>
-                          <td className="px-6 py-3 text-slate-700">
-                            <span className="inline-flex items-center rounded-full bg-slate-100 text-slate-700 px-3 py-0.5 text-xs font-medium">
-                              {m.category}
-                            </span>
-                          </td>
-                          <td className={`px-6 py-3 text-right ${getStockColor(m.current_stock)}`}>
-                            {m.current_stock}
-                          </td>
-
-                          <td className="px-6 py-3 text-slate-700">{m.uom}</td>
-                          <td className="px-6 py-3 text-center">
-                            <button
-                              onClick={() => navigate(`/inventory/materials/${m.id}`)}
-                              className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
-                            >
-                              View / Edit
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              {currentUserHasPermission('material.create') && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/inventory/materials/new')}
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-700 hover:shadow-emerald-500/40 transition-all"
+                >
+                  <Plus size={18} />
+                  New Material
+                </button>
               )}
             </div>
-          </main>
+          </div>
+        </div>
+
+        {/* Materials Table Card */}
+        <div className="rounded-3xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+          {error && (
+            <div className="p-4 bg-red-50 border-b border-red-100">
+              <p className="text-sm text-red-700 font-medium">{error}</p>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
+              <p className="mt-2 text-sm text-gray-500">Loading materials...</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-gray-50/50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">ID</th>
+                    <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Name</th>
+                    <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Category</th>
+                    <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs text-right">Stock</th>
+                    <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">UoM</th>
+                    <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filtered.map(m => (
+                    <tr key={m.id} className="hover:bg-gray-50/80 transition-colors group">
+                      <td className="px-6 py-4 text-gray-400 font-mono text-xs">#{m.id}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500">
+                            <Package size={16} />
+                          </div>
+                          <span className="font-medium text-gray-900">{m.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center rounded-lg bg-gray-100 text-gray-600 px-2.5 py-1 text-xs font-medium">
+                          {m.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs ${getStockColor(m.current_stock)}`}>
+                          {m.current_stock}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-500">{m.uom}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => navigate(`/inventory/materials/${m.id}`)}
+                          className="text-sm font-medium text-emerald-600 hover:text-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }
