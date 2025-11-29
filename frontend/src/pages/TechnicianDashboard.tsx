@@ -1,13 +1,37 @@
 // @ts-nocheck
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { clearAuth } from '@/utils/apiClient'
+import { fetchWorkOrders, fetchMaterials } from '@/api/apiClient'
 import TechnicianTopNav from '@/components/layout/TechnicianTopNav'
 import JobPipelineOverview from '../modules/dashboards/components/JobPipelineOverview'
 import StockAlerts from '../modules/dashboards/components/StockAlerts'
 
 export default function TechnicianDashboard() {
   const navigate = useNavigate()
+  const [workOrders, setWorkOrders] = useState<any[]>([])
+  const [materials, setMaterials] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [wo, mats] = await Promise.all([fetchWorkOrders(), fetchMaterials()])
+        setWorkOrders(wo || [])
+        setMaterials(mats || [])
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  const today = new Date().toISOString().split('T')[0]
+  const activeJobs = workOrders.filter((wo) => wo.status !== 'completed').length
+  const dueToday = workOrders.filter((wo) => wo.due_date?.split('T')[0] === today).length
+  const lowStock = materials.filter((m) => m.current_stock <= (m.reorder_level || 0)).length
 
   const handleLogout = () => {
     clearAuth()
@@ -46,7 +70,7 @@ export default function TechnicianDashboard() {
             <dl className="mt-8 grid gap-4 sm:grid-cols-3 text-sm">
               <div className="rounded-xl bg-white/80 px-4 py-3 border border-gray-100 shadow-lg">
                 <dt className="text-xs font-medium text-gray-500">Active jobs</dt>
-                <dd className="mt-1 text-2xl font-bold text-gray-900">--</dd>
+                <dd className="mt-1 text-2xl font-bold text-gray-900">{loading ? '...' : activeJobs}</dd>
                 <dd className="mt-2 text-[11px] text-sky-700">
                   <Link to="/production/work-orders" className="underline underline-offset-2 hover:text-sky-800">
                     View work orders
@@ -55,7 +79,7 @@ export default function TechnicianDashboard() {
               </div>
               <div className="rounded-xl bg-white/80 px-4 py-3 border border-gray-100 shadow-lg">
                 <dt className="text-xs font-medium text-gray-500">Due today</dt>
-                <dd className="mt-1 text-2xl font-bold text-gray-900">--</dd>
+                <dd className="mt-1 text-2xl font-bold text-gray-900">{loading ? '...' : dueToday}</dd>
                 <dd className="mt-2 text-[11px] text-sky-700">
                   <Link to="/production/work-orders" className="underline underline-offset-2 hover:text-sky-800">
                     See today’s jobs
@@ -64,7 +88,7 @@ export default function TechnicianDashboard() {
               </div>
               <div className="rounded-xl bg-sky-50/90 px-4 py-3 border border-sky-200 shadow-lg ring-1 ring-sky-500/10">
                 <dt className="text-xs font-medium text-sky-700">Materials at risk</dt>
-                <dd className="mt-1 text-2xl font-bold text-sky-800">--</dd>
+                <dd className="mt-1 text-2xl font-bold text-sky-800">{loading ? '...' : lowStock}</dd>
                 <dd className="mt-2 text-[11px] text-sky-700">
                   <Link to="/inventory/materials" className="underline underline-offset-2 hover:text-sky-800">
                     Check materials

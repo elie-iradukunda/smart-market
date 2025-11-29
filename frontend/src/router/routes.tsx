@@ -1,5 +1,3 @@
-import React from 'react';
-
 import AdminDashboard from '../pages/AdminDashboard';
 import OwnerDashboard from '../pages/OwnerDashboard';
 import ReceptionDashboard from '../pages/ReceptionDashboard';

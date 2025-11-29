@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { fetchAccounts } from '../../api/apiClient'
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState([])
@@ -43,9 +43,7 @@ export default function AccountsPage() {
   })
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <OwnerTopNav />
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+    <DashboardLayout>
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Finance</p>
         <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900">Chart of accounts</h1>
@@ -98,7 +96,6 @@ export default function AccountsPage() {
           </div>
         )}
       </div>
-      </div>
-    </div>
+    </DashboardLayout>
   )
 }

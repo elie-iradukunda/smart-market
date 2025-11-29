@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchDemoConversations } from '@/api/apiClient'
+import { fetchConversations } from '@/api/apiClient'
 
 export default function ConversationList({ onCountChange }) {
   const [conversations, setConversations] = useState([])
@@ -10,14 +10,21 @@ export default function ConversationList({ onCountChange }) {
   const navigate = useNavigate()
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
-
-    const list = fetchDemoConversations()
-    const safeList = Array.isArray(list) ? list : []
-    setConversations(safeList)
-    if (onCountChange) onCountChange(safeList.length)
-    setLoading(false)
+    const loadConversations = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const list = await fetchConversations()
+        const safeList = Array.isArray(list) ? list : []
+        setConversations(safeList)
+        if (onCountChange) onCountChange(safeList.length)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load conversations')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadConversations()
   }, [onCountChange])
 
   return (

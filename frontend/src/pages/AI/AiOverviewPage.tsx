@@ -5,7 +5,7 @@ import { Zap, TrendingUp, DollarSign, Package, Users, Activity, Loader, AlertTri
 
 // --- IMPORTANT: DO NOT REMOVE / EXTERNAL API IMPORTS ---
 // These are assumed to be implemented in your project and are necessary for the component to function.
-import { fetchDemandPredictions, fetchReorderSuggestions, fetchPricingPredictions, fetchCustomerInsights, fetchChurnPredictions, fetchSegmentPredictions, fetchDemoAiInsights } from '../../api/apiClient'
+import { fetchDemandPredictions, fetchReorderSuggestions, fetchPricingPredictions, fetchCustomerInsights, fetchChurnPredictions, fetchSegmentPredictions } from '../../api/apiClient'
 import MarketingTopNav from '@/components/layout/MarketingTopNav'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import OwnerSideNav from '@/components/layout/OwnerSideNav'
@@ -77,11 +77,6 @@ export default function AiOverviewPage() {
 
     const user = getAuthUser()
     const isOwner = user?.role_id === 1
-
-    // Until there is a backend endpoint for price recommendations, keep them from demo helper
-    // --- API LOGIC PRESERVED ---
-    const demoInsights = fetchDemoAiInsights()
-    const demoPriceRecommendations = demoInsights.priceRecommendations || []
 
     useEffect(() => {
         let isMounted = true
@@ -188,7 +183,7 @@ export default function AiOverviewPage() {
 
                 setDemandData(mappedDemand)
                 setReorderData(mappedReorder)
-                setPriceData(mappedPricing.length > 0 ? mappedPricing : demoPriceRecommendations)
+                setPriceData(mappedPricing)
                 setCustomerInsights(mappedInsights)
                 setChurnData(mappedChurn)
                 setSegmentData(mappedSegments)

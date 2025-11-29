@@ -1,10 +1,8 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { DollarSign, User, Calendar, Clock, Download, AlertTriangle, Loader, Package, CreditCard, PiggyBank } from 'lucide-react'
-
 import { fetchPOSSales } from '../../api/apiClient'
-import PosTopNav from '@/components/layout/PosTopNav'
-import FinanceTopNav from '@/components/layout/FinanceTopNav'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 const getPaymentColor = (method) => {
     switch (method) {
@@ -28,21 +26,21 @@ const formatCurrency = (amount) => {
 
 const StateFeedback = ({ error, loading, salesLength }) => {
     if (error) {
-      return (
-        <div role="alert" className="p-8 text-red-700 bg-red-50 border border-red-300 rounded-xl flex items-center justify-center">
-          <AlertTriangle className="h-6 w-6 mr-3" aria-hidden="true" />
-          <p className="text-base font-medium">Error loading data: {error}</p>
-        </div>
-      )
+        return (
+            <div role="alert" className="p-8 text-red-700 bg-red-50 border border-red-300 rounded-xl flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 mr-3" aria-hidden="true" />
+                <p className="text-base font-medium">Error loading data: {error}</p>
+            </div>
+        )
     }
-    
+
     if (loading) {
-      return (
-        <div role="status" className="p-8 flex items-center justify-center">
-          <Loader className="h-6 w-6 mr-3 text-indigo-500 animate-spin" aria-hidden="true" />
-          <p className="text-base text-gray-500">Loading POS sales history...</p>
-        </div>
-      )
+        return (
+            <div role="status" className="p-8 flex items-center justify-center">
+                <Loader className="h-6 w-6 mr-3 text-indigo-500 animate-spin" aria-hidden="true" />
+                <p className="text-base text-gray-500">Loading POS sales history...</p>
+            </div>
+        )
     }
 
     if (salesLength === 0) {
@@ -83,7 +81,7 @@ export default function PosSalesHistoryPage() {
                         customer: s.customer_name || 'Walk-in',
                         cashier: s.cashier_name || 'Unknown',
                         total: Number(s.total) || 0,
-                        paymentMethod: s.payment_method || 'Cash', 
+                        paymentMethod: s.payment_method || 'Cash',
                         date: dt.toISOString().slice(0, 10),
                         time: dt.toTimeString().slice(0, 5),
                     }
@@ -92,7 +90,7 @@ export default function PosSalesHistoryPage() {
             })
             .catch((err) => {
                 if (!isMounted) return
-                setError(err.message || 'Failed to load POS sales history') 
+                setError(err.message || 'Failed to load POS sales history')
             })
             .finally(() => {
                 if (!isMounted) return
@@ -116,7 +114,7 @@ export default function PosSalesHistoryPage() {
             return false;
         }
         if (filter.date && sale.date !== filter.date) {
-             return false; 
+            return false;
         }
         return true;
     });
@@ -154,25 +152,21 @@ export default function PosSalesHistoryPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 via-white to-blue-100/50 font-sans">
-            {/* Accountant nav renders only for accountant role based on its internal role check */}
-            <FinanceTopNav />
-            <PosTopNav />
-            <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-
-                <div className="rounded-3xl border border-blue-100 bg-white/95 backdrop-blur-xl p-8 shadow-2xl shadow-blue-200/50">
-                    <p className="text-sm font-semibold uppercase tracking-wider text-indigo-700">
+        <DashboardLayout>
+            <div className="space-y-6">
+                <div className="rounded-3xl border border-purple-100 bg-white p-8 shadow-xl">
+                    <p className="text-sm font-semibold uppercase tracking-wider text-purple-700">
                         <PiggyBank className="inline h-4 w-4 mr-2" aria-hidden="true" />
                         Retail Operations
                     </p>
                     <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
-                        Daily Sales <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">Transactions</span>
+                        Daily Sales <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Transactions</span>
                     </h1>
                     <p className="mt-3 text-base text-gray-600 max-w-xl">
                         Review and reconcile recent counter transactions. Data is presented chronologically for daily closing reports.
                     </p>
-                    <button 
-                        className="mt-4 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-500/50 hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/50 transition duration-300"
+                    <button
+                        className="mt-4 inline-flex items-center justify-center rounded-xl bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-lg hover:bg-purple-700 transition"
                         onClick={handleExport}
                         aria-label="Export full sales report"
                     >
@@ -181,7 +175,7 @@ export default function PosSalesHistoryPage() {
                     </button>
                 </div>
 
-                <div className="mt-8 rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl shadow-xl overflow-hidden">
+                <div className="rounded-3xl border border-gray-100 bg-white shadow-xl overflow-hidden">
                     <div className="p-6 border-b border-gray-100">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                             <div>
@@ -190,12 +184,12 @@ export default function PosSalesHistoryPage() {
                             </div>
 
                             <div className="flex flex-wrap items-center gap-3 text-sm">
-                                <select 
-                                    name="paymentMethod" 
+                                <select
+                                    name="paymentMethod"
                                     value={filter.paymentMethod}
                                     onChange={handleFilterChange}
                                     aria-label="Filter by payment method"
-                                    className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition duration-150 shadow-sm"
+                                    className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition shadow-sm"
                                 >
                                     <option value="All">All Payment Methods</option>
                                     <option value="Cash">Cash</option>
@@ -209,14 +203,13 @@ export default function PosSalesHistoryPage() {
                                     value={filter.date}
                                     onChange={handleFilterChange}
                                     aria-label="Filter by date"
-                                    className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-800 placeholder-gray-400 
-                                              focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition duration-150 shadow-sm"
+                                    className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-800 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition shadow-sm"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* KPI strip for the selected day */}
+                    {/* KPI strip */}
                     <div className="px-6 pb-4 grid gap-3 sm:grid-cols-3 text-sm">
                         <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
                             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Transactions</p>
@@ -226,31 +219,31 @@ export default function PosSalesHistoryPage() {
                             <p className="text-xs font-semibold uppercase tracking-wide text-green-700">Total sales</p>
                             <p className="mt-1 text-xl font-bold text-green-800">{formatCurrency(totalForDay)}</p>
                         </div>
-                        <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">Average ticket</p>
-                            <p className="mt-1 text-xl font-bold text-indigo-800">{formatCurrency(averageTicket)}</p>
+                        <div className="rounded-xl border border-purple-100 bg-purple-50 px-4 py-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">Average ticket</p>
+                            <p className="mt-1 text-xl font-bold text-purple-800">{formatCurrency(averageTicket)}</p>
                         </div>
                     </div>
 
                     {error || loading || filteredSales.length === 0 ? (
-                         <StateFeedback error={error} loading={loading} salesLength={filteredSales.length} />
+                        <StateFeedback error={error} loading={loading} salesLength={filteredSales.length} />
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="min-w-full text-left text-sm" role="table">
-                                <thead className="bg-blue-50/80 border-b border-blue-200">
+                                <thead className="bg-purple-50 border-b border-purple-200">
                                     <tr>
-                                        <th className="px-6 py-3 font-semibold text-blue-700 uppercase tracking-wider" scope="col">ID</th>
-                                        <th className="px-6 py-3 font-semibold text-blue-700 uppercase tracking-wider" scope="col"><User className="inline h-4 w-4 mr-1" aria-hidden="true" /> Customer</th>
-                                        <th className="px-6 py-3 font-semibold text-blue-700 uppercase tracking-wider" scope="col">Cashier</th>
-                                        <th className="px-6 py-3 font-semibold text-blue-700 uppercase tracking-wider" scope="col"><CreditCard className="inline h-4 w-4 mr-1" aria-hidden="true" /> Method</th>
-                                        <th className="px-6 py-3 text-right font-semibold text-blue-700 uppercase tracking-wider" scope="col">Total</th>
-                                        <th className="px-6 py-3 font-semibold text-blue-700 uppercase tracking-wider" scope="col"><Calendar className="inline h-4 w-4 mr-1" aria-hidden="true" /> Date & Time</th>
-                                        <th className="px-6 py-3 font-semibold text-blue-700 uppercase tracking-wider text-right" scope="col">Action</th>
+                                        <th className="px-6 py-3 font-semibold text-purple-700 uppercase tracking-wider" scope="col">ID</th>
+                                        <th className="px-6 py-3 font-semibold text-purple-700 uppercase tracking-wider" scope="col"><User className="inline h-4 w-4 mr-1" aria-hidden="true" /> Customer</th>
+                                        <th className="px-6 py-3 font-semibold text-purple-700 uppercase tracking-wider" scope="col">Cashier</th>
+                                        <th className="px-6 py-3 font-semibold text-purple-700 uppercase tracking-wider" scope="col"><CreditCard className="inline h-4 w-4 mr-1" aria-hidden="true" /> Method</th>
+                                        <th className="px-6 py-3 text-right font-semibold text-purple-700 uppercase tracking-wider" scope="col">Total</th>
+                                        <th className="px-6 py-3 font-semibold text-purple-700 uppercase tracking-wider" scope="col"><Calendar className="inline h-4 w-4 mr-1" aria-hidden="true" /> Date & Time</th>
+                                        <th className="px-6 py-3 font-semibold text-purple-700 uppercase tracking-wider text-right" scope="col">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {filteredSales.map(sale => (
-                                        <tr key={sale.id} className="hover:bg-blue-50/50 transition duration-150 cursor-pointer">
+                                        <tr key={sale.id} className="hover:bg-purple-50/50 transition cursor-pointer">
                                             <td className="px-6 py-4 text-gray-500 font-mono text-xs">{sale.id}</td>
                                             <td className="px-6 py-4 text-gray-800 font-medium">{sale.customer}</td>
                                             <td className="px-6 py-4 text-gray-700">{sale.cashier}</td>
@@ -264,8 +257,8 @@ export default function PosSalesHistoryPage() {
                                                 {sale.date} <span className="text-xs text-gray-400">({sale.time})</span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <button 
-                                                    className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition duration-150"
+                                                <button
+                                                    className="text-sm font-medium text-purple-600 hover:text-purple-800 transition"
                                                     aria-label={`View receipt for transaction ID ${sale.id}`}
                                                     onClick={() => setSelectedSale(sale)}
                                                 >
@@ -281,7 +274,7 @@ export default function PosSalesHistoryPage() {
                 </div>
             </div>
 
-            {/* Simple receipt modal */}
+            {/* Receipt modal */}
             {selectedSale && (
                 <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
                     <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl p-6 space-y-4">
@@ -306,6 +299,6 @@ export default function PosSalesHistoryPage() {
                     </div>
                 </div>
             )}
-        </div>
+        </DashboardLayout>
     )
 }

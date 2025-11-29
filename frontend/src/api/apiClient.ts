@@ -25,8 +25,149 @@ export interface Supplier extends SupplierMaterial {
 
 const API_BASE = 'http://localhost:3000/api'
 
+// ============================================================================
+// BOM Templates API
+// ============================================================================
+
+export async function fetchBomTemplates() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/bom-templates`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch BOM templates')
+  }
+
+  return res.json()
+}
+
+export async function fetchBomTemplate(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/bom-templates/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch BOM template')
+  }
+
+  return res.json()
+}
+
+export async function createBomTemplate(payload: { code: string; name: string; description?: string; items?: Array<{ material_id: number; quantity: number }> }) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/bom-templates`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to create BOM template')
+  }
+
+  return data
+}
+
+export async function updateBomTemplate(id: number | string, payload: { code?: string; name?: string; description?: string; items?: Array<{ material_id: number; quantity: number }> }) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/bom-templates/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to update BOM template')
+  }
+
+  return data
+}
+
+export async function deleteBomTemplate(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/bom-templates/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to delete BOM template')
+  }
+
+  return data
+}
+
+// ============================================================================
+// Dashboard Stats APIs
+// ============================================================================
+
+export async function fetchDashboardStats() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const [ordersRes, workOrdersRes, materialsRes, invoicesRes] = await Promise.all([
+    fetch(`${API_BASE}/orders`, { headers: { Authorization: `Bearer ${token}` } }),
+    fetch(`${API_BASE}/work-orders`, { headers: { Authorization: `Bearer ${token}` } }),
+    fetch(`${API_BASE}/materials`, { headers: { Authorization: `Bearer ${token}` } }),
+    fetch(`${API_BASE}/invoices`, { headers: { Authorization: `Bearer ${token}` } }),
+  ])
+
+  const orders = ordersRes.ok ? await ordersRes.json() : []
+  const workOrders = workOrdersRes.ok ? await workOrdersRes.json() : []
+  const materialsData = materialsRes.ok ? await materialsRes.json() : { data: [] }
+  const invoices = invoicesRes.ok ? await invoicesRes.json() : []
+
+  const materials = materialsData.data || materialsData || []
+  
+  const activeOrders = orders.filter((o: any) => o.status !== 'delivered' && o.status !== 'cancelled').length
+  const pendingWorkOrders = workOrders.filter((w: any) => w.status !== 'completed').length
+  const lowStockItems = materials.filter((m: any) => m.current_stock <= (m.reorder_level || 10)).length
+  const unpaidInvoices = invoices.filter((i: any) => i.status !== 'paid').length
+  const totalRevenue = invoices.filter((i: any) => i.status === 'paid').reduce((sum: number, i: any) => sum + (i.total || 0), 0)
+
+  return {
+    activeOrders,
+    pendingWorkOrders,
+    lowStockItems,
+    unpaidInvoices,
+    totalRevenue,
+    ordersCount: orders.length,
+    workOrdersCount: workOrders.length,
+    materialsCount: materials.length,
+  }
+}
+
 // CRM: leads list (used by LeadsPage)
-export async function fetchDemoLeads() {
+export async function fetchLeads() {
   const token = getAuthToken()
   if (!token) {
     throw new Error('Not authenticated')
@@ -48,12 +189,16 @@ export async function fetchDemoLeads() {
   // Map backend shape to UI shape expected by CRM LeadsPage
   return leads.map((lead: any) => ({
     id: `L-${lead.id}`,
+    rawId: lead.id,
     name: lead.customer_name || `Lead ${lead.id}`,
     channel: lead.channel,
     status: lead.status || 'New',
     owner: lead.owner_name || 'Unassigned',
   }))
 }
+
+// Alias for backward compatibility
+export const fetchDemoLeads = fetchLeads
 
 // CRM: single lead detail
 export async function fetchLead(id: number | string) {
@@ -1082,7 +1227,7 @@ export async function fetchRolePermissions(roleId: number | string) {
 }
 
 // Orders list for OrdersPage (mapped from backend orders API)
-export async function fetchDemoOrders() {
+export async function fetchOrders() {
   const token = getAuthToken()
   if (!token) {
     throw new Error('Not authenticated')
@@ -1112,6 +1257,9 @@ export async function fetchDemoOrders() {
   }))
 }
 
+// Alias for backward compatibility
+export const fetchDemoOrders = fetchOrders
+
 // Orders: single order
 export async function fetchOrder(id: number | string) {
   const token = getAuthToken()
@@ -1133,29 +1281,14 @@ export async function fetchOrder(id: number | string) {
   return res.json()
 }
 
-export function fetchDemoWorkOrders() {
-  return [
-    { id: 'WO-501', orderId: 'ORD-23001', jobName: 'School Opening Banners', stage: 'Print', technician: 'Joseph', sla: '4h' },
-    { id: 'WO-502', orderId: 'ORD-23002', jobName: 'Backdrop 4x3m', stage: 'Finishing', technician: 'Grace', sla: '2h' },
-    { id: 'WO-503', orderId: 'ORD-23003', jobName: 'Polo Shirt Branding', stage: 'Design', technician: 'Peter', sla: '8h' }
-  ];
-}
+// Deprecated: Use fetchWorkOrders instead (already defined above)
+export const fetchDemoWorkOrders = fetchWorkOrders
 
-export function fetchDemoMaterials() {
-  return [
-    { sku: 'VINYL-3M-GLOSS', name: '3m Glossy Vinyl', stockQty: 120, uom: 'm', category: 'Vinyl' },
-    { sku: 'INK-CMYK-1L', name: 'Solvent Ink CMYK 1L Set', stockQty: 15, uom: 'set', category: 'Ink' },
-    { sku: 'TSHIRT-M-BLACK', name: 'T-Shirt Black M', stockQty: 75, uom: 'pcs', category: 'Garments' }
-  ];
-}
+// Deprecated: Use fetchMaterials instead (already defined above)
+export const fetchDemoMaterials = fetchMaterials
 
-export function fetchDemoInvoices() {
-  return [
-    { id: 'INV-2025-001', customer: 'Acme School', amount: 450.0, status: 'Partially Paid', dueDate: '2025-11-30' },
-    { id: 'INV-2025-002', customer: 'Hope Church', amount: 320.0, status: 'Paid', dueDate: '2025-11-18' },
-    { id: 'INV-2025-003', customer: 'Top Merch Ltd', amount: 1200.0, status: 'Unpaid', dueDate: '2025-12-05' }
-  ];
-}
+// Deprecated: Use fetchInvoices instead (already defined above)
+export const fetchDemoInvoices = fetchInvoices
 
 export async function fetchFinancialOverview() {
   const token = getAuthToken()
@@ -1225,12 +1358,8 @@ export async function fetchProductionReport() {
   return res.json()
 }
 
-export function fetchDemoCampaigns() {
-  return [
-    { id: 'CMP-BACK2SCHOOL', name: 'Back to School Banners', channel: 'Facebook/Instagram', budget: 500.0, status: 'Active' },
-    { id: 'CMP-CHRISTMAS', name: 'Christmas Promo', channel: 'WhatsApp Broadcast', budget: 300.0, status: 'Planned' }
-  ];
-}
+// Deprecated: Use fetchCampaigns instead (already defined above)
+export const fetchDemoCampaigns = fetchCampaigns
 
 // Marketing: create campaign
 export async function createCampaign(payload: { name: string; channel: string; budget: number }) {
@@ -1326,13 +1455,6 @@ export async function createWorkOrder(payload: { order_id: number | string; stag
   return data
 }
 
-export function fetchDemoConversations() {
-  return [
-    { id: 'CONV-IG-001', customer: 'Jane (IG)', channel: 'Instagram', subject: 'Polo branding', slaStatus: 'On Track' },
-    { id: 'CONV-WA-002', customer: 'John (WA)', channel: 'WhatsApp', subject: 'Event backdrop', slaStatus: 'At Risk' }
-  ];
-}
-
 // Communications: conversations from backend
 export async function fetchConversations() {
   const token = getAuthToken()
@@ -1353,6 +1475,9 @@ export async function fetchConversations() {
 
   return res.json()
 }
+
+// Alias for backward compatibility
+export const fetchDemoConversations = fetchConversations
 
 // Communications: messages for a conversation
 export async function fetchConversationMessages(conversationId: number | string) {
@@ -1593,19 +1718,7 @@ export async function fetchPricingPredictions() {
   return res.json()
 }
 
-export function fetchDemoAiInsights() {
-  return {
-    demandForecast: [
-      { category: 'Banners', month: '2025-12', expectedJobs: 42 },
-      { category: 'Garments', month: '2025-12', expectedJobs: 28 },
-      { category: 'Stickers', month: '2025-12', expectedJobs: 15 }
-    ],
-    priceRecommendations: [
-      { item: '3m Banner Print', currentPrice: 45, suggestedPrice: 49, reason: 'High demand before holidays' },
-      { item: 'T-Shirt Vinyl Print', currentPrice: 7, suggestedPrice: 6.5, reason: 'Price-sensitive segment' }
-    ]
-  };
-}
+// AI insights now fetched from real APIs: fetchDemandPredictions, fetchPricingPredictions, etc.
 
 // Admin: Users
 export async function fetchUsers() {
@@ -1686,6 +1799,535 @@ export async function fetchRoles() {
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     throw new Error(data.error || 'Failed to fetch roles')
+  }
+
+  return res.json()
+}
+
+// ============================================================================
+// MISSING API FUNCTIONS - Added for complete backend coverage
+// ============================================================================
+
+// CRM: delete customer
+export async function deleteCustomer(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/customers/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to delete customer')
+  }
+
+  return data
+}
+
+// CRM: delete lead
+export async function deleteLead(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/leads/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to delete lead')
+  }
+
+  return data
+}
+
+// CRM: update quote
+export async function updateQuote(id: number | string, payload: any) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/quotes/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to update quote')
+  }
+
+  return data
+}
+
+// Production: fetch work orders from backend
+export async function fetchWorkOrders() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/work-orders`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch work orders')
+  }
+
+  return res.json()
+}
+
+// Production: fetch single work order
+export async function fetchWorkOrder(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/work-orders/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch work order')
+  }
+
+  return res.json()
+}
+
+// Production: update work order
+export async function updateWorkOrder(id: number | string, payload: any) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/work-orders/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to update work order')
+  }
+
+  return data
+}
+
+// Production: create work log
+export async function createWorkLog(payload: { work_order_id: number | string; user_id: number | string; hours: number; notes?: string }) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/work-logs`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to create work log')
+  }
+
+  return data
+}
+
+// Production: fetch work logs
+export async function fetchWorkLogs() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/work-logs`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch work logs')
+  }
+
+  return res.json()
+}
+
+// Finance: update invoice
+export async function updateInvoice(id: number | string, payload: any) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/invoices/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to update invoice')
+  }
+
+  return data
+}
+
+// Finance: refund payment
+export async function refundPayment(paymentId: number | string, reason?: string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/payments/${paymentId}/refund`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ reason }),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to refund payment')
+  }
+
+  return data
+}
+
+// Finance: fetch single payment
+export async function fetchPayment(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/payments/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch payment')
+  }
+
+  return res.json()
+}
+
+// Finance: fetch chart of accounts
+export async function fetchChartOfAccounts() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/chart-of-accounts`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch chart of accounts')
+  }
+
+  return res.json()
+}
+
+// Finance: fetch single journal entry
+export async function fetchJournalEntry(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/journal-entries/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch journal entry')
+  }
+
+  return res.json()
+}
+
+// Marketing: broadcast to all customers
+export async function broadcastToAllCustomers(payload: { subject: string; message: string; channel?: string }) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/broadcast/all`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to broadcast message')
+  }
+
+  return data
+}
+
+// Marketing: broadcast to segment
+export async function broadcastToSegment(payload: { segment: string; subject: string; message: string; channel?: string }) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/broadcast/segment`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to broadcast to segment')
+  }
+
+  return data
+}
+
+// Communication: send email
+export async function sendEmail(payload: { to: string; subject: string; body: string }) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to send email')
+  }
+
+  return data
+}
+
+// Admin: create permission
+export async function createPermission(payload: { code: string; description?: string }) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/permissions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to create permission')
+  }
+
+  return data
+}
+
+// Admin: update permission
+export async function updatePermission(id: number | string, payload: { code?: string; description?: string }) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/permissions/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to update permission')
+  }
+
+  return data
+}
+
+// Admin: delete permission
+export async function deletePermission(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/permissions/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to delete permission')
+  }
+
+  return data
+}
+
+// Admin: fetch all role permissions
+export async function fetchAllRolePermissions() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/role-permissions`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch role permissions')
+  }
+
+  return res.json()
+}
+
+// Admin: delete role permission
+export async function deleteRolePermission(roleId: number | string, permissionId: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/roles/${roleId}/permissions/${permissionId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to delete role permission')
+  }
+
+  return data
+}
+
+// Upload: upload artwork file
+export async function uploadArtwork(file: File, quoteId?: number | string, orderId?: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const formData = new FormData()
+  formData.append('artwork', file)
+  if (quoteId) formData.append('quote_id', String(quoteId))
+  if (orderId) formData.append('order_id', String(orderId))
+
+  const res = await fetch(`${API_BASE}/upload/artwork`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to upload artwork')
+  }
+
+  return data
+}
+
+// Upload: get file by ID
+export async function getFile(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/files/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch file')
+  }
+
+  return res.blob()
+}
+
+// Reports: fetch sales report
+export async function fetchSalesReport(startDate?: string, endDate?: string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  let url = `${API_BASE}/reports/sales`
+  if (startDate && endDate) {
+    url += `?start_date=${startDate}&end_date=${endDate}`
+  }
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch sales report')
+  }
+
+  return res.json()
+}
+
+// Reports: fetch financial report
+export async function fetchFinancialReport(startDate?: string, endDate?: string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  let url = `${API_BASE}/reports/financial`
+  if (startDate && endDate) {
+    url += `?start_date=${startDate}&end_date=${endDate}`
+  }
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch financial report')
   }
 
   return res.json()

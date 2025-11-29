@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import OwnerSideNav from '@/components/layout/OwnerSideNav'
-import { fetchUsers, fetchCustomers, fetchDemoOrders, fetchQuotes, fetchMaterials } from '@/api/apiClient'
+import { fetchUsers, fetchCustomers, fetchOrders, fetchQuotes, fetchMaterials } from '@/api/apiClient'
 
 function useQuery() {
   const { search } = useLocation()
@@ -43,7 +43,7 @@ export default function SearchPage() {
         const [u, c, o, qu, m] = await Promise.all([
           fetchUsers().catch(() => []),
           fetchCustomers().catch(() => []),
-          fetchDemoOrders().catch(() => []),
+          fetchOrders().catch(() => []),
           fetchQuotes().catch(() => []),
           fetchMaterials().catch(() => []),
         ])

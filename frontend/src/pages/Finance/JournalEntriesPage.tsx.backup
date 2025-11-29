@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
-import DashboardLayout from '@/components/layout/DashboardLayout'
+import FinanceDashboardLayout from '@/components/layout/FinanceDashboardLayout'
 import { getAuthUser } from '@/utils/apiClient'
 import { fetchJournalEntries } from '../../api/apiClient'
 import {
@@ -139,7 +139,7 @@ export default function JournalEntriesPage() {
   })
 
   return (
-    <DashboardLayout>
+    <FinanceDashboardLayout>
       {/* Header Section */}
       <div className="rounded-3xl shadow-2xl overflow-hidden bg-white border border-slate-200">
         <div className="bg-gradient-to-r from-indigo-700 via-blue-600 to-cyan-500 text-white p-6">
@@ -234,6 +234,6 @@ export default function JournalEntriesPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    </FinanceDashboardLayout>
   )
 }

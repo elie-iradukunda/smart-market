@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { fetchDemoLeads, createLead, fetchMaterials, createCustomer } from '../../api/apiClient'
+import { fetchLeads, createLead, fetchMaterials, createCustomer } from '../../api/apiClient'
 
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
@@ -38,7 +38,7 @@ export default function LeadsPage() {
     setLoading(true)
     setError(null)
 
-    fetchDemoLeads()
+    fetchLeads()
       .then((data) => {
         if (!isMounted) return
         setLeads(data || [])
@@ -151,7 +151,7 @@ export default function LeadsPage() {
       })
 
       // refresh list
-      const refreshed = await fetchDemoLeads()
+      const refreshed = await fetchLeads()
       setLeads(refreshed || [])
       setNewLead({ name: '', company: '', phone: '', email: '', address: '', channel: 'Walk-in' })
       setLeadItems(Array.from({ length: 3 }).map(() => ({ material_id: '', quantity: '1' })))
