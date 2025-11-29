@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
 
-import { fetchUsers, createWorkOrder, fetchDemoOrders } from '@/api/apiClient'
+import { fetchUsers, createWorkOrder, fetchOrders } from '@/api/apiClient'
 
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 
@@ -98,7 +98,7 @@ export default function OwnerDashboard() {
       })
 
     // Load available orders so owner can select instead of typing ID
-    fetchDemoOrders()
+    fetchOrders()
       .then((data) => {
         if (!isMounted) return
         setOrders(Array.isArray(data) ? data : [])

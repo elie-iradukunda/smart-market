@@ -1,12 +1,41 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, ChangeEvent } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ShoppingCart, Upload, Calendar, FileText, CheckCircle, Package, User } from 'lucide-react'
-// Assuming these are styled components that accept Tailwind classes via className prop
+import { ArrowLeft, ShoppingCart, Upload, Calendar, FileText, CheckCircle, Package, User, LucideIcon } from 'lucide-react'
 import Button from '@/components/ui/Button' 
-import Card from '@/components/ui/Card' 
+import Card from '@/components/ui/Card'
+
+interface FormInputProps {
+  label: string
+  name: string
+  type?: string
+  value: string
+  onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
+  placeholder?: string
+  required?: boolean
+  icon?: LucideIcon
+  min?: string
+}
+
+interface FormTextareaProps {
+  label: string
+  name: string
+  value: string
+  onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
+  placeholder?: string
+  rows?: number
+  required?: boolean
+}
+
+interface ServiceData {
+  name: string
+  description: string
+  startingPrice: number
+  priceNote: string
+  category: string
+} 
 
 // Service data - KEEPING THIS EXACTLY AS IS
-const servicesData = {
+const servicesData: Record<string, ServiceData> = {
   'banner-printing': {
     name: 'Banner Printing',
     description: 'High-quality banners in various sizes and materials for events, advertising, and branding',
@@ -78,7 +107,7 @@ const CURRENCY = {
 }
 
 // Custom Input Field for Reusability and Cleanliness
-const FormInput = ({ label, name, type = 'text', value, onChange, placeholder, required = false, icon: Icon, min }) => (
+const FormInput = ({ label, name, type = 'text', value, onChange, placeholder, required = false, icon: Icon, min }: FormInputProps) => (
   <div>
     <label htmlFor={name} className="block text-sm font-semibold text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
@@ -105,7 +134,7 @@ const FormInput = ({ label, name, type = 'text', value, onChange, placeholder, r
 )
 
 // Custom Textarea Field
-const FormTextarea = ({ label, name, value, onChange, placeholder, rows = 3, required = false }) => (
+const FormTextarea = ({ label, name, value, onChange, placeholder, rows = 3, required = false }: FormTextareaProps) => (
   <div>
     <label htmlFor={name} className="block text-sm font-semibold text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}

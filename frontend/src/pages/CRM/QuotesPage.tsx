@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 // WARNING: This import is causing a compilation error in this isolated environment
 // because it cannot resolve the path '../../api/apiClient'.
 // It is left here as requested.
-import { fetchQuotes, createQuote, approveQuote, fetchCustomers, fetchLead, fetchDemoLeads } from '../../api/apiClient'
+import { fetchQuotes, createQuote, approveQuote, fetchCustomers, fetchLead, fetchLeads } from '../../api/apiClient'
 
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
@@ -128,7 +128,7 @@ export default function QuotesPage() {
           })
 
         // Load recent leads so we can select them by customer name when prefilling quote items
-        fetchDemoLeads()
+        fetchLeads()
           .then((data) => {
             if (!isMounted) return
             setAvailableLeads(Array.isArray(data) ? data : [])

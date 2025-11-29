@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchDemoOrders } from '../../api/apiClient'
+import { fetchOrders } from '../../api/apiClient'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
 import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
@@ -80,7 +80,7 @@ export default function OrdersPage() {
     setLoading(true)
     setError(null)
 
-    fetchDemoOrders()
+    fetchOrders()
       .then(data => {
         if (!isMounted) return
         const processedData = Array.isArray(data) ? data.map(order => ({

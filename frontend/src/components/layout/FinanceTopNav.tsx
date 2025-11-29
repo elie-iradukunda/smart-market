@@ -1,7 +1,8 @@
 // @ts-nocheck
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
+import { Search } from 'lucide-react'
 
 const FINANCE_LINKS = [
   { path: '/dashboard/accountant', label: 'Overview' },
@@ -12,8 +13,21 @@ const FINANCE_LINKS = [
   { path: '/pos/sales-history', label: 'POS history' },
 ]
 
+const SEARCH_ROUTES = [
+  { path: '/dashboard/accountant', label: 'Finance Overview', keywords: ['dashboard', 'home', 'overview'] },
+  { path: '/finance/invoices', label: 'Invoices', keywords: ['invoice', 'invoices', 'bill', 'billing'] },
+  { path: '/finance/payments', label: 'Payments', keywords: ['payment', 'payments', 'pay', 'receipt'] },
+  { path: '/finance/journals', label: 'Journal Entries', keywords: ['journal', 'journals', 'entry', 'entries', 'ledger'] },
+  { path: '/finance/reports', label: 'Financial Reports', keywords: ['report', 'reports', 'financial', 'analytics'] },
+  { path: '/finance/accounts', label: 'Chart of Accounts', keywords: ['accounts', 'chart', 'coa'] },
+  { path: '/pos/sales-history', label: 'POS Sales History', keywords: ['pos', 'sales', 'history', 'terminal'] },
+  { path: '/pos', label: 'POS Terminal', keywords: ['pos', 'terminal', 'cashier', 'register'] },
+  { path: '/finance/search', label: 'Search Finance', keywords: ['search', 'find', 'lookup'] },
+]
+
 export default function FinanceTopNav() {
   const navigate = useNavigate()
+  const [search, setSearch] = useState('')
   const user = getAuthUser()
 
   // Only for Accountant role (3)
@@ -24,6 +38,28 @@ export default function FinanceTopNav() {
   const handleLogout = () => {
     clearAuth()
     navigate('/login')
+  }
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    const term = (search || '').trim()
+    if (!term) return
+    const value = term.toLowerCase()
+
+    // Try to find a direct match first
+    const direct = SEARCH_ROUTES.find((route) =>
+      route.keywords.some((k) => value === k || value.includes(k))
+    )
+
+    if (direct) {
+      navigate(direct.path)
+      setSearch('')
+      return
+    }
+
+    // Fallback to finance search results page
+    navigate(`/finance/search?q=${encodeURIComponent(term)}`)
+    setSearch('')
   }
 
   return (
@@ -39,7 +75,7 @@ export default function FinanceTopNav() {
           </div>
         </div>
 
-        <nav className="hidden md:flex items-center gap-4 text-xs font-medium">
+                <nav className="hidden md:flex items-center gap-4 text-xs font-medium">
           {FINANCE_LINKS.map((link) => (
             <Link
               key={link.path}
@@ -49,6 +85,57 @@ export default function FinanceTopNav() {
               {link.label}
             </Link>
           ))}
+
+          {/* Search input */}
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-40 lg:w-48 rounded-full border border-slate-700 bg-slate-800/60 pl-8 pr-3 py-1.5 text-xs text-slate-50 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
+              />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            </div>
+
+            {/* Suggestions dropdown */}
+            {search.trim() && (
+              <div className="absolute right-0 mt-1 w-56 lg:w-64 rounded-xl bg-white shadow-xl border border-slate-200 text-xs text-slate-800 z-50 max-h-80 overflow-y-auto">
+                {SEARCH_ROUTES.filter((route) => {
+                  const v = search.toLowerCase()
+                  return (
+                    route.label.toLowerCase().includes(v) ||
+                    route.keywords.some((k) => k.includes(v) || v.includes(k))
+                  )
+                }).slice(0, 8).map((route) => (
+                  <button
+                    key={route.path}
+                    type="button"
+                    onClick={() => {
+                      navigate(route.path)
+                      setSearch('')
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-slate-100 border-b border-slate-100 last:border-b-0"
+                  >
+                    <span className="block font-semibold text-slate-900">{route.label}</span>
+                    <span className="block text-[10px] text-slate-500 truncate">{route.path}</span>
+                  </button>
+                ))}
+                {search.trim() && SEARCH_ROUTES.filter((route) => {
+                  const v = search.toLowerCase()
+                  return (
+                    route.label.toLowerCase().includes(v) ||
+                    route.keywords.some((k) => k.includes(v) || v.includes(k))
+                  )
+                }).length === 0 && (
+                  <div className="px-3 py-2 text-slate-500">
+                    No quick links found. Press Enter to search.
+                  </div>
+                )}
+              </div>
+            )}
+          </form>
         </nav>
 
         <button

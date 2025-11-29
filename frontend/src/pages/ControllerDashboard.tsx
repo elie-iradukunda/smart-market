@@ -1,11 +1,57 @@
 // @ts-nocheck
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate,Link } from 'react-router-dom'
 import { clearAuth, currentUserHasPermission } from '@/utils/apiClient'
+import { fetchMaterials, fetchPurchaseOrders, fetchStockMovements } from '@/api/apiClient'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
+
+interface InventoryStats {
+  totalMaterials: number
+  lowStockItems: number
+  pendingPurchaseOrders: number
+  recentMovements: number
+}
 
 export default function ControllerDashboard() {
   const navigate = useNavigate()
+  const [stats, setStats] = useState<InventoryStats>({
+    totalMaterials: 0,
+    lowStockItems: 0,
+    pendingPurchaseOrders: 0,
+    recentMovements: 0,
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const [materials, purchaseOrders, stockMovements] = await Promise.all([
+          fetchMaterials(),
+          fetchPurchaseOrders(),
+          fetchStockMovements(),
+        ])
+
+        const lowStock = materials.filter((m: any) => m.current_stock <= (m.reorder_level || 10)).length
+        const pendingPOs = purchaseOrders.filter((po: any) => po.status === 'pending' || po.status === 'ordered').length
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        const recentMoves = stockMovements.filter((sm: any) => new Date(sm.created_at) >= sevenDaysAgo).length
+
+        setStats({
+          totalMaterials: materials.length,
+          lowStockItems: lowStock,
+          pendingPurchaseOrders: pendingPOs,
+          recentMovements: recentMoves,
+        })
+      } catch (err) {
+        console.error('Failed to load inventory stats:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadStats()
+  }, [])
 
   const handleLogout = () => {
     clearAuth()
@@ -32,18 +78,22 @@ export default function ControllerDashboard() {
               </p>
             </div>
 
-            <dl className="mt-8 grid gap-4 sm:grid-cols-3 text-sm">
+            <dl className="mt-8 grid gap-4 sm:grid-cols-4 text-sm">
               <div className="rounded-xl bg-white/80 px-4 py-3 border border-gray-100 shadow-lg">
-                <dt className="text-xs font-medium text-gray-500">Revenue vs. plan</dt>
-                <dd className="mt-1 text-2xl font-bold text-gray-900">--</dd>
+                <dt className="text-xs font-medium text-gray-500">Total materials</dt>
+                <dd className="mt-1 text-2xl font-bold text-gray-900">{loading ? '...' : stats.totalMaterials}</dd>
               </div>
               <div className="rounded-xl bg-white/80 px-4 py-3 border border-gray-100 shadow-lg">
-                <dt className="text-xs font-medium text-gray-500">High-risk SKUs</dt>
-                <dd className="mt-1 text-2xl font-bold text-gray-900">--</dd>
+                <dt className="text-xs font-medium text-gray-500">Low stock items</dt>
+                <dd className="mt-1 text-2xl font-bold text-red-600">{loading ? '...' : stats.lowStockItems}</dd>
+              </div>
+              <div className="rounded-xl bg-white/80 px-4 py-3 border border-gray-100 shadow-lg">
+                <dt className="text-xs font-medium text-gray-500">Pending POs</dt>
+                <dd className="mt-1 text-2xl font-bold text-gray-900">{loading ? '...' : stats.pendingPurchaseOrders}</dd>
               </div>
               <div className="rounded-xl bg-amber-50/90 px-4 py-3 border border-amber-200 shadow-lg ring-1 ring-amber-500/10">
-                <dt className="text-xs font-medium text-amber-700">Gross margin</dt>
-                <dd className="mt-1 text-2xl font-bold text-amber-800">--</dd>
+                <dt className="text-xs font-medium text-amber-700">Recent movements</dt>
+                <dd className="mt-1 text-2xl font-bold text-amber-800">{loading ? '...' : stats.recentMovements}</dd>
               </div>
             </dl>
           </div>

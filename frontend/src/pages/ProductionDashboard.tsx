@@ -1,12 +1,43 @@
 // @ts-nocheck
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { clearAuth } from '@/utils/apiClient'
+import { fetchWorkOrders, fetchOrders } from '@/api/apiClient'
 import JobPipelineOverview from '../modules/dashboards/components/JobPipelineOverview'
 import StockAlerts from '../modules/dashboards/components/StockAlerts'
 
 export default function ProductionDashboard() {
   const navigate = useNavigate()
+  const [workOrders, setWorkOrders] = useState<any[]>([])
+  const [orders, setOrders] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [woData, ordersData] = await Promise.all([
+          fetchWorkOrders(),
+          fetchOrders(),
+        ])
+        setWorkOrders(woData || [])
+        setOrders(ordersData || [])
+      } catch (err) {
+        console.error('Failed to load production data:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  const activeWorkOrders = workOrders.filter((wo) => wo.status !== 'completed' && wo.status !== 'cancelled').length
+  const ordersInProduction = orders.filter((o) => o.status === 'in_production' || o.status === 'processing').length
+  const today = new Date().toISOString().split('T')[0]
+  const completedToday = workOrders.filter((wo) => {
+    if (wo.status !== 'completed') return false
+    const completedDate = wo.completed_at || wo.updated_at
+    return completedDate?.startsWith(today)
+  }).length
 
   const handleLogout = () => {
     clearAuth()
@@ -75,6 +106,28 @@ export default function ProductionDashboard() {
                 See which stages are overloaded and where material shortages might slow the floor.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Stats section */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl border border-gray-100 bg-white/95 p-6 shadow-md">
+            <p className="text-sm font-medium text-gray-500">Active Work Orders</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {loading ? '...' : activeWorkOrders}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-gray-100 bg-white/95 p-6 shadow-md">
+            <p className="text-sm font-medium text-gray-500">Orders in Production</p>
+            <p className="mt-2 text-3xl font-bold text-sky-600">
+              {loading ? '...' : ordersInProduction}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-gray-100 bg-white/95 p-6 shadow-md">
+            <p className="text-sm font-medium text-gray-500">Completed Today</p>
+            <p className="mt-2 text-3xl font-bold text-emerald-600">
+              {loading ? '...' : completedToday}
+            </p>
           </div>
         </div>
 

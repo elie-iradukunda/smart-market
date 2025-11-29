@@ -174,7 +174,7 @@ export function getDashboardPathForRole(roleId: number | null | undefined): stri
     case 6: // Controller / Inventory Controller
       return '/dashboard/inventory'
     case 8: // Manager
-      return '/dashboard/admin'
+      return '/dashboard/inventory'
     case 9: // Sales Rep
       return '/dashboard/sales'
     case 10: // Viewer – send to admin overview as read-only user

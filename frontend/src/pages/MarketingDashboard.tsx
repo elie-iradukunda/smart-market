@@ -7,7 +7,7 @@ import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import OwnerSideNav from '@/components/layout/OwnerSideNav'
 import CampaignPerformanceWidget from '../modules/dashboards/components/CampaignPerformanceWidget'
 import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
-import { fetchCampaigns, fetchDemoLeads, fetchFinancialOverview } from '@/api/apiClient'
+import { fetchCampaigns, fetchLeads, fetchFinancialOverview } from '@/api/apiClient'
 
 export default function MarketingDashboard() {
   const navigate = useNavigate()
@@ -26,8 +26,7 @@ export default function MarketingDashboard() {
       try {
         const [campaigns, leads, financial] = await Promise.all([
           fetchCampaigns().catch(() => []),
-          // Leads endpoint already exists and is mapped via fetchDemoLeads
-          fetchDemoLeads().catch(() => []),
+          fetchLeads().catch(() => []),
           fetchFinancialOverview().catch(() => null),
         ])
 

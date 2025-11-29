@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 
 // RESTORED EXTERNAL API CLIENT IMPORT
-import { fetchInvoices, createInvoice, fetchDemoOrders } from '../../api/apiClient'
+import { fetchInvoices, createInvoice, fetchOrders } from '../../api/apiClient'
 
 // --- Utility Functions and Components for Design ---
 
@@ -184,7 +184,7 @@ export default function InvoicesPage() {
     // Load delivered orders so accountant can create invoices without typing IDs
     setOrdersLoading(true)
     setOrdersError(null)
-    fetchDemoOrders()
+    fetchOrders()
       .then((orders) => {
         if (!isMounted) return
         const processed = Array.isArray(orders)

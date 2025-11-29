@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 // Retaining original external imports as requested:
 import { useNavigate } from 'react-router-dom'
-import { fetchDemoOrders } from '../../api/apiClient'
+import { fetchWorkOrders } from '../../api/apiClient'
 import { getAuthUser } from '@/utils/apiClient'
 import TechnicianTopNav from '@/components/layout/TechnicianTopNav'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
@@ -34,8 +34,7 @@ export default function WorkOrdersBoardPage() {
             setCurrentUser(user)
         }
 
-        // NOTE: fetchDemoOrders is retained from the original imports
-        fetchDemoOrders()
+        fetchWorkOrders()
             .then((data) => {
                 if (!isMounted) return
                 // Ensure data is an array before setting state

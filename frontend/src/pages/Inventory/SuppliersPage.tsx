@@ -99,6 +99,7 @@ export default function SuppliersPage() {
     const loadData = async () => {
       try {
         setLoading(true);
+        setLoadingMaterials(true);
         setError(null);
         
         const [suppliersResponse, materialsResponse] = await Promise.all([
@@ -126,6 +127,7 @@ export default function SuppliersPage() {
         setSuppliers([]);
       } finally {
         setLoading(false);
+        setLoadingMaterials(false);
       }
     };
 

@@ -1,13 +1,58 @@
 // @ts-nocheck
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import InventoryTopNav from '@/components/layout/InventoryTopNav'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import { fetchBomTemplates } from '@/api/apiClient'
+
+interface BomTemplate {
+  id: number
+  code: string
+  name: string
+  description: string
+  materials: string
+  created_at: string
+}
 
 export default function BomTemplatesPage() {
-  const boms = [
-    { id: 'BOM-BANNER-3M', name: 'PVC Banner 3m x 1m', materials: 'Vinyl, Ink, Eyelets', version: 'v1' },
-    { id: 'BOM-TSHIRT-VINYL', name: 'T-Shirt Vinyl Print', materials: 'T-Shirt, Vinyl, Ink', version: 'v2' },
-  ]
+  const [boms, setBoms] = useState<BomTemplate[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchBomTemplates()
+      .then((data) => {
+        setBoms(data)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(err.message)
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <InventoryTopNav />
+        <OwnerTopNav />
+        <div className="flex items-center justify-center py-20">
+          <p className="text-gray-500">Loading BOM templates...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <InventoryTopNav />
+        <OwnerTopNav />
+        <div className="flex items-center justify-center py-20">
+          <p className="text-red-600">Error: {error}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,17 +83,17 @@ export default function BomTemplatesPage() {
               <tr>
                 <th className="px-3 py-2 font-semibold text-indigo-700 uppercase tracking-wider">Code</th>
                 <th className="px-3 py-2 font-semibold text-indigo-700 uppercase tracking-wider">Name</th>
+                <th className="px-3 py-2 font-semibold text-indigo-700 uppercase tracking-wider">Description</th>
                 <th className="px-3 py-2 font-semibold text-indigo-700 uppercase tracking-wider">Materials</th>
-                <th className="px-3 py-2 font-semibold text-indigo-700 uppercase tracking-wider">Version</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {boms.map(bom => (
                 <tr key={bom.id} className="bg-white hover:bg-blue-50/50">
-                  <td className="px-3 py-2 text-slate-800 font-mono">{bom.id}</td>
+                  <td className="px-3 py-2 text-slate-800 font-mono">{bom.code}</td>
                   <td className="px-3 py-2 text-slate-900 font-medium">{bom.name}</td>
-                  <td className="px-3 py-2 text-slate-700">{bom.materials}</td>
-                  <td className="px-3 py-2 text-slate-700">{bom.version}</td>
+                  <td className="px-3 py-2 text-slate-700">{bom.description || '-'}</td>
+                  <td className="px-3 py-2 text-slate-700">{bom.materials || '-'}</td>
                 </tr>
               ))}
             </tbody>
