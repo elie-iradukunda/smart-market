@@ -13,7 +13,7 @@ export const authenticateToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const [users] = await pool.execute(
-      'SELECT u.id, u.name, u.email, r.name as role FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ? AND u.status = "active"', 
+      'SELECT u.id, u.name, u.email, u.role_id, r.name as role FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ? AND u.status = "active"', 
       [decoded.userId]
     );
     

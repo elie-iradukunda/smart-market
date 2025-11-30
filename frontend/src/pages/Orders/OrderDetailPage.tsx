@@ -7,9 +7,9 @@ import { fetchOrder, createInvoice, recordPayment, updateOrderStatus, initiateLa
 import { CheckCircle, Clock, DollarSign, Package, Truck, User } from 'lucide-react'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
-import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
 import SalesTopNav from '@/components/layout/SalesTopNav'
 import { getAuthUser } from '@/utils/apiClient'
+import ConditionalReceptionLayout from '@/components/layout/ConditionalReceptionLayout'
 
 // --- Utility Functions for Design ---
 
@@ -21,7 +21,7 @@ const formatCurrency = (amount) => {
 
 // Helper to style the Status pill/card
 const getStatusClasses = (status) => {
-  switch (status.toLowerCase()) {
+  switch (status?.toLowerCase()) {
     case 'pending':
     case 'processing':
       return 'bg-blue-100 text-blue-800 border-blue-300'
@@ -186,28 +186,40 @@ export default function OrderDetailPage() {
   // --- Render Functions for Feedback ---
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        {isController ? <ControllerTopNav /> : isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-        {!isReception && <SalesTopNav />}
-        <div className="max-w-6xl mx-auto flex items-center justify-center p-8">
-          <span className="animate-spin mr-3 text-indigo-600">🌀</span>
-          <p className="text-lg text-gray-600">Loading Order Details for ID: {id}...</p>
+      <ConditionalReceptionLayout>
+        <div className="min-h-screen bg-slate-50">
+          {!isReception && (
+            <>
+              {isController ? <ControllerTopNav /> : <OwnerTopNav />}
+              <SalesTopNav />
+            </>
+          )}
+          <div className="max-w-6xl mx-auto flex items-center justify-center p-8">
+            <span className="animate-spin mr-3 text-indigo-600">🌀</span>
+            <p className="text-lg text-gray-600">Loading Order Details for ID: {id}...</p>
+          </div>
         </div>
-      </div>
+      </ConditionalReceptionLayout>
     )
   }
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        {isController ? <ControllerTopNav /> : isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-        {!isReception && <SalesTopNav />}
-        <div className="max-w-6xl mx-auto flex flex-col items-center justify-center p-8 text-red-700 bg-red-50 border border-red-200 rounded-3xl shadow-md mt-8">
-          <Package className="h-8 w-8 mb-3" />
-          <p className="text-xl font-semibold">Error Loading Order</p>
-          <p className="text-sm mt-1">{error || `Order with ID ${id} not found.`}</p>
+      <ConditionalReceptionLayout>
+        <div className="min-h-screen bg-slate-50">
+          {!isReception && (
+            <>
+              {isController ? <ControllerTopNav /> : <OwnerTopNav />}
+              <SalesTopNav />
+            </>
+          )}
+          <div className="max-w-6xl mx-auto flex flex-col items-center justify-center p-8 text-red-700 bg-red-50 border border-red-200 rounded-3xl shadow-md mt-8">
+            <Package className="h-8 w-8 mb-3" />
+            <p className="text-xl font-semibold">Error Loading Order</p>
+            <p className="text-sm mt-1">{error || `Order with ID ${id} not found.`}</p>
+          </div>
         </div>
-      </div>
+      </ConditionalReceptionLayout>
     )
   }
   // --- End Render Functions for Feedback ---
@@ -222,230 +234,236 @@ export default function OrderDetailPage() {
   const currentStageIndex = Math.max(stageStatusCodes.indexOf(statusCode), 0)
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {isController ? <ControllerTopNav /> : isReception ? <ReceptionTopNav /> : <OwnerTopNav />}
-      {!isReception && <SalesTopNav />}
-      <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-        
-        {/* Section 1: Header and Key Metrics Card */}
-        <div className="bg-white rounded-3xl shadow-2xl p-6 border border-slate-200 border-t-4 border-t-indigo-600 transition duration-500 hover:shadow-indigo-300/60">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-            
-            {/* Main Title Block */}
-            <div>
-              <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">
-                <Package className="inline h-4 w-4 mr-2" />
-                Order Details
-              </p>
-              <h1 className="mt-1 text-4xl font-extrabold text-gray-900 leading-tight">
-                Order **#{id}**
-              </h1>
-              <p className="mt-2 text-base text-gray-600 flex items-center">
-                <User className="h-4 w-4 mr-1 text-gray-400" />
-                Customer: **{order.customer_name || 'N/A'}**
-              </p>
-            </div>
+    <ConditionalReceptionLayout>
+      <div className="min-h-screen bg-slate-50">
+        {!isReception && (
+          <>
+            {isController ? <ControllerTopNav /> : <OwnerTopNav />}
+            <SalesTopNav />
+          </>
+        )}
+        <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
 
-            {/* Key Metrics Grid */}
-            <div className="grid grid-cols-2 gap-4 text-sm min-w-[200px]">
-              {/* Status */}
-              <div className={`rounded-xl px-4 py-3 border ${getStatusClasses(order.status)} transition duration-300 hover:scale-[1.03]`}>
-                <p className="font-medium text-gray-800">Status</p>
-                <p className="mt-1 text-lg font-bold">{order.status}</p>
+          {/* Section 1: Header and Key Metrics Card */}
+          <div className="bg-white rounded-3xl shadow-2xl p-6 border border-slate-200 border-t-4 border-t-indigo-600 transition duration-500 hover:shadow-indigo-300/60">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+
+              {/* Main Title Block */}
+              <div>
+                <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">
+                  <Package className="inline h-4 w-4 mr-2" />
+                  Order Details
+                </p>
+                <h1 className="mt-1 text-4xl font-extrabold text-gray-900 leading-tight">
+                  Order **#{id}**
+                </h1>
+                <p className="mt-2 text-base text-gray-600 flex items-center">
+                  <User className="h-4 w-4 mr-1 text-gray-400" />
+                  Customer: **{order.customer_name || 'N/A'}**
+                </p>
               </div>
-              {/* ETA */}
-              <div className="rounded-xl px-4 py-3 bg-white border border-gray-300 shadow-sm transition duration-300 hover:shadow-md">
-                <p className="font-medium text-gray-800 flex items-center">
+
+              {/* Key Metrics Grid */}
+              <div className="grid grid-cols-2 gap-4 text-sm min-w-[200px]">
+                {/* Status */}
+                <div className={`rounded-xl px-4 py-3 border ${getStatusClasses(order.status)} transition duration-300 hover:scale-[1.03]`}>
+                  <p className="font-medium text-gray-800">Status</p>
+                  <p className="mt-1 text-lg font-bold">{order.status}</p>
+                </div>
+                {/* ETA */}
+                <div className="rounded-xl px-4 py-3 bg-white border border-gray-300 shadow-sm transition duration-300 hover:shadow-md">
+                  <p className="font-medium text-gray-800 flex items-center">
                     <Clock className="h-4 w-4 mr-1 text-blue-500" />
                     Estimated Delivery
-                </p>
-                <p className="mt-1 text-lg font-bold text-blue-700">{order.eta || 'N/A'}</p>
-              </div>
+                  </p>
+                  <p className="mt-1 text-lg font-bold text-blue-700">{order.eta || 'N/A'}</p>
+                </div>
 
-              {/* Technician quick access to production materials view */}
-              {isTechnician && (
+                {/* Technician quick access to production materials view */}
+                {isTechnician && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/production/work-orders/${id}`)}
+                    className="col-span-2 mt-2 inline-flex items-center justify-center rounded-full border border-indigo-500 bg-white px-4 py-2 text-xs font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50"
+                  >
+                    Open technician materials view
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Production Stages and Billing */}
+          <div className="grid gap-8 lg:grid-cols-3">
+
+            {/* Production Stages (Timeline/Stepper View) */}
+            <div className="lg:col-span-2 bg-white rounded-3xl shadow-lg p-6 space-y-4 border border-slate-200">
+              <p className="text-sm font-bold uppercase tracking-widest text-gray-700 border-b pb-2 mb-4 flex items-center justify-between">
+                <span className="flex items-center">
+                  <Truck className="inline h-4 w-4 mr-2" />
+                  Production Timeline
+                </span>
                 <button
                   type="button"
-                  onClick={() => navigate(`/production/work-orders/${id}`)}
-                  className="col-span-2 mt-2 inline-flex items-center justify-center rounded-full border border-indigo-500 bg-white px-4 py-2 text-xs font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50"
+                  onClick={handleAdvanceStage}
+                  disabled={currentStageIndex >= stages.length - 1}
+                  className="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Open technician materials view
+                  {currentStageIndex >= stages.length - 1 ? 'All steps completed' : 'Mark next step done'}
                 </button>
-              )}
+              </p>
+              <ol className="relative border-l border-indigo-200 space-y-8 ml-3">
+                {stages.map((stage, index) => {
+                  const isCompleted = index < currentStageIndex
+                  const isActive = index === currentStageIndex
+
+                  return (
+                    <li key={stage} className={`ml-6 transition duration-500 ${isCompleted ? 'opacity-100' : isActive ? 'opacity-100' : 'opacity-60'}`}>
+                      <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white ${isCompleted ? 'bg-green-500' : isActive ? 'bg-indigo-600 animate-pulse' : 'bg-gray-300'}`}>
+                        {isCompleted && <CheckCircle className="w-3 h-3 text-white" />}
+                        {!isCompleted && !isActive && <div className="w-3 h-3 bg-white rounded-full"></div>}
+                      </span>
+                      <h3 className={`font-semibold ${isCompleted ? 'text-gray-700' : isActive ? 'text-indigo-600 text-lg' : 'text-gray-400'}`}>
+                        {stage}
+                        {isActive && <span className="ml-2 text-xs font-normal bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">CURRENT</span>}
+                      </h3>
+                      <p className="text-xs text-gray-500 mt-0.5">{isCompleted ? 'Completed' : isActive ? 'In progress' : 'Upcoming'}</p>
+                    </li>
+                  )
+                })}
+              </ol>
+            </div>
+
+            {/* Billing Summary */}
+            <div className="lg:col-span-1 bg-white rounded-3xl shadow-lg p-6 space-y-5 border border-slate-200">
+              <p className="text-sm font-bold uppercase tracking-widest text-gray-700 border-b pb-2">
+                <DollarSign className="inline h-4 w-4 mr-2" />
+                Financial Summary
+              </p>
+
+              <div className="space-y-3">
+                {/* Total */}
+                <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span className="text-base text-gray-700 font-semibold">Order Total</span>
+                  <span className="text-xl font-extrabold text-blue-700">{formatCurrency(total)}</span>
+                </div>
+
+                {/* Deposit Paid */}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Deposit Paid (50%)</span>
+                  <span className="font-semibold text-gray-800">{formatCurrency(depositPaid)}</span>
+                </div>
+
+                {/* Balance Due */}
+                <div className="flex items-center justify-between text-sm py-2 px-3 rounded-lg bg-red-50 border border-red-200 transition duration-300 hover:bg-red-100">
+                  <span className="text-red-700 font-bold">Balance Due</span>
+                  <span className="font-extrabold text-red-700">{formatCurrency(balanceDue)}</span>
+                </div>
+              </div>
+
+              {/* Simple payment form */}
+              <div className="mt-4 space-y-3 border-t border-slate-200 pt-4 text-sm">
+                {paymentSuccess && !error && (
+                  <p className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-emerald-800 text-xs">
+                    {paymentSuccess}
+                  </p>
+                )}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium text-slate-600">Payment amount</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="Enter amount the customer is paying now"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium text-slate-600">Method</label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="cash">Cash</option>
+                    <option value="mobile_money">Mobile money</option>
+                    <option value="card">Card</option>
+                    <option value="bank_transfer">Bank transfer</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium text-slate-600">Reference (optional)</label>
+                  <input
+                    type="text"
+                    value={paymentReference}
+                    onChange={(e) => setPaymentReference(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="Receipt no, transaction ID, etc."
+                  />
+                </div>
+              </div>
+              {/* Lanari shortcut */}
+              <div className="mt-4 space-y-2 border-t border-slate-200 pt-3 text-xs">
+                <p className="font-semibold text-slate-700">Or request customer to pay via Lanari (USSD / MoMo)</p>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-medium text-slate-600">Customer phone</label>
+                  <input
+                    type="tel"
+                    value={lanariPhone}
+                    onChange={(e) => setLanariPhone(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    placeholder="e.g. 078..."
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={handleLanariPayment}
+                    disabled={lanariLoading}
+                    className="inline-flex items-center rounded-full bg-amber-600 px-3 py-2 text-[11px] font-semibold text-white shadow-sm hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {lanariLoading ? 'Sending Lanari request…' : 'Pay via Lanari (USSD/MoMo)'}
+                  </button>
+                  {lanariPaymentId && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const status = await checkLanariPaymentStatus(lanariPaymentId)
+                          setLanariStatus(
+                            `Gateway status: ${status.gateway_status || 'unknown'} · Payment status: ${status.payment_status || 'unknown'}`
+                          )
+                        } catch (err: any) {
+                          setLanariStatus(err.message || 'Failed to check Lanari payment status')
+                        }
+                      }}
+                      className="inline-flex items-center rounded-full bg-white px-3 py-2 text-[11px] font-semibold text-amber-700 border border-amber-300 hover:bg-amber-50"
+                    >
+                      Check Lanari status
+                    </button>
+                  )}
+                </div>
+                {lanariStatus && (
+                  <p className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] text-amber-800">
+                    {lanariStatus}
+                  </p>
+                )}
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={handleProcessPayment}
+                disabled={processingPayment}
+                className="w-full mt-4 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/50 hover:bg-indigo-700 transition-all duration-300 ease-in-out transform hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {processingPayment ? 'Processing…' : 'Process Payment'}
+              </button>
             </div>
           </div>
         </div>
-        
-        {/* Section 2: Production Stages and Billing */}
-        <div className="grid gap-8 lg:grid-cols-3">
-            
-            {/* Production Stages (Timeline/Stepper View) */}
-            <div className="lg:col-span-2 bg-white rounded-3xl shadow-lg p-6 space-y-4 border border-slate-200">
-                <p className="text-sm font-bold uppercase tracking-widest text-gray-700 border-b pb-2 mb-4 flex items-center justify-between">
-                    <span className="flex items-center">
-                      <Truck className="inline h-4 w-4 mr-2" />
-                      Production Timeline
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleAdvanceStage}
-                      disabled={currentStageIndex >= stages.length - 1}
-                      className="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {currentStageIndex >= stages.length - 1 ? 'All steps completed' : 'Mark next step done'}
-                    </button>
-                </p>
-                <ol className="relative border-l border-indigo-200 space-y-8 ml-3">
-                    {stages.map((stage, index) => {
-                        const isCompleted = index < currentStageIndex
-                        const isActive = index === currentStageIndex
-                        
-                        return (
-                            <li key={stage} className={`ml-6 transition duration-500 ${isCompleted ? 'opacity-100' : isActive ? 'opacity-100' : 'opacity-60'}`}>
-                                <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white ${isCompleted ? 'bg-green-500' : isActive ? 'bg-indigo-600 animate-pulse' : 'bg-gray-300'}`}>
-                                    {isCompleted && <CheckCircle className="w-3 h-3 text-white" />}
-                                    {!isCompleted && !isActive && <div className="w-3 h-3 bg-white rounded-full"></div>}
-                                </span>
-                                <h3 className={`font-semibold ${isCompleted ? 'text-gray-700' : isActive ? 'text-indigo-600 text-lg' : 'text-gray-400'}`}>
-                                    {stage}
-                                    {isActive && <span className="ml-2 text-xs font-normal bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">CURRENT</span>}
-                                </h3>
-                                <p className="text-xs text-gray-500 mt-0.5">{isCompleted ? 'Completed' : isActive ? 'In progress' : 'Upcoming'}</p>
-                            </li>
-                        )
-                    })}
-                </ol>
-            </div>
-            
-            {/* Billing Summary */}
-            <div className="lg:col-span-1 bg-white rounded-3xl shadow-lg p-6 space-y-5 border border-slate-200">
-                <p className="text-sm font-bold uppercase tracking-widest text-gray-700 border-b pb-2">
-                    <DollarSign className="inline h-4 w-4 mr-2" />
-                    Financial Summary
-                </p>
-
-                <div className="space-y-3">
-                    {/* Total */}
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                        <span className="text-base text-gray-700 font-semibold">Order Total</span>
-                        <span className="text-xl font-extrabold text-blue-700">{formatCurrency(total)}</span>
-                    </div>
-
-                    {/* Deposit Paid */}
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Deposit Paid (50%)</span>
-                        <span className="font-semibold text-gray-800">{formatCurrency(depositPaid)}</span>
-                    </div>
-
-                    {/* Balance Due */}
-                    <div className="flex items-center justify-between text-sm py-2 px-3 rounded-lg bg-red-50 border border-red-200 transition duration-300 hover:bg-red-100">
-                        <span className="text-red-700 font-bold">Balance Due</span>
-                        <span className="font-extrabold text-red-700">{formatCurrency(balanceDue)}</span>
-                    </div>
-                </div>
-
-                {/* Simple payment form */}
-                <div className="mt-4 space-y-3 border-t border-slate-200 pt-4 text-sm">
-                  {paymentSuccess && !error && (
-                    <p className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-emerald-800 text-xs">
-                      {paymentSuccess}
-                    </p>
-                  )}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium text-slate-600">Payment amount</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={paymentAmount}
-                      onChange={(e) => setPaymentAmount(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="Enter amount the customer is paying now"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium text-slate-600">Method</label>
-                    <select
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    >
-                      <option value="cash">Cash</option>
-                      <option value="mobile_money">Mobile money</option>
-                      <option value="card">Card</option>
-                      <option value="bank_transfer">Bank transfer</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium text-slate-600">Reference (optional)</label>
-                    <input
-                      type="text"
-                      value={paymentReference}
-                      onChange={(e) => setPaymentReference(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="Receipt no, transaction ID, etc."
-                    />
-                  </div>
-                </div>
-                {/* Lanari shortcut */}
-                <div className="mt-4 space-y-2 border-t border-slate-200 pt-3 text-xs">
-                  <p className="font-semibold text-slate-700">Or request customer to pay via Lanari (USSD / MoMo)</p>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[11px] font-medium text-slate-600">Customer phone</label>
-                    <input
-                      type="tel"
-                      value={lanariPhone}
-                      onChange={(e) => setLanariPhone(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
-                      placeholder="e.g. 078..."
-                    />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <button
-                      type="button"
-                      onClick={handleLanariPayment}
-                      disabled={lanariLoading}
-                      className="inline-flex items-center rounded-full bg-amber-600 px-3 py-2 text-[11px] font-semibold text-white shadow-sm hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {lanariLoading ? 'Sending Lanari request…' : 'Pay via Lanari (USSD/MoMo)'}
-                    </button>
-                    {lanariPaymentId && (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const status = await checkLanariPaymentStatus(lanariPaymentId)
-                            setLanariStatus(
-                              `Gateway status: ${status.gateway_status || 'unknown'} · Payment status: ${status.payment_status || 'unknown'}`
-                            )
-                          } catch (err: any) {
-                            setLanariStatus(err.message || 'Failed to check Lanari payment status')
-                          }
-                        }}
-                        className="inline-flex items-center rounded-full bg-white px-3 py-2 text-[11px] font-semibold text-amber-700 border border-amber-300 hover:bg-amber-50"
-                      >
-                        Check Lanari status
-                      </button>
-                    )}
-                  </div>
-                  {lanariStatus && (
-                    <p className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] text-amber-800">
-                      {lanariStatus}
-                    </p>
-                  )}
-                </div>
-                 
-                {/* Action Button */}
-                <button
-                    onClick={handleProcessPayment}
-                    disabled={processingPayment}
-                    className="w-full mt-4 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/50 hover:bg-indigo-700 transition-all duration-300 ease-in-out transform hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                    {processingPayment ? 'Processing…' : 'Process Payment'}
-                </button>
-            </div>
-        </div>
       </div>
-    </div>
+    </ConditionalReceptionLayout>
   )
 }

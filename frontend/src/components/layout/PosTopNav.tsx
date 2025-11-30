@@ -8,8 +8,8 @@ import { Menu } from 'lucide-react'
 export default function PosTopNav({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const user = getAuthUser()
-  // POS is handled primarily by Sales Rep role (role_id 9)
-  const isPosRole = user?.role_id === 9
+  // POS Cashier role (11)
+  const isPosRole = user?.role_id === 11
 
   const handleLogout = () => {
     clearAuth()

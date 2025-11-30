@@ -2,16 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchOrders } from '../../api/apiClient'
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
-import ControllerTopNav from '@/components/layout/ControllerTopNav'
-import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
-import SalesTopNav from '@/components/layout/SalesTopNav'
-import TechnicianTopNav from '@/components/layout/TechnicianTopNav'
-import OwnerSideNav from '@/components/layout/OwnerSideNav'
-
-import { getAuthUser } from '@/utils/apiClient'
-
-// Updated imports with more relevant icons
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { ListOrdered, Users, Tag, Clock, Package, AlertTriangle, ChevronRight, Dices } from 'lucide-react'
 
 // --- Utility Functions for Design ---
@@ -84,9 +75,9 @@ export default function OrdersPage() {
       .then(data => {
         if (!isMounted) return
         const processedData = Array.isArray(data) ? data.map(order => ({
-            ...order,
-            // Fallback for demo date
-            date: order.date || new Date(Date.now() - Math.random() * 86400000 * 30).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric' }),
+          ...order,
+          // Fallback for demo date
+          date: order.date || new Date(Date.now() - Math.random() * 86400000 * 30).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric' }),
         })) : []
         setOrders(processedData)
       })
@@ -113,7 +104,7 @@ export default function OrdersPage() {
 
   // Component to render the status pill
   const StatusPill = ({ status }) => (
-    <span 
+    <span
       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset transition duration-300 ${getStatusClasses(status)}`}
     >
       {status}
@@ -162,37 +153,9 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {(() => {
-        const user = getAuthUser()
-        const isController = user?.role_id === 4
-        const isReception = user?.role_id === 2
-        const isTechnician = user?.role_id === 7
-        const isOwner = user?.role_id === 1
-        if (isController) return <ControllerTopNav />
-        if (isReception) return <ReceptionTopNav />
-        if (isTechnician) return <TechnicianTopNav />
-        return <OwnerTopNav />
-      })()}
-      {(() => {
-        const user = getAuthUser()
-        const isOwner = user?.role_id === 1
-        const isReception = user?.role_id === 2
-        const isTechnician = user?.role_id === 7
-        if (isOwner || isTechnician || isReception) return null
-        return <SalesTopNav />
-      })()}
-
-      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav only for owner/admin (role_id 1). */}
+    <DashboardLayout>
       <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-6">
         <div className="flex gap-6">
-          {(() => {
-            const user = getAuthUser()
-            const isOwner = user?.role_id === 1
-            if (isOwner) return <OwnerSideNav />
-            return null
-          })()}
-
           <main className="flex-1 space-y-8 max-w-7xl mx-auto">
             {/* Header Section - Modern, Elevated Card with Blue Accent */}
             <div className="flex items-center justify-between p-6 bg-white rounded-3xl shadow-2xl border border-slate-200 border-t-4 border-t-indigo-500 transition duration-500 hover:shadow-indigo-300/50">
@@ -207,7 +170,7 @@ export default function OrdersPage() {
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  
+
                   {/* Table Header - Sticky and Blue Tinted */}
                   <thead className="bg-indigo-50/70 border-b border-indigo-200 sticky top-0 z-10">
                     <tr>
@@ -235,7 +198,7 @@ export default function OrdersPage() {
                       <th className="px-6 py-4"></th>
                     </tr>
                   </thead>
-                  
+
                   {/* Table Body - Dynamic Rows with Hover and Transition */}
                   <tbody className="bg-white divide-y divide-gray-100">
                     {filteredOrders.map((order, index) => (
@@ -257,7 +220,7 @@ export default function OrdersPage() {
                         </td>
                         {/* Date */}
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 transition duration-300">
-                          {order.date || 'N/A'} 
+                          {order.date || 'N/A'}
                         </td>
                         {/* Total - Uses the formatted span for blue color */}
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -284,10 +247,10 @@ export default function OrdersPage() {
                 </table>
               </div>
             </div>
-            
+
             {/* Orders Table/List Section - Elevated Design */}
             <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
-              
+
               {loading || error || orders.length === 0 ? (
                 <StateFeedback />
               ) : (
@@ -320,7 +283,7 @@ export default function OrdersPage() {
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
-                      
+
                       {/* Table Header - Sticky and Blue Tinted */}
                       <thead className="bg-indigo-50/70 border-b border-indigo-200 sticky top-0 z-10">
                         <tr>
@@ -348,7 +311,7 @@ export default function OrdersPage() {
                           <th className="px-6 py-4"></th>
                         </tr>
                       </thead>
-                      
+
                       {/* Table Body - Dynamic Rows with Hover and Transition */}
                       <tbody className="bg-white divide-y divide-gray-100">
                         {filteredOrders.map((order, index) => (
@@ -370,7 +333,7 @@ export default function OrdersPage() {
                             </td>
                             {/* Date */}
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 transition duration-300">
-                              {order.date || 'N/A'} 
+                              {order.date || 'N/A'}
                             </td>
                             {/* Total - Uses the formatted span for blue color */}
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -402,6 +365,6 @@ export default function OrdersPage() {
           </main>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

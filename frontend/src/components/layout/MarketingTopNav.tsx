@@ -2,6 +2,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
+import { Menu } from 'lucide-react'
 
 const MARKETING_LINKS = [
   { path: '/dashboard/marketing', label: 'Overview' },
@@ -12,12 +13,16 @@ const MARKETING_LINKS = [
   { path: '/ai/overview', label: 'AI insights' },
 ]
 
-export default function MarketingTopNav() {
+interface MarketingTopNavProps {
+  onMenuClick?: () => void
+}
+
+export default function MarketingTopNav({ onMenuClick }: MarketingTopNavProps) {
   const navigate = useNavigate()
   const user = getAuthUser()
 
-  // Only for Marketing Officer role (4)
-  if (!user || user.role_id !== 4) {
+  // Only for Marketing role (10)
+  if (!user || user.role_id !== 10) {
     return null
   }
 
@@ -27,15 +32,25 @@ export default function MarketingTopNav() {
   }
 
   return (
-    <header className="bg-fuchsia-900 text-fuchsia-50 shadow-md">
+    <header className="bg-fuchsia-900 text-fuchsia-50 shadow-md sticky top-0 z-30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-6">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-fuchsia-400 text-xs font-bold text-fuchsia-950">
-            MK
-          </span>
-          <div className="leading-tight">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-fuchsia-200/80">Role</p>
-            <p className="text-sm font-semibold">Marketing</p>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            className="md:hidden text-fuchsia-300 hover:text-white"
+            onClick={onMenuClick}
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-fuchsia-400 text-xs font-bold text-fuchsia-950">
+              MK
+            </span>
+            <div className="leading-tight">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-fuchsia-200/80">Role</p>
+              <p className="text-sm font-semibold">Marketing</p>
+            </div>
           </div>
         </div>
 

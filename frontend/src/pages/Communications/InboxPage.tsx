@@ -1,11 +1,8 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import ConversationList from '../../modules/communications/components/ConversationList'
 import { fetchOrdersReadyForCommunication } from '@/api/apiClient'
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
-import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
-import OwnerSideNav from '@/components/layout/OwnerSideNav'
-import { getAuthUser } from '@/utils/apiClient'
 
 export default function InboxPage() {
   const [activeCount, setActiveCount] = useState(0)
@@ -37,174 +34,79 @@ export default function InboxPage() {
     }
   }, [])
 
-  const user = getAuthUser()
-  const isReception = user?.role_id === 2
-  const isOwner = user?.role_id === 1
-
   return (
-    // 1. Apply the light gradient background
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50">
-      {isReception ? <ReceptionTopNav /> : isOwner ? <OwnerTopNav /> : null}
+    <DashboardLayout>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          {/* Page Header */}
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900">Communications Inbox</h1>
+            <p className="mt-2 text-sm text-gray-600">
+              Manage all customer conversations and communications in one place
+            </p>
+          </div>
 
-      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav only for owner/admin (role_id 1). */}
-      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-6">
-        <div className="flex gap-6 max-w-7xl mx-auto">
-          {isOwner && <OwnerSideNav />}
-
-          <main className="flex-1 space-y-6">
-
-            {/* Main Inbox Layout - Conversation List, Preview, and orders ready for follow-up */}
-            <div className="grid gap-6 lg:grid-cols-[2fr,3fr] items-start">
-
-              {/* Conversation List Card - Applying the consistent card style */}
-              <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-0 shadow-xl overflow-hidden">
-                <div className="p-4 border-b border-gray-100">
-                  <p className="text-lg font-semibold text-gray-900">Conversations ({activeCount} Active)</p>
-                </div>
-                {/* The ConversationList component goes here */}
-                <ConversationList onCountChange={setActiveCount} />
-                <div className="p-3 border-t border-gray-100 flex justify-center bg-gray-50/50">
-                  <button className="text-sm font-medium text-blue-600 hover:text-blue-800">
-                    Load more...
-                  </button>
-                </div>
+          {/* Main Inbox Layout - Conversation List, Preview, and orders ready for follow-up */}
+          <div className="grid gap-6 lg:grid-cols-[2fr,3fr] items-start">
+            {/* Conversation List Card */}
+            <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-0 shadow-xl overflow-hidden">
+              <div className="p-6 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-gray-900">Conversations</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  {activeCount > 0 ? `${activeCount} active conversations` : 'No active conversations'}
+                </p>
               </div>
-
-              {/* Preview Panel Card - Applying the consistent card style */}
-              <div className="hidden lg:block rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-6 shadow-xl min-h-[400px] space-y-6">
-                <p className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Conversation Preview</p>
-
-                <div className="flex items-center justify-center h-48 bg-gray-50/70 rounded-xl border border-dashed border-gray-300">
-                  <p className="text-base font-medium text-gray-500 p-4 text-center">
-                    Select a conversation on the left to load the full message history and reply interface here (demo placeholder).
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="text-sm text-gray-600 flex justify-between">
-                    <span className="font-medium text-gray-800">Channel:</span>
-                    <span>WhatsApp</span>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="text-sm text-gray-600 flex justify-between">
-                      <span className="font-medium text-gray-800">Channel:</span>
-                      <span>WhatsApp</span>
-                    </div>
-                    <div className="text-sm text-gray-600 flex justify-between">
-                      <span className="font-medium text-gray-800">Assigned To:</span>
-                      <span>Unassigned</span>
-                    </div>
-                    <div className="text-sm text-gray-600 flex justify-between">
-                      <span className="font-medium text-gray-800">Last Message:</span>
-                      <span>minutes ago</span>
-                    </div>
-                  </div>
-
-                  {/* Orders ready for communication - Reception helper */}
-                  <div className="mt-6 rounded-2xl border border-green-100 bg-green-50/80 p-4 space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-green-900">Customers with orders ready</p>
-                      {loadingOrders && <span className="text-[11px] text-green-700">Loading...</span>}
-                    </div>
-                    {ordersError && (
-                      <p className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-md px-2 py-1">{ordersError}</p>
-                    )}
-                    {!loadingOrders && !ordersError && orders.length === 0 && (
-                      <p className="text-[11px] text-green-800/80">No ready or delivered orders requiring follow-up right now.</p>
-                    )}
-                    {!loadingOrders && !ordersError && orders.length > 0 && (
-                      <ul className="space-y-2 max-h-56 overflow-y-auto pr-1 text-xs">
-                        {orders.map((o) => {
-                          const phone = (o.customer_phone || '').replace(/[^0-9+]/g, '')
-                          const message = `Hello ${o.customer_name || ''}, your order #${o.order_id} is ${o.status}. Can we confirm payment and delivery?`
-                          const waUrl = phone ? `https://wa.me/${phone.startsWith('+') ? phone.slice(1) : phone}?text=${encodeURIComponent(message)}` : null
-
-                          return (
-                            <li
-                              key={o.order_id}
-                              className="flex items-center justify-between gap-2 rounded-xl bg-white/90 border border-green-100 px-3 py-2"
-                            >
-                              <div className="space-y-0.5">
-                                <p className="text-xs font-semibold text-gray-900 line-clamp-1">{o.customer_name}</p>
-                                <p className="text-[11px] text-gray-600">
-                                  Order #{o.order_id} · <span className="capitalize">{o.status}</span>
-                                </p>
-                              </div>
-                              {waUrl ? (
-                                <a
-                                  href={waUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center rounded-full bg-green-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-green-700"
-                                >
-                                  WhatsApp
-                                </a>
-                              ) : (
-                                <span className="text-[10px] text-gray-500">No phone</span>
-                              )}
-                            </li>
-                          )
-                        })}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-
-                {/* Orders ready for communication - Reception helper */}
-                <div className="mt-6 rounded-2xl border border-green-100 bg-green-50/80 p-4 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-green-900">Customers with orders ready</p>
-                    {loadingOrders && <span className="text-[11px] text-green-700">Loading...</span>}
-                  </div>
-                  {ordersError && (
-                    <p className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-md px-2 py-1">{ordersError}</p>
-                  )}
-                  {!loadingOrders && !ordersError && orders.length === 0 && (
-                    <p className="text-[11px] text-green-800/80">No ready or delivered orders requiring follow-up right now.</p>
-                  )}
-                  {!loadingOrders && !ordersError && orders.length > 0 && (
-                    <ul className="space-y-2 max-h-56 overflow-y-auto pr-1 text-xs">
-                      {orders.map((o) => {
-                        const phone = (o.customer_phone || '').replace(/[^0-9+]/g, '')
-                        const message = `Hello ${o.customer_name || ''}, your order #${o.order_id} is ${o.status}. Can we confirm payment and delivery?`
-                        const waUrl = phone ? `https://wa.me/${phone.startsWith('+') ? phone.slice(1) : phone}?text=${encodeURIComponent(message)}` : null
-
-                        return (
-                          <li
-                            key={o.order_id}
-                            className="flex items-center justify-between gap-2 rounded-xl bg-white/90 border border-green-100 px-3 py-2"
-                          >
-                            <div className="space-y-0.5">
-                              <p className="text-xs font-semibold text-gray-900 line-clamp-1">{o.customer_name}</p>
-                              <p className="text-[11px] text-gray-600">
-                                Order #{o.order_id} · <span className="capitalize">{o.status}</span>
-                              </p>
-                            </div>
-                            {waUrl ? (
-                              <a
-                                href={waUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center rounded-full bg-green-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-green-700"
-                              >
-                                WhatsApp
-                              </a>
-                            ) : (
-                              <span className="text-[10px] text-gray-500">No phone</span>
-                            )}
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  )}
-                </div>
-              </div>
+              <ConversationList onActiveCountChange={setActiveCount} />
             </div>
 
-          </main>
+            {/* Orders Ready for Communication Card */}
+            <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-6 shadow-xl">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Orders Ready for Follow-up</h2>
+
+              {loadingOrders ? (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                  <p className="mt-2 text-sm">Loading orders...</p>
+                </div>
+              ) : ordersError ? (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {ordersError}
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-sm">No orders ready for communication</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {orders.map((order: any) => (
+                    <div
+                      key={order.id}
+                      className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/50 cursor-pointer transition"
+                    >
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-gray-900">
+                          Order #{order.id}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {order.customer_name || 'Unknown Customer'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${order.status === 'completed' ? 'bg-green-100 text-green-700' :
+                            order.status === 'ready' ? 'bg-blue-100 text-blue-700' :
+                              'bg-gray-100 text-gray-700'
+                          }`}>
+                          {order.status || 'Pending'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

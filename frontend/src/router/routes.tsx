@@ -31,6 +31,7 @@ import BomTemplatesPage from '../pages/Inventory/BomTemplatesPage';
 import SuppliersPage from '../pages/Inventory/SuppliersPage';
 import StockMovementsPage from '../pages/Inventory/StockMovementsPage';
 import InventoryReportsPage from '../pages/Inventory/InventoryReportsPage';
+import OperationsReportsPage from '../pages/Reports/OperationsReportsPage';
 
 import PosTerminalPage from '../pages/POS/PosTerminalPage';
 import PosSalesHistoryPage from '../pages/POS/PosSalesHistoryPage';
@@ -96,6 +97,8 @@ export const routes = [
   { path: '/inventory/suppliers', element: <SuppliersPage /> },
   { path: '/inventory/stock-movements', element: <StockMovementsPage /> },
   { path: '/inventory/reports', element: <InventoryReportsPage /> },
+
+  { path: '/reports/operations', element: <OperationsReportsPage /> },
 
   { path: '/pos/terminal', element: <PosTerminalPage /> },
   { path: '/pos/sales-history', element: <PosSalesHistoryPage /> },

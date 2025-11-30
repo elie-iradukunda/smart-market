@@ -2,6 +2,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
+import { Menu } from 'lucide-react'
 
 const TECH_LINKS = [
   { path: '/dashboard/technician', label: 'Overview' },
@@ -10,12 +11,16 @@ const TECH_LINKS = [
   { path: '/inventory/materials', label: 'Materials' },
 ]
 
-export default function TechnicianTopNav() {
+interface TechnicianTopNavProps {
+  onMenuClick?: () => void
+}
+
+export default function TechnicianTopNav({ onMenuClick }: TechnicianTopNavProps) {
   const navigate = useNavigate()
   const user = getAuthUser()
 
-  // Only for Technician role (5)
-  if (!user || user.role_id !== 5) {
+  // Only for Technician role (6)
+  if (!user || user.role_id !== 6) {
     return null
   }
 
@@ -25,15 +30,25 @@ export default function TechnicianTopNav() {
   }
 
   return (
-    <header className="bg-sky-900 text-sky-50 shadow-md">
+    <header className="bg-sky-900 text-sky-50 shadow-md sticky top-0 z-30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-6">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-sky-400 text-xs font-bold text-sky-950">
-            TE
-          </span>
-          <div className="leading-tight">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-sky-200/80">Role</p>
-            <p className="text-sm font-semibold">Technician</p>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            className="md:hidden text-sky-300 hover:text-white"
+            onClick={onMenuClick}
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-sky-400 text-xs font-bold text-sky-950">
+              TE
+            </span>
+            <div className="leading-tight">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-sky-200/80">Role</p>
+              <p className="text-sm font-semibold">Technician</p>
+            </div>
           </div>
         </div>
 

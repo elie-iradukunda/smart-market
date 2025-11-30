@@ -1,9 +1,17 @@
 import React from 'react';
 import { getAuthUser } from '@/utils/apiClient';
 import OwnerDashboardLayout from './OwnerDashboardLayout';
+import AdminDashboardLayout from './AdminDashboardLayout';
 import FinanceDashboardLayout from './FinanceDashboardLayout';
+import ControllerDashboardLayout from './ControllerDashboardLayout';
+import ReceptionDashboardLayout from './ReceptionDashboardLayout';
+import TechnicianDashboardLayout from './TechnicianDashboardLayout';
+import ProductionManagerDashboardLayout from './ProductionManagerDashboardLayout';
+import InventoryManagerDashboardLayout from './InventoryManagerDashboardLayout';
+import SalesDashboardLayout from './SalesDashboardLayout';
+import MarketingDashboardLayout from './MarketingDashboardLayout';
 import POSDashboardLayout from './POSDashboardLayout';
-import InventoryLayout from './InventoryLayout';
+import SupportDashboardLayout from './SupportDashboardLayout';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -21,23 +29,36 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
     switch (roleId) {
         case 1: // Owner
-        case 7: // Super Admin
             return <OwnerDashboardLayout>{children}</OwnerDashboardLayout>;
+        case 2: // Admin
+            return <AdminDashboardLayout>{children}</AdminDashboardLayout>;
         case 3: // Accountant
             return <FinanceDashboardLayout>{children}</FinanceDashboardLayout>;
-        case 9: // POS / Sales Rep
+        case 4: // Controller
+            return <ControllerDashboardLayout>{children}</ControllerDashboardLayout>;
+        case 5: // Reception
+            return <ReceptionDashboardLayout>{children}</ReceptionDashboardLayout>;
+        case 6: // Technician
+            return <TechnicianDashboardLayout>{children}</TechnicianDashboardLayout>;
+        case 7: // Production Manager
+            return <ProductionManagerDashboardLayout>{children}</ProductionManagerDashboardLayout>;
+        case 8: // Inventory Manager
+            return <InventoryManagerDashboardLayout>{children}</InventoryManagerDashboardLayout>;
+        case 9: // Sales Rep
+            return <SalesDashboardLayout>{children}</SalesDashboardLayout>;
+        case 10: // Marketing
+            return <MarketingDashboardLayout>{children}</MarketingDashboardLayout>;
+        case 11: // POS Cashier
             return <POSDashboardLayout>{children}</POSDashboardLayout>;
-        case 6: // Controller / Inventory
-        case 8: // Manager
-            return <InventoryLayout>{children}</InventoryLayout>;
+        case 12: // Support Agent
+            return <SupportDashboardLayout>{children}</SupportDashboardLayout>;
         default:
-            // Fallback: If the user is an Owner/Admin but role_id wasn't caught above
-            if (roleId === 1 || roleId === 7) {
+            // Fallback: If the user is an Owner/Admin but role_id wasn't caught above (shouldn't happen with updated switch)
+            if (roleId === 1) {
                 return <OwnerDashboardLayout>{children}</OwnerDashboardLayout>;
             }
-            // For other roles, we might want to return a default layout or just children
-            // For now, returning children allows the page to render without a sidebar if no layout matches,
-            // which is better than showing the WRONG sidebar.
+            // For unknown roles, just render children to avoid breaking the app, 
+            // but ideally we should have a default layout or error page.
             return <>{children}</>;
     }
 };

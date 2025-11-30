@@ -1,62 +1,68 @@
 // @ts-nocheck
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { clearAuth, currentUserHasPermission, getAuthUser } from '@/utils/apiClient'
+import { clearAuth, getAuthUser } from '@/utils/apiClient'
+import { Menu } from 'lucide-react'
 
-export default function ControllerTopNav() {
+const CONTROLLER_LINKS = [
+  { path: '/dashboard/controller', label: 'Overview' },
+  { path: '/orders', label: 'Orders' },
+  { path: '/inventory/materials', label: 'Inventory' },
+  { path: '/reports/operations', label: 'Reports' },
+  { path: '/ai/overview', label: 'AI Insights' },
+]
+
+interface ControllerTopNavProps {
+  onMenuClick?: () => void
+}
+
+export default function ControllerTopNav({ onMenuClick }: ControllerTopNavProps) {
   const navigate = useNavigate()
   const user = getAuthUser()
-  const isController = user?.role_id === 6
+
+  // Only for Controller role (4)
+  if (!user || user.role_id !== 4) {
+    return null
+  }
 
   const handleLogout = () => {
     clearAuth()
     navigate('/login')
   }
 
-  if (!isController) return null
-
   return (
-    <header className="bg-slate-900 text-slate-100 shadow-md">
+    <header className="bg-amber-900 text-amber-50 shadow-md sticky top-0 z-30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-6">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-500/90 text-xs font-bold text-slate-900">
-            CO
-          </span>
-          <div className="leading-tight">
-            <p className="text-xs uppercase tracking-[0.18em] text-amber-200/80">Role</p>
-            <p className="text-sm font-semibold">Controller</p>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            className="md:hidden text-amber-300 hover:text-white"
+            onClick={onMenuClick}
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-xs font-bold text-amber-950">
+              CO
+            </span>
+            <div className="leading-tight">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-amber-200/80">Role</p>
+              <p className="text-sm font-semibold">Controller</p>
+            </div>
           </div>
         </div>
 
         <nav className="hidden md:flex items-center gap-4 text-xs font-medium">
-          <Link to="/dashboard/controller" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-            Overview
-          </Link>
-          {currentUserHasPermission('report.view') && (
-            <Link to="/finance/reports" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Finance reports
+          {CONTROLLER_LINKS.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className="px-3 py-1.5 rounded-full hover:bg-amber-800 text-amber-50"
+            >
+              {link.label}
             </Link>
-          )}
-          {currentUserHasPermission('invoice.create') && (
-            <Link to="/finance/invoices" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Invoices
-            </Link>
-          )}
-          {currentUserHasPermission('payment.create') && (
-            <Link to="/finance/payments" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Payments
-            </Link>
-          )}
-          {currentUserHasPermission('material.view') && (
-            <Link to="/inventory/materials" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Materials
-            </Link>
-          )}
-          {currentUserHasPermission('stock.move') && (
-            <Link to="/inventory/purchase-orders" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Purchase orders
-            </Link>
-          )}
+          ))}
         </nav>
 
         <button
