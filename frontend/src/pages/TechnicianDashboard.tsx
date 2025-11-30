@@ -1,9 +1,8 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { clearAuth } from '@/utils/apiClient'
 import { fetchWorkOrders, fetchMaterials } from '@/api/apiClient'
-import TechnicianTopNav from '@/components/layout/TechnicianTopNav'
+import TechnicianDashboardLayout from '@/components/layout/TechnicianDashboardLayout'
 import JobPipelineOverview from '../modules/dashboards/components/JobPipelineOverview'
 import StockAlerts from '../modules/dashboards/components/StockAlerts'
 
@@ -33,25 +32,9 @@ export default function TechnicianDashboard() {
   const dueToday = workOrders.filter((wo) => wo.due_date?.split('T')[0] === today).length
   const lowStock = materials.filter((m) => m.current_stock <= (m.reorder_level || 0)).length
 
-  const handleLogout = () => {
-    clearAuth()
-    navigate('/login')
-  }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-white to-blue-50/50 px-0 pb-10">
-      <TechnicianTopNav />
-      <div className="mx-auto max-w-7xl space-y-8 px-4 pt-6 sm:px-6 lg:px-8">
-        {/* Top bar with logout */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm font-semibold text-gray-500">Technician</h2>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-red-600 hover:text-red-700 rounded-full px-3 py-1 border border-red-100 bg-red-50/60 hover:bg-red-100 transition"
-          >
-            Logout
-          </button>
-        </div>
-
+    <TechnicianDashboardLayout>
+      <div className="mx-auto max-w-7xl space-y-8 px-4 pt-6 sm:px-6 lg:px-8 pb-10">
         {/* Header section */}
         <div className="grid gap-6 lg:grid-cols-[2fr,1.3fr] items-stretch">
           <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-8 sm:p-10 shadow-xl flex flex-col justify-between">
@@ -150,6 +133,6 @@ export default function TechnicianDashboard() {
           </div>
         </div>
       </div>
-    </div>
+    </TechnicianDashboardLayout>
   )
 }

@@ -47,6 +47,11 @@ const POSSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen
     const [expandedItems, setExpandedItems] = useState<string[]>(['Point of Sale'])
     const user = getAuthUser()
 
+    // Only show for POS Cashier role (11)
+    if (!user || user.role_id !== 11) {
+        return null
+    }
+
     const toggleExpand = (label: string) => {
         setExpandedItems(prev =>
             prev.includes(label) ? prev.filter(item => item !== label) : [...prev, label]

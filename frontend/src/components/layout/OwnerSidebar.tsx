@@ -1,16 +1,81 @@
 // @ts-nocheck
-import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { getAuthUser, clearAuth } from '@/utils/apiClient'
+import React, { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import {
+    LayoutDashboard,
+    ShoppingCart,
+    DollarSign,
+    Users,
+    Settings,
+    ChevronDown,
+    ChevronRight,
+    LogOut,
+    Crown,
+    BarChart3
+} from 'lucide-react'
+import { clearAuth, getAuthUser } from '@/utils/apiClient'
 
-const linkBase =
-    'flex items-center space-x-3 p-3 transition duration-300 rounded-2xl border border-slate-100 bg-white hover:bg-slate-50 shadow-sm hover:shadow-md'
+interface SidebarItem {
+    label: string
+    path?: string
+    icon: React.ElementType
+    children?: SidebarItem[]
+}
 
-export default function OwnerSideNav() {
+const sidebarItems: SidebarItem[] = [
+    {
+        label: 'Dashboard',
+        path: '/dashboard/owner',
+        icon: LayoutDashboard,
+    },
+    {
+        label: 'Operations',
+        path: '/orders',
+        icon: ShoppingCart,
+    },
+    {
+        label: 'Finance',
+        path: '/finance/reports',
+        icon: DollarSign,
+    },
+    {
+        label: 'Sales & CRM',
+        path: '/crm/leads',
+        icon: BarChart3,
+    },
+    {
+        label: 'Team',
+        path: '/admin/users',
+        icon: Users,
+    },
+    {
+        label: 'Settings',
+        path: '/admin/system-settings',
+        icon: Settings,
+    },
+]
+
+const OwnerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen: boolean) => void }) => {
+    const location = useLocation()
     const navigate = useNavigate()
+    const [expandedItems, setExpandedItems] = useState<string[]>([])
     const user = getAuthUser()
 
-    if (!user || user.role_id !== 1) return null
+    // Only show for Owner role (1)
+    if (!user || user.role_id !== 1) {
+        return null
+    }
+
+    const toggleExpand = (label: string) => {
+        setExpandedItems(prev =>
+            prev.includes(label) ? prev.filter(item => item !== label) : [...prev, label]
+        )
+    }
+
+    const isActive = (path?: string) => {
+        if (!path) return false
+        return location.pathname === path || location.pathname.startsWith(path + '/')
+    }
 
     const handleLogout = () => {
         clearAuth()
@@ -18,45 +83,121 @@ export default function OwnerSideNav() {
     }
 
     return (
-        <aside className="hidden md:flex w-64 flex-col rounded-3xl bg-white shadow-xl border border-slate-100 py-6 px-4 space-y-6">
-            <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Workspace</p>
-                <h2 className="mt-2 text-lg font-bold text-slate-900">Owner Control</h2>
-            </div>
+        <>
+            {/* Mobile Overlay */}
+            <div
+                className={`fixed inset-0 z-20 bg-gray-900/50 backdrop-blur-sm transition-opacity lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                onClick={() => setIsOpen(false)}
+            />
 
-            <nav className="flex-1 space-y-1 text-sm">
-                <Link to="/dashboard/owner" className={linkBase}>
-                    <span className="inline-flex h-4 w-4 mr-1" aria-hidden="true">🏠</span>
-                    Dashboard
-                </Link>
-                <Link to="/orders" className={linkBase}>
-                    <span className="inline-flex h-4 w-4 mr-1" aria-hidden="true">📦</span>
-                    Operations
-                </Link>
-                <Link to="/finance/reports" className={linkBase}>
-                    <span className="inline-flex h-4 w-4 mr-1" aria-hidden="true">💰</span>
-                    Finance
-                </Link>
-                <Link to="/crm/leads" className={linkBase}>
-                    <span className="inline-flex h-4 w-4 mr-1" aria-hidden="true">👥</span>
-                    Sales
-                </Link>
-                <Link to="/admin/users" className={linkBase}>
-                    <span className="inline-flex h-4 w-4 mr-1" aria-hidden="true">👤</span>
-                    Team
-                </Link>
-                <Link to="/admin/system-settings" className={linkBase}>
-                    <span className="inline-flex h-4 w-4 mr-1" aria-hidden="true">⚙️</span>
-                    Settings
-                </Link>
-            </nav>
-
-            <button
-                onClick={handleLogout}
-                className="mt-auto inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-black transition"
+            {/* Sidebar Container */}
+            <aside
+                className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-gradient-to-b from-slate-50 via-white to-gray-50 border-r border-slate-200 shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:shadow-none ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
-                Sign out
-            </button>
-        </aside>
+                {/* Logo Section */}
+                <div className="flex h-16 items-center justify-center border-b border-slate-200 px-6 bg-gradient-to-r from-slate-800 to-black">
+                    <div className="flex items-center gap-2 font-bold text-xl text-white">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shadow-lg">
+                            <Crown size={20} />
+                        </div>
+                        <span>
+                            Top<span className="font-light">Design</span>
+                        </span>
+                    </div>
+                </div>
+
+                {/* Role Badge */}
+                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-200">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-slate-700 to-black flex items-center justify-center text-white font-bold text-xs shadow-md">
+                            OW
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium text-slate-600">Business</p>
+                            <p className="text-sm font-bold text-slate-900">Owner</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Navigation Items */}
+                <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
+                    {sidebarItems.map((item) => (
+                        <div key={item.label}>
+                            {item.children ? (
+                                <div className="space-y-1">
+                                    <button
+                                        onClick={() => toggleExpand(item.label)}
+                                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${expandedItems.includes(item.label)
+                                            ? 'text-slate-900 bg-slate-100/80 shadow-sm'
+                                            : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <item.icon size={18} className={expandedItems.includes(item.label) ? 'text-slate-600' : 'text-slate-500'} />
+                                            <span>{item.label}</span>
+                                        </div>
+                                        {expandedItems.includes(item.label) ? (
+                                            <ChevronDown size={16} className="text-slate-500" />
+                                        ) : (
+                                            <ChevronRight size={16} className="text-slate-500" />
+                                        )}
+                                    </button>
+
+                                    <div className={`space-y-1 overflow-hidden transition-all duration-300 ${expandedItems.includes(item.label) ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                        {item.children.map((child) => (
+                                            <Link
+                                                key={child.label}
+                                                to={child.path!}
+                                                className={`group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ml-4 ${isActive(child.path)
+                                                    ? 'bg-gradient-to-r from-slate-700 to-black text-white shadow-md shadow-slate-600/30'
+                                                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                                                    }`}
+                                            >
+                                                <child.icon size={16} className={`transition-colors ${isActive(child.path) ? 'text-white' : 'text-slate-500 group-hover:text-slate-700'}`} />
+                                                <span>{child.label}</span>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <Link
+                                    to={item.path!}
+                                    className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive(item.path)
+                                        ? 'bg-gradient-to-r from-slate-700 to-black text-white shadow-md shadow-slate-600/30'
+                                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                                        }`}
+                                >
+                                    <item.icon size={18} className={`transition-colors ${isActive(item.path) ? 'text-white' : 'text-slate-500 group-hover:text-slate-700'}`} />
+                                    <span>{item.label}</span>
+                                </Link>
+                            )}
+                        </div>
+                    ))}
+                </nav>
+
+                {/* User Profile / Footer Section */}
+                <div className="border-t border-slate-200 p-4 space-y-3 bg-gradient-to-b from-white to-slate-50/50">
+                    <div className="flex items-center gap-3 rounded-xl bg-white p-3 border border-slate-200 shadow-sm">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-black flex items-center justify-center text-white font-bold text-sm shadow-md">
+                            {user?.name?.charAt(0).toUpperCase() || 'O'}
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                            <p className="truncate text-sm font-semibold text-slate-900">{user?.name || 'Owner'}</p>
+                            <p className="truncate text-xs text-slate-600">Managing Director</p>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white p-2.5 text-sm font-medium text-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all shadow-sm hover:shadow-md"
+                    >
+                        <LogOut size={18} />
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </aside>
+        </>
     )
 }
+
+export default OwnerSidebar

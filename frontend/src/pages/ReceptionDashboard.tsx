@@ -1,72 +1,15 @@
 // @ts-nocheck
 import React from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { clearAuth, currentUserHasPermission } from '@/utils/apiClient'
+import { currentUserHasPermission } from '@/utils/apiClient'
+import ReceptionDashboardLayout from '@/components/layout/ReceptionDashboardLayout'
 
 export default function ReceptionDashboard() {
   const navigate = useNavigate()
 
-  const handleLogout = () => {
-    clearAuth()
-    navigate('/login')
-  }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-emerald-50/50 px-0 pb-10">
-      {/* Role-specific top navbar for Reception */}
-      <header className="bg-slate-900 text-slate-100 shadow-md">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-6">
-          {/* Role label */}
-          <div className="flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-400 text-xs font-bold text-slate-900">
-              RE
-            </span>
-            <div className="leading-tight">
-              <p className="text-xs uppercase tracking-[0.18em] text-emerald-200/80">Role</p>
-              <p className="text-sm font-semibold">Reception</p>
-            </div>
-          </div>
-
-          {/* Nav links for reception */}
-          <nav className="hidden md:flex items-center gap-4 text-xs font-medium">
-            <Link to="/dashboard/reception" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Overview
-            </Link>
-            {currentUserHasPermission('lead.create') && (
-              <Link to="/crm/leads" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-                Leads
-              </Link>
-            )}
-            {currentUserHasPermission('customer.view') && (
-              <Link to="/crm/customers" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-                Customers
-              </Link>
-            )}
-            {currentUserHasPermission('quote.create') && (
-              <Link to="/crm/quotes" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-                Quotes
-              </Link>
-            )}
-            {currentUserHasPermission('order.view') && (
-              <Link to="/orders" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-                Orders
-              </Link>
-            )}
-            <Link to="/communications/inbox" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Communication
-            </Link>
-          </nav>
-
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="text-xs font-medium text-red-200 hover:text-white border border-red-400/60 bg-red-500/10 hover:bg-red-500/80 rounded-full px-3 py-1 transition"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-8">
+    <ReceptionDashboardLayout>
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-8 pb-10">
 
         {/* Header section */}
         <div className="grid gap-6 lg:grid-cols-[2fr,1.3fr] items-stretch">
@@ -202,6 +145,6 @@ export default function ReceptionDashboard() {
           )}
         </div>
       </div>
-    </div>
+    </ReceptionDashboardLayout>
   )
 }
