@@ -228,6 +228,8 @@ export function getDashboardPathForRole(roleId: number | null | undefined): stri
       return '/dashboard/pos'
     case 12: // Support Agent
       return '/dashboard/support'
+    case 13: // Customer (e-commerce)
+      return '/' // Redirect to e-commerce homepage
     default:
       // Fallback to owner dashboard if role is unknown
       return '/dashboard/owner'

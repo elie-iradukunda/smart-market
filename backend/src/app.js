@@ -7,7 +7,6 @@ import { createServer } from 'http';
 import socketService from './services/socketService.js';
 import pool from './config/database.js';
 
-
 import authRoutes from './routes/auth.js';
 import orderRoutes from './routes/orders.js';
 import customerRoutes from './routes/customers.js';
@@ -23,7 +22,9 @@ import reportRoutes from './routes/reports.js';
 import uploadRoutes from './routes/upload.js';
 import roleRoutes from './routes/roles.js';
 import paymentRoutes from './routes/payments.js';
-
+import productRoutes from './routes/products.js';
+import productImageUploadRoutes from './routes/productImageUpload.js';
+import ecommerceOrdersRoutes from './routes/ecommerceOrders.js';
 
 import './jobs/scheduler.js';
 
@@ -33,10 +34,10 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-
-
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(cors());
 
 // Rate limiting – keep it for production, disable for local development
@@ -52,6 +53,9 @@ if (process.env.NODE_ENV === 'production') {
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files (uploaded images)
+app.use('/uploads', express.static('public/uploads'));
 
 // Direct campaign route (before other routes)
 app.get('/api/campaigns/:id', async (req, res) => {
@@ -172,7 +176,7 @@ app.get('/api/permissions', async (req, res) => {
 
 app.get('/api/permissions/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id} = req.params;
     const [permission] = await pool.execute('SELECT * FROM permissions WHERE id = ?', [id]);
     if (permission.length === 0) {
       return res.status(404).json({ error: 'Permission not found' });
@@ -352,7 +356,10 @@ app.post('/api/orders/:id/issue-materials', async (req, res) => {
   }
 });
 
-// Routes
+// Routes - E-commerce routes FIRST (before auth middleware)
+app.use('/api/ecommerce/orders', ecommerceOrdersRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/upload', productImageUploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', customerRoutes);
@@ -364,24 +371,6 @@ app.use('/api', financeRoutes);
 app.use('/api', marketingRoutes);
 app.use('/api', communicationRoutes);
 app.use('/api', aiRoutes);
-app.use('/api', reportRoutes);
-app.use('/api', uploadRoutes);
-app.use('/api', roleRoutes);
-app.use('/payments', paymentRoutes);
-
-
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
-
-
-
-// Catch-all route handler for debugging
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
 
 // Error handling
 app.use((err, req, res, next) => {
@@ -409,3 +398,4 @@ server.listen(PORT, () => {
 });
 
 export default app;
+// Ready for orders

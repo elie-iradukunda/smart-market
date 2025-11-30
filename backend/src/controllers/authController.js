@@ -37,6 +37,49 @@ export const login = async (req, res) => {
   }
 };
 
+export const register = async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email and password are required' });
+    }
+
+    // Get customer role ID
+    const [roles] = await pool.execute('SELECT id FROM roles WHERE name = "customer"');
+    let roleId = null;
+    if (roles.length > 0) {
+      roleId = roles[0].id;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const [result] = await pool.execute(
+      'INSERT INTO users (name, email, phone, password_hash, role_id) VALUES (?, ?, ?, ?, ?)',
+      [name, email, phone || null, hashedPassword, roleId]
+    );
+
+    const token = jwt.sign({ userId: result.insertId }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+
+    return res.status(201).json({
+      message: 'Registration successful',
+      token,
+      user: {
+        id: result.insertId,
+        name,
+        email,
+        role_id: roleId
+      }
+    });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY' || error.errno === 1062) {
+      return res.status(409).json({ error: 'Email or phone already exists' });
+    }
+    console.error('Registration error:', error);
+    return res.status(500).json({ error: 'Registration failed' });
+  }
+};
+
 
 export const createUser = async (req, res) => {
   try {

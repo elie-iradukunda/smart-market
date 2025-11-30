@@ -20,7 +20,7 @@ export default function InventoryManagerTopNav({ onMenuClick }: InventoryManager
     const user = getAuthUser()
 
     // Only for Inventory Manager role (8)
-    if (!user || user.role_id !== 8) {
+    if (!user || Number(user.role_id) !== 8) {
         return null
     }
 

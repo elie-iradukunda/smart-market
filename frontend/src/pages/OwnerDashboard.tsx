@@ -70,11 +70,7 @@ export default function OwnerDashboard() {
   const navigate = useNavigate()
   const user = getAuthUser()
 
-  // Guard: only admin/owner role (role_id === 1) may access this dashboard
-  if (!user || user.role_id !== 1) {
-    navigate('/login')
-    return null
-  }
+  // DashboardLayout handles role checking, no need for duplicate guard here
 
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])

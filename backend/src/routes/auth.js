@@ -1,6 +1,7 @@
 import express from 'express';
 import { 
   login, 
+  register,
   createUser, 
   getUsers, 
   getUser, 
@@ -17,6 +18,7 @@ import rbacMiddleware from '../../middleware/rbac.js';
 const router = express.Router();
 
 // Public routes (no authentication required)
+router.post('/register', register);
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
@@ -32,7 +34,5 @@ router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 router.put('/users/:id/password', changePassword);
 router.put('/users/{id}/password', changePassword);
-
-
 
 export default router;
