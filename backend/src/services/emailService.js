@@ -1142,6 +1142,262 @@ class EmailService {
           <p style="margin: 0; color: #666; font-size: 14px;">${COMPANY_NAME} | Billing Department</p>
           <p style="margin: 10px 0 0 0; color: #999; font-size: 12px;">This is an automated message. Please do not reply to this email.</p>
         </div>
+              ${data.payment_terms === 'prepaid' ? `
+              <li style="margin-bottom: 8px; font-size: 14px; line-height: 1.5; color: #b45309; font-weight: 500;">
+                <strong>Prepayment Required:</strong> This order requires 100% prepayment. We will process the payment upon receipt of your proforma invoice.
+              </li>
+              ` : ''}
+            </ul>
+          </div>
+          
+          <!-- Contact Information -->
+          <div style="margin-top: 30px; text-align: center; color: #4a5568; font-size: 14px; line-height: 1.6;">
+            <p style="margin: 0 0 10px 0;">
+              <strong>Questions about this order?</strong> Please contact our Purchasing Department at ${COMPANY_PHONE} or reply to this email.
+            </p>
+            <p style="margin: 0; font-size: 13px; color: #718096;">
+              This is an automated message. Please do not reply directly to this email.
+            </p>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="background-color: #1a202c; padding: 25px 30px; text-align: center; color: #a0aec0; font-size: 12px; line-height: 1.6;">
+          <p style="margin: 0 0 10px 0;">
+            &copy; ${new Date().getFullYear()} ${COMPANY_NAME}. All rights reserved.
+          </p>
+          <p style="margin: 0; font-size: 11px; opacity: 0.8;">
+            ${COMPANY_ADDRESS} | ${COMPANY_PHONE} | ${GMAIL_USER}
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+    return this.sendEmail(to, subject, content);
+  }
+
+  // Supplier Update Notification
+  async sendSupplierUpdate(to, data) {
+    const subject = 'Your Supplier Account Has Been Updated';
+    const content = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Supplier Account Update</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; padding: 30px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">ACCOUNT UPDATED</h1>
+          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">${COMPANY_NAME} Supplier Portal</p>
+        </div>
+        
+        <!-- Content -->
+        <div style="padding: 30px;">
+          <p style="margin: 0 0 20px 0; color: #666; line-height: 1.6;">Dear ${data.contact_name || 'Valued Supplier'},</p>
+          <p style="margin: 0 0 20px 0; color: #666; line-height: 1.6;">This is to inform you that your supplier account information has been updated. Here are the details of the changes:</p>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #17a2b8;">
+            <h3 style="margin: 0 0 15px 0; color: #0c5460; font-size: 18px;">Updated Information</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              ${data.updated_fields && data.updated_fields.length > 0 ? data.updated_fields.map(field => `
+                <tr>
+                  <td style="padding: 8px 0; color: #666; width: 120px; vertical-align: top;"><strong>${field.label}:</strong></td>
+                  <td style="padding: 8px 0; color: #333;">
+                    ${field.old_value ? `
+                      <div style="margin-bottom: 5px; padding: 5px; background-color: #fff8e1; border-left: 3px solid #ffc107;">
+                        <span style="text-decoration: line-through; color: #dc3545;">${field.old_value}</span>
+                      </div>
+                      <div style="padding: 5px; background-color: #e8f5e9; border-left: 3px solid #28a745;">
+                        <strong>${field.new_value}</strong>
+                      </div>
+                    ` : `
+                      <div style="padding: 5px; background-color: #e8f5e9; border-left: 3px solid #28a745; display: inline-block;">
+                        <strong>${field.new_value}</strong>
+                      </div>
+                    `}
+                  </td>
+                </tr>
+              `).join('') : `
+                <tr>
+                  <td colspan="2" style="padding: 8px 0; color: #666; text-align: center;">No specific changes were made to your account details.</td>
+                </tr>
+              `}
+            </table>
+          </div>
+          
+          <p style="margin: 0 0 20px 0; color: #666; line-height: 1.6;">If you did not request these changes or believe this was done in error, please contact our support team immediately at <a href="mailto:${ADMIN_EMAIL}" style="color: #17a2b8; text-decoration: none;">${ADMIN_EMAIL}</a>.</p>
+          
+          <p style="margin: 0; color: #666; line-height: 1.6;">Thank you for your continued partnership with ${COMPANY_NAME}.</p>
+        </div>
+        
+        <!-- Footer -->
+        <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
+          <p style="margin: 0; color: #666; font-size: 14px;">${COMPANY_NAME} | Supplier Relations</p>
+          <p style="margin: 10px 0 0 0; color: #999; font-size: 12px;">This is an automated message. Please do not reply to this email.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+    return this.sendEmail(to, subject, content);
+  }
+
+  // Payment Notification
+  async sendPaymentNotification(to, data) {
+    const subject = `Payment Processed - Invoice #${data.invoice_number}`;
+    const content = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Payment Processed - Invoice #${data.invoice_number}</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">PAYMENT CONFIRMATION</h1>
+          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Invoice #${data.invoice_number}</p>
+        </div>
+        
+        <!-- Content -->
+        <div style="padding: 30px;">
+          <p style="margin: 0 0 20px 0; color: #666; line-height: 1.6;">Dear ${data.recipient_name || 'Valued Customer'},</p>
+          <p style="margin: 0 0 20px 0; color: #666; line-height: 1.6;">We are pleased to inform you that we have received your payment. Thank you for your business!</p>
+          
+          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #28a745;">
+            <h3 style="margin: 0 0 15px 0; color: #155724; font-size: 20px;">Payment Details</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #666; width: 120px;"><strong>Invoice #:</strong></td>
+                <td style="padding: 8px 0; color: #333; font-weight: bold;">${data.invoice_number}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;"><strong>Amount Paid:</strong></td>
+                <td style="padding: 8px 0; color: #28a745; font-weight: bold; font-size: 18px;">${data.amount_paid.toLocaleString()} RWF</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;"><strong>Payment Date:</strong></td>
+                <td style="padding: 8px 0; color: #333;">${new Date(data.payment_date).toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;"><strong>Payment Method:</strong></td>
+                <td style="padding: 8px 0; color: #333; text-transform: capitalize;">${data.payment_method || 'N/A'}</td>
+              </tr>
+              ${data.transaction_id ? `
+              <tr>
+                <td style="padding: 8px 0; color: #666; vertical-align: top;"><strong>Transaction ID:</strong></td>
+                <td style="padding: 8px 0; color: #333; font-family: monospace; word-break: break-all;">${data.transaction_id}</td>
+              </tr>
+              ` : ''}
+              ${data.payment_notes ? `
+              <tr>
+                <td style="padding: 8px 0; color: #666; vertical-align: top;"><strong>Notes:</strong></td>
+                <td style="padding: 8px 0; color: #333;">${data.payment_notes}</td>
+              </tr>
+              ` : ''}
+            </table>
+          </div>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">Invoice Summary</h3>
+            <p style="margin: 0 0 10px 0; color: #666;"><strong>Invoice Date:</strong> ${new Date(data.invoice_date).toLocaleDateString()}</p>
+            <p style="margin: 0 0 10px 0; color: #666;"><strong>Due Date:</strong> ${new Date(data.due_date).toLocaleDateString()}</p>
+            <p style="margin: 0 0 10px 0; color: #666;"><strong>Invoice Total:</strong> ${data.invoice_total.toLocaleString()} RWF</p>
+            <p style="margin: 0; color: #666;"><strong>Amount Paid:</strong> ${data.amount_paid.toLocaleString()} RWF</p>
+            ${data.balance_due > 0 ? `
+              <p style="margin: 10px 0 0 0; color: #dc3545; font-weight: bold;">
+                Balance Due: ${data.balance_due.toLocaleString()} RWF
+              </p>
+            ` : `
+              <p style="margin: 10px 0 0 0; color: #28a745; font-weight: bold;">
+                Payment Complete - Thank You!
+              </p>
+            `}
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.CUSTOMER_PORTAL_URL || 'https://customers.smartmarket.rw/invoices'}" 
+               style="display: inline-block; background-color: #28a745; color: white; text-decoration: none; padding: 12px 25px; border-radius: 4px; font-weight: bold; font-size: 16px;">
+              View Invoice
+            </a>
+          </div>
+          
+          <p style="margin: 0; color: #666; line-height: 1.6;">If you have any questions about this payment, please contact our billing department at <a href="mailto:billing@smartmarket.rw" style="color: #28a745; text-decoration: none;">billing@smartmarket.rw</a>.</p>
+        </div>
+        
+        <!-- Footer -->
+        <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
+          <p style="margin: 0; color: #666; font-size: 14px;">${COMPANY_NAME} | Billing Department</p>
+          <p style="margin: 10px 0 0 0; color: #999; font-size: 12px;">This is an automated message. Please do not reply to this email.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+    return this.sendEmail(to, subject, content);
+  }
+
+  async sendOrderConfirmation(to, orderData) {
+    const subject = `Order Confirmation #${orderData.order_id}`;
+    const itemsHtml = orderData.items.map(item => `
+      <tr>
+        <td style="padding: 12px; border-bottom: 1px solid #eee;">${item.name}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">${parseInt(item.price).toLocaleString()} RWF</td>
+      </tr>
+    `).join('');
+
+    const content = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Order Confirmation</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 30px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #2563eb; margin: 0;">Order Confirmed!</h1>
+          <p style="color: #666; margin-top: 10px;">Thank you for your purchase, ${orderData.customer_name}</p>
+        </div>
+
+        <div style="background-color: #f8fafc; padding: 20px; border-radius: 6px; margin-bottom: 30px;">
+          <h2 style="font-size: 18px; margin-top: 0; color: #1e293b;">Order Details</h2>
+          <p style="margin: 5px 0;"><strong>Order ID:</strong> ${orderData.order_id}</p>
+          <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date(orderData.order_date).toLocaleDateString()}</p>
+          <p style="margin: 5px 0;"><strong>Payment Method:</strong> ${orderData.payment_method.toUpperCase()}</p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+          <thead>
+            <tr style="background-color: #f1f5f9;">
+              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Item</th>
+              <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e2e8f0;">Qty</th>
+              <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e2e8f0;">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" style="padding: 12px; text-align: right; font-weight: bold;">Total:</td>
+              <td style="padding: 12px; text-align: right; font-weight: bold; color: #2563eb;">${parseInt(orderData.total_amount).toLocaleString()} RWF</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div style="text-align: center; color: #666; font-size: 14px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+          <p>If you have any questions, please contact our support team.</p>
+          <p>&copy; ${new Date().getFullYear()} ${process.env.COMPANY_NAME || 'Smart Market'}. All rights reserved.</p>
+        </div>
       </div>
     </body>
     </html>

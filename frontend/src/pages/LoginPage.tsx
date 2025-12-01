@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Mail, Lock, ArrowRight, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { loginRequest, setAuthToken, setAuthUser, getDashboardPathForRole } from '@/utils/apiClient'
@@ -10,7 +10,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,7 +22,9 @@ export default function LoginPage() {
 
       // Decide which dashboard to open based on the user's role_id
       const dashboardPath = getDashboardPathForRole(res.user.role_id)
-      navigate(dashboardPath)
+
+      // Use window.location.href for full page reload to properly initialize dashboard
+      window.location.href = dashboardPath
     } catch (err: any) {
       setError(err.message || 'Login failed')
     } finally {

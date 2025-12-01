@@ -10,7 +10,8 @@ import {
     ChevronDown,
     ChevronRight,
     LogOut,
-    Archive
+    Archive,
+    ShoppingBag
 } from 'lucide-react'
 import { clearAuth, getAuthUser, currentUserHasPermission } from '@/utils/apiClient'
 
@@ -34,6 +35,12 @@ const sidebarItems: SidebarItem[] = [
         path: '/inventory/materials',
         icon: Package,
         permission: 'material.view',
+    },
+    {
+        label: 'Products',
+        path: '/inventory/products',
+        icon: ShoppingBag,
+        permission: 'inventory.manage',
     },
     {
         label: 'Suppliers',
@@ -62,7 +69,7 @@ const InventoryManagerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIs
     const user = getAuthUser()
 
     // Only show for Inventory Manager role (8)
-    if (!user || user.role_id !== 8) {
+    if (!user || Number(user.role_id) !== 8) {
         return null
     }
 

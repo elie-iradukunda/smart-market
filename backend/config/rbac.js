@@ -60,6 +60,13 @@ const ROUTE_PERMISSIONS = {
   'POST /forgot-password': [],
   'POST /reset-password': [],
   
+  // Products routes (public GET, protected POST/PUT/DELETE)
+  'GET /products': [],
+  'GET /products/:id': [],
+  'POST /products': [PERMISSIONS.INVENTORY_MANAGE],
+  'PUT /products/:id': [PERMISSIONS.INVENTORY_MANAGE],
+  'DELETE /products/:id': [PERMISSIONS.INVENTORY_MANAGE],
+  
   // User management (auth routes)
   'GET /users': [PERMISSIONS.USER_MANAGE],
   'POST /users': [PERMISSIONS.USER_MANAGE],
