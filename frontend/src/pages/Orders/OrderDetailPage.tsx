@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 
 import { fetchOrder, createInvoice, recordPayment, updateOrderStatus, initiateLanariPayment, checkLanariPaymentStatus } from '../../api/apiClient'
 
-import { CheckCircle, Clock, DollarSign, Package, Truck, User } from 'lucide-react'
+import { CheckCircle, Clock, DollarSign, Package, Truck, User, MessageCircle } from 'lucide-react'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
 import SalesTopNav from '@/components/layout/SalesTopNav'
@@ -182,6 +182,15 @@ export default function OrderDetailPage() {
       setError(err.message || 'Failed to update order status')
     }
   }
+
+  const handleWhatsAppContact = () => {
+    if (!order) return
+    const phone = order.customer_phone || order.phone || ''
+    const message = `Hello ${order.customer_name || 'valued customer'}! Your order #${order.id} is ready for pickup. Please visit us at your earliest convenience. Thank you!`
+    const whatsappUrl = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`
+    window.open(whatsappUrl, '_blank')
+  }
+
 
   // --- Render Functions for Feedback ---
   if (loading) {

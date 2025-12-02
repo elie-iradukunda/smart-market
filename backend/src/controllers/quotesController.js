@@ -151,3 +151,8 @@ export const updateQuote = async (req, res) => {
     res.status(500).json({ error: 'Failed to update quote' });
   }
 };
+
+export const approveQuote = async (req, res) => {
+  req.body.status = 'approved';
+  return updateQuote(req, res);
+};

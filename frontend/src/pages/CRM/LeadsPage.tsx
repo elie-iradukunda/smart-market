@@ -351,7 +351,47 @@ export default function LeadsPage() {
               />
             </div>
 
-            {/* TODO: Leads table content goes here */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700">Name</th>
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700">Company</th>
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700">Channel</th>
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700">Status</th>
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {leads.map((lead: any) => (
+                    <tr key={lead.id} className="hover:bg-slate-50 transition">
+                      <td className="px-4 py-3 font-medium text-slate-900">{lead.customer_name || 'Unknown'}</td>
+                      <td className="px-4 py-3 text-slate-600">{lead.company || '-'}</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                          {lead.channel}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border ${getStatusColor(lead.status)}`}>
+                          {lead.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        {lead.created_at ? new Date(lead.created_at).toLocaleDateString() : 'Just now'}
+                      </td>
+                    </tr>
+                  ))}
+                  {leads.length === 0 && !loading && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                        No leads found. Create one above!
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
         </div>

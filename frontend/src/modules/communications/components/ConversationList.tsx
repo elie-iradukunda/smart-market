@@ -1,31 +1,11 @@
 // @ts-nocheck
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { fetchConversations } from '@/api/apiClient'
+import React, { useEffect } from 'react'
 
-export default function ConversationList({ onCountChange }) {
-  const [conversations, setConversations] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const navigate = useNavigate()
-
+export default function ConversationList({ onActiveCountChange }) {
   useEffect(() => {
-    const loadConversations = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const list = await fetchConversations()
-        const safeList = Array.isArray(list) ? list : []
-        setConversations(safeList)
-        if (onCountChange) onCountChange(safeList.length)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load conversations')
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadConversations()
-  }, [onCountChange])
+    // Set count to 0 since we're not fetching conversations
+    if (onActiveCountChange) onActiveCountChange(0)
+  }, [onActiveCountChange])
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm text-xs sm:text-sm">
@@ -35,31 +15,12 @@ export default function ConversationList({ onCountChange }) {
           SLA: 95% on time
         </span>
       </div>
-      {error && <p className="mb-2 text-[11px] text-red-600">{error}</p>}
-      {loading ? (
-        <p className="text-[11px] text-gray-500">Loading conversations...</p>
-      ) : (
-        <div className="space-y-1 max-h-[360px] overflow-y-auto">
-          {conversations.map(conv => (
-            <div
-              key={conv.id}
-              onClick={() => navigate(`/communications/conversations/${conv.id}`)}
-              className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 hover:bg-gray-100 cursor-pointer"
-            >
-              <div>
-                <p className="text-gray-900 font-medium">{conv.customer || conv.customer_name || conv.contact_name}</p>
-                <p className="text-[11px] text-gray-600">{conv.subject || conv.last_message || ''}</p>
-              </div>
-              <div className="text-right text-[11px]">
-                <p className="text-gray-500">{conv.channel || conv.channel_type}</p>
-                <p className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100">
-                  {conv.slaStatus || conv.sla_status || 'On Track'}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="py-8 text-center">
+        <p className="text-sm text-gray-600 mb-2">WhatsApp Communication</p>
+        <p className="text-xs text-gray-500">
+          Use the "Orders Ready for Follow-up" section to contact customers via WhatsApp when their orders are ready.
+        </p>
+      </div>
     </div>
   )
 }

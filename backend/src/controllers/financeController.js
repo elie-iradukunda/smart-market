@@ -255,7 +255,10 @@ export const recordPayment = async (req, res) => {
       [invoice_id]
     );
 
-    const status = payments[0].total_paid >= invoice[0].amount ? 'paid' : 'partial';
+    const totalPaid = payments[0].total_paid || 0;
+    const invoiceAmount = invoice[0].amount;
+    const remainingBalance = invoiceAmount - totalPaid;
+    const status = totalPaid >= invoiceAmount ? 'paid' : 'partial';
     
     await pool.execute('UPDATE invoices SET status = ? WHERE id = ?', [status, invoice_id]);
     
@@ -283,7 +286,13 @@ export const recordPayment = async (req, res) => {
       }
     }
     
-    res.json({ message: 'Payment recorded' });
+    res.json({ 
+      message: status === 'paid' ? 'Payment recorded - Invoice fully paid' : 'Payment recorded - Partial payment',
+      status: status,
+      totalPaid: totalPaid,
+      invoiceAmount: invoiceAmount,
+      remainingBalance: remainingBalance > 0 ? remainingBalance : 0
+    });
   } catch (error) {
     console.error('Payment recording error:', error);
     res.status(500).json({ error: 'Payment recording failed' });
@@ -317,32 +326,98 @@ export const createPOSSale = async (req, res) => {
         [pos_id, item.item_id, item.quantity, item.price]
       );
 
-      // Decrement material stock based on quantity sold
+      // Decrement product stock based on quantity sold
       await pool.execute(
-        'UPDATE materials SET current_stock = current_stock - ? WHERE id = ?',
+        'UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?',
         [item.quantity, item.item_id]
       );
 
-      // Log a stock movement of type "issue" so inventory history stays consistent
-      await pool.execute(
-        'INSERT INTO stock_movements (material_id, type, quantity, reference, user_id) VALUES (?, ?, ?, ?, ?)',
-        [item.item_id, 'issue', item.quantity, `POS-${pos_id}`, req.user.id]
-      );
     }
 
     // Also create an order so the sale appears in production/finance flows
     let order_id = null;
     if (customer_id) {
-      const [orderResult] = await pool.execute(
-        'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
-        [customer_id, 'ready', total]
-      );
-      order_id = orderResult.insertId;
+      try {
+        const [orderResult] = await pool.execute(
+          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
+          [customer_id, 'ready', total]
+        );
+        order_id = orderResult.insertId;
+      } catch (orderError) {
+        console.error('Order creation failed (non-critical):', orderError);
+      }
+    }
+    if (customer_id) {
+      try {
+        const [orderResult] = await pool.execute(
+          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
+          [customer_id, 'ready', total]
+        );
+        order_id = orderResult.insertId;
+      } catch (orderError) {
+        console.error('Order creation failed (non-critical):', orderError);
+      }
+    }
+    if (customer_id) {
+      try {
+        const [orderResult] = await pool.execute(
+          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
+          [customer_id, 'ready', total]
+        );
+        order_id = orderResult.insertId;
+      } catch (orderError) {
+        console.error('Order creation failed (non-critical):', orderError);
+      }
+    }
+    if (customer_id) {
+      try {
+        const [orderResult] = await pool.execute(
+          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
+          [customer_id, 'ready', total]
+        );
+        order_id = orderResult.insertId;
+      } catch (orderError) {
+        console.error('Order creation failed (non-critical):', orderError);
+      }
+    }
+    if (customer_id) {
+      try {
+        const [orderResult] = await pool.execute(
+          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
+          [customer_id, 'ready', total]
+        );
+        order_id = orderResult.insertId;
+      } catch (orderError) {
+        console.error('Order creation failed (non-critical):', orderError);
+      }
+    }
+    if (customer_id) {
+      try {
+        const [orderResult] = await pool.execute(
+          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
+          [customer_id, 'ready', total]
+        );
+        order_id = orderResult.insertId;
+      } catch (orderError) {
+        console.error('Order creation failed (non-critical):', orderError);
+      }
+    }
+    if (customer_id) {
+      try {
+        const [orderResult] = await pool.execute(
+          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
+          [customer_id, 'ready', total]
+        );
+        order_id = orderResult.insertId;
+      } catch (orderError) {
+        console.error('Order creation failed (non-critical):', orderError);
+      }
     }
 
     res.status(201).json({ id: pos_id, order_id, message: 'POS sale recorded' });
   } catch (error) {
-    res.status(500).json({ error: 'POS sale failed' });
+    console.error('POS sale error:', error);
+    res.status(500).json({ error: 'POS sale failed', details: error.message });
   }
 };
 
