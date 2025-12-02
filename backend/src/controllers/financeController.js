@@ -580,20 +580,20 @@ export const getPOSSales = async (req, res) => {
 
 export const getJournalEntries = async (req, res) => {
   try {
-    // Fetch journal lines with account information
+    // Fetch journal lines with account information and real status
     const [journalLines] = await pool.execute(`
       SELECT 
         jl.id,
         je.id as journal_id,
         je.date,
         je.description,
+        je.status,
         coa.id as account_id,
         coa.name as account_name,
         coa.account_code,
         coa.type as account_type,
         jl.debit,
-        jl.credit,
-        'draft' as status
+        jl.credit
       FROM journal_lines jl
       JOIN journal_entries je ON jl.journal_id = je.id
       JOIN chart_of_accounts coa ON jl.account_id = coa.id
@@ -606,6 +606,59 @@ export const getJournalEntries = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch journal entries' });
   }
 };
+
+export const postJournalEntry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if journal entry exists and is not already posted
+    const [entry] = await pool.execute(
+      'SELECT status FROM journal_entries WHERE id = ?',
+      [id]
+    );
+    
+    if (entry.length === 0) {
+      return res.status(404).json({ error: 'Journal entry not found' });
+    }
+    
+    if (entry[0].status === 'posted') {
+      return res.status(400).json({ error: 'Journal entry is already posted' });
+    }
+    
+    // Verify that debits equal credits
+    const [lines] = await pool.execute(
+      'SELECT SUM(debit) as total_debit, SUM(credit) as total_credit FROM journal_lines WHERE journal_id = ?',
+      [id]
+    );
+    
+    const totalDebit = parseFloat(lines[0].total_debit) || 0;
+    const totalCredit = parseFloat(lines[0].total_credit) || 0;
+    
+    if (Math.abs(totalDebit - totalCredit) > 0.01) {
+      return res.status(400).json({ 
+        error: 'Cannot post unbalanced entry. Debits must equal credits.',
+        totalDebit,
+        totalCredit
+      });
+    }
+    
+    // Update status to posted
+    await pool.execute(
+      'UPDATE journal_entries SET status = ? WHERE id = ?',
+      ['posted', id]
+    );
+    
+    res.json({ 
+      message: 'Journal entry posted successfully',
+      id: id,
+      status: 'posted'
+    });
+  } catch (error) {
+    console.error('Post journal entry error:', error);
+    res.status(500).json({ error: 'Failed to post journal entry' });
+  }
+};
+
 
 export const getChartOfAccounts = async (req, res) => {
   try {

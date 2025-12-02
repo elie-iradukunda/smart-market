@@ -4,7 +4,7 @@ import {
   recordPayment, getPayments, 
   processLanariPayment, checkPaymentStatus,
   createPOSSale, getPOSSales,
-  createJournalEntry, getJournalEntries,
+  createJournalEntry, getJournalEntries, postJournalEntry,
   getChartOfAccounts,
 } from '../controllers/financeController.js';
 import { authenticateToken } from '../middleware/auth.js';
@@ -124,6 +124,9 @@ router.get('/journal-entries/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch journal entry' });
   }
 });
+
+// Post (finalize) a journal entry
+router.put('/journal-entries/:id/post', auditLog('UPDATE', 'journal_entries'), postJournalEntry);
 
 // Chart of Accounts
 router.get('/chart-of-accounts', getChartOfAccounts);
