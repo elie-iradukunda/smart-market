@@ -61,7 +61,7 @@ function App() {
             />
             <Route path="/order-tracking" element={<EcommerceLayout><OrderTrackingPage /></EcommerceLayout>} />
             <Route
-              path="/orders"
+              path="/shop/orders"
               element={
                 <EcommerceLayout>
                   <ProtectedRoute>

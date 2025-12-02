@@ -7,6 +7,13 @@ interface ProductCardProps {
     product: Product
 }
 
+// Helper to get full image URL
+const getImageUrl = (path: string) => {
+    if (!path) return ''
+    if (path.startsWith('http')) return path
+    return `http://localhost:3000${path}`
+}
+
 export default function ProductCard({ product }: ProductCardProps) {
     const { addToCart } = useCart()
 
@@ -23,7 +30,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             {/* Product Image */}
             <div className="relative aspect-square overflow-hidden bg-gray-100">
                 <img
-                    src={product.image}
+                    src={getImageUrl(product.image)}
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     loading="lazy"

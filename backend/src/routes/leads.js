@@ -30,12 +30,23 @@ router.get('/leads/:id', async (req, res) => {
       // Return first lead for literal {id}
       const [leads] = await pool.execute('SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id LIMIT 1');
       if (leads.length === 0) return res.status(404).json({ error: 'Lead not found' });
-      return res.json(leads[0]);
+      
+      const lead = leads[0];
+      const [items] = await pool.execute('SELECT li.*, m.name as material_name FROM lead_items li LEFT JOIN materials m ON li.material_id = m.id WHERE li.lead_id = ?', [lead.id]);
+      lead.items = items;
+      
+      return res.json(lead);
     }
     const [leads] = await pool.execute('SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id WHERE l.id = ?', [id]);
     if (leads.length === 0) return res.status(404).json({ error: 'Lead not found' });
-    res.json(leads[0]);
+    
+    const lead = leads[0];
+    const [items] = await pool.execute('SELECT li.*, m.name as material_name FROM lead_items li LEFT JOIN materials m ON li.material_id = m.id WHERE li.lead_id = ?', [lead.id]);
+    lead.items = items;
+    
+    res.json(lead);
   } catch (error) {
+    console.error('Fetch lead error:', error);
     res.status(500).json({ error: 'Failed to fetch lead' });
   }
 });
@@ -43,13 +54,28 @@ router.get('/leads/:id', async (req, res) => {
 // Create lead
 router.post('/leads', async (req, res) => {
   try {
-    const { customer_id, channel, status } = req.body;
+    const { customer_id, channel, status, items } = req.body;
     const [result] = await pool.execute(
       'INSERT INTO leads (customer_id, channel, status) VALUES (?, ?, ?)',
       [customer_id || null, channel || null, status || 'new']
     );
-    res.status(201).json({ id: result.insertId, customer_id, channel, status: status || 'new' });
+    
+    const leadId = result.insertId;
+    
+    if (items && Array.isArray(items) && items.length > 0) {
+      for (const item of items) {
+        if (item.material_id && item.quantity) {
+             await pool.execute(
+            'INSERT INTO lead_items (lead_id, material_id, quantity) VALUES (?, ?, ?)',
+            [leadId, item.material_id, item.quantity]
+          );
+        }
+      }
+    }
+    
+    res.status(201).json({ id: leadId, customer_id, channel, status: status || 'new', items: items || [] });
   } catch (error) {
+    console.error('Create lead error:', error);
     res.status(500).json({ error: 'Failed to create lead' });
   }
 });

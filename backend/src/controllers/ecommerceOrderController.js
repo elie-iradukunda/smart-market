@@ -1,12 +1,59 @@
 import pool from '../config/database.js';
 import emailService from '../services/emailService.js';
+import lanariPaymentService from '../services/lanariPaymentService.js';
 
 export const createOrder = async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
-    const { customerDetails, items, total, paymentMethod } = req.body;
+    const { customerDetails, items, total, paymentMethod, mtnPhoneNumber } = req.body;
+
+    // Process MTN payment if payment method is MTN
+    if (paymentMethod === 'mtn') {
+      if (!mtnPhoneNumber) {
+        connection.release();
+        return res.status(400).json({ error: 'MTN phone number is required for MTN payments' });
+      }
+
+      try {
+        console.log('[PAYMENT] Processing MTN payment for:', mtnPhoneNumber);
+        const paymentResult = await lanariPaymentService.processPayment({
+          amount: total,
+          customer_phone: mtnPhoneNumber,
+          description: `Order payment for ${customerDetails.fullName}`,
+          currency: 'RWF'
+        });
+
+        if (!paymentResult.success) {
+          let errorMessage = paymentResult.error || 'Payment failed. Please try again.';
+          
+          if (paymentResult.timeout) {
+            errorMessage = 'Payment request timed out. Please ensure your phone is on and try again.';
+          } else if (paymentResult.networkError) {
+            errorMessage = 'Network error. Please check your internet connection and try again.';
+          } else if (errorMessage.toLowerCase().includes('insufficient')) {
+            errorMessage = 'Insufficient funds on your mobile money account. Please top up and try again.';
+          } else if (errorMessage.toLowerCase().includes('invalid') && errorMessage.toLowerCase().includes('phone')) {
+            errorMessage = 'Invalid phone number. Please check your MTN number and try again.';
+          } else if (errorMessage.toLowerCase().includes('cancelled') || errorMessage.toLowerCase().includes('rejected')) {
+            errorMessage = 'Payment was cancelled or rejected. Please try again.';
+          }
+          
+          console.log('✗ [PAYMENT] Payment failed:', errorMessage);
+          connection.release();
+          return res.status(400).json({ error: errorMessage });
+        }
+
+        console.log('✓ [PAYMENT] Payment successful:', paymentResult.transaction_id);
+      } catch (paymentError) {
+        console.error('✗ [PAYMENT] Payment processing error:', paymentError);
+        connection.release();
+        return res.status(500).json({ 
+          error: 'Payment service is temporarily unavailable. Please try again later.'
+        });
+      }
+    }
 
     // 1. Find or create customer
     // Check if customer exists by email

@@ -88,7 +88,7 @@ export default function ReceptionDashboard() {
 
         {/* Quick access row based on reception permissions */}
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {currentUserHasPermission('lead.create') && (
+          {currentUserHasPermission('lead.manage') && (
             <button
               type="button"
               onClick={() => navigate('/crm/leads')}
@@ -116,7 +116,7 @@ export default function ReceptionDashboard() {
             </button>
           )}
 
-          {currentUserHasPermission('quote.create') && (
+          {currentUserHasPermission('quote.manage') && (
             <button
               type="button"
               onClick={() => navigate('/crm/quotes')}
@@ -133,7 +133,7 @@ export default function ReceptionDashboard() {
           {currentUserHasPermission('order.view') && (
             <button
               type="button"
-              onClick={() => navigate('/orders')}
+              onClick={() => navigate('crm/orders')}
               className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between"
             >
               <div>

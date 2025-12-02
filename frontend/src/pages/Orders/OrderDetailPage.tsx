@@ -9,7 +9,7 @@ import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
 import SalesTopNav from '@/components/layout/SalesTopNav'
 import { getAuthUser } from '@/utils/apiClient'
-import ConditionalReceptionLayout from '@/components/layout/ConditionalReceptionLayout'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 // --- Utility Functions for Design ---
 
@@ -186,7 +186,7 @@ export default function OrderDetailPage() {
   // --- Render Functions for Feedback ---
   if (loading) {
     return (
-      <ConditionalReceptionLayout>
+      <DashboardLayout>
         <div className="min-h-screen bg-slate-50">
           {!isReception && (
             <>
@@ -199,13 +199,13 @@ export default function OrderDetailPage() {
             <p className="text-lg text-gray-600">Loading Order Details for ID: {id}...</p>
           </div>
         </div>
-      </ConditionalReceptionLayout>
+      </DashboardLayout>
     )
   }
 
   if (error || !order) {
     return (
-      <ConditionalReceptionLayout>
+      <DashboardLayout>
         <div className="min-h-screen bg-slate-50">
           {!isReception && (
             <>
@@ -219,7 +219,7 @@ export default function OrderDetailPage() {
             <p className="text-sm mt-1">{error || `Order with ID ${id} not found.`}</p>
           </div>
         </div>
-      </ConditionalReceptionLayout>
+      </DashboardLayout>
     )
   }
   // --- End Render Functions for Feedback ---
@@ -234,7 +234,7 @@ export default function OrderDetailPage() {
   const currentStageIndex = Math.max(stageStatusCodes.indexOf(statusCode), 0)
 
   return (
-    <ConditionalReceptionLayout>
+    <DashboardLayout>
       <div className="min-h-screen bg-slate-50">
         {!isReception && (
           <>
@@ -464,6 +464,6 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </div>
-    </ConditionalReceptionLayout>
+    </DashboardLayout>
   )
 }

@@ -41,8 +41,8 @@ const sidebarItems: SidebarItem[] = [
         permission: null,
         children: [
             { label: 'Customers', path: '/crm/customers', icon: Users, permission: 'customer.view' },
-            { label: 'Leads', path: '/crm/leads', icon: UserPlus, permission: 'lead.create' },
-            { label: 'Quotes', path: '/crm/quotes', icon: FileText, permission: 'quote.create' },
+            { label: 'Leads', path: '/crm/leads', icon: UserPlus, permission: 'lead.manage' },
+            { label: 'Quotes', path: '/crm/quotes', icon: FileText, permission: 'quote.manage' },
         ]
     },
     {
@@ -57,14 +57,7 @@ const sidebarItems: SidebarItem[] = [
         permission: null,
         children: [
             { label: 'Inbox', path: '/communications/inbox', icon: Mail, permission: null },
-            { label: 'Conversations', path: '/communications/inbox', icon: Phone, permission: null },
         ]
-    },
-    {
-        label: 'Files',
-        path: '/orders',
-        icon: FolderOpen,
-        permission: null,
     },
     {
         label: 'Point of Sale',

@@ -30,8 +30,8 @@ export default function EcommerceNavbar() {
                         <Link
                             to="/"
                             className={`font-medium transition-colors ${isActive('/')
-                                    ? 'text-blue-600'
-                                    : 'text-gray-700 hover:text-blue-600'
+                                ? 'text-blue-600'
+                                : 'text-gray-700 hover:text-blue-600'
                                 }`}
                         >
                             Home
@@ -39,8 +39,8 @@ export default function EcommerceNavbar() {
                         <Link
                             to="/products"
                             className={`font-medium transition-colors ${isActive('/products')
-                                    ? 'text-blue-600'
-                                    : 'text-gray-700 hover:text-blue-600'
+                                ? 'text-blue-600'
+                                : 'text-gray-700 hover:text-blue-600'
                                 }`}
                         >
                             Products
@@ -66,7 +66,7 @@ export default function EcommerceNavbar() {
                         {isAuthenticated ? (
                             <div className="flex items-center space-x-3">
                                 <Link
-                                    to="/orders"
+                                    to="/shop/orders"
                                     className="hidden sm:flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors"
                                 >
                                     <Package className="w-4 h-4" />

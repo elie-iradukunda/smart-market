@@ -3,6 +3,13 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react'
 
+// Helper to get full image URL
+const getImageUrl = (path: string) => {
+    if (!path) return ''
+    if (path.startsWith('http')) return path
+    return `http://localhost:3000${path}`
+}
+
 export default function CartPage() {
     const { cart, removeFromCart, updateQuantity, getCartTotal, getCartCount } = useCart()
     const { isAuthenticated } = useAuth()
@@ -62,7 +69,7 @@ export default function CartPage() {
                                 {/* Product Image */}
                                 <div className="w-32 h-32 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                                     <img
-                                        src={item.image}
+                                        src={getImageUrl(item.image)}
                                         alt={item.name}
                                         className="w-full h-full object-cover"
                                     />

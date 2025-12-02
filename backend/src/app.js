@@ -371,6 +371,7 @@ app.use('/api', financeRoutes);
 app.use('/api', marketingRoutes);
 app.use('/api', communicationRoutes);
 app.use('/api', aiRoutes);
+app.use('/api', reportRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {

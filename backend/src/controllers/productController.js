@@ -3,7 +3,25 @@ import pool from '../config/database.js';
 export const getProducts = async (req, res) => {
   try {
     const [products] = await pool.execute('SELECT * FROM products ORDER BY created_at DESC');
-    res.json(products);
+    
+    // Convert local file paths to web URLs
+    const productsWithUrls = products.map(product => {
+      let imageUrl = product.image;
+      
+      // If image is a local file path, convert it to a web URL
+      if (imageUrl && (imageUrl.includes('\\') || imageUrl.includes('C:'))) {
+        // Extract just the filename from the path
+        const filename = imageUrl.split('\\').pop() || imageUrl.split('/').pop();
+        imageUrl = `http://localhost:3000/uploads/products/${filename}`;
+      }
+      
+      return {
+        ...product,
+        image: imageUrl
+      };
+    });
+    
+    res.json(productsWithUrls);
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ error: 'Failed to fetch products' });
@@ -19,7 +37,15 @@ export const getProduct = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
     
-    res.json(products[0]);
+    let product = products[0];
+    
+    // Convert local file path to web URL
+    if (product.image && (product.image.includes('\\') || product.image.includes('C:'))) {
+      const filename = product.image.split('\\').pop() || product.image.split('/').pop();
+      product.image = `http://localhost:3000/uploads/products/${filename}`;
+    }
+    
+    res.json(product);
   } catch (error) {
     console.error('Error fetching product:', error);
     res.status(500).json({ error: 'Failed to fetch product' });
