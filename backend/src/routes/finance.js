@@ -4,7 +4,7 @@ import {
   recordPayment, getPayments, 
   processLanariPayment, checkPaymentStatus,
   createPOSSale, getPOSSales,
-  createJournalEntry, getJournalEntries,
+  createJournalEntry, getJournalEntries, postJournalEntry,
   getChartOfAccounts,
 } from '../controllers/financeController.js';
 import { authenticateToken } from '../middleware/auth.js';
@@ -24,6 +24,7 @@ router.get('/invoices/:id', getInvoice);
 router.put('/invoices/:id', auditLog('UPDATE', 'invoices'), updateInvoice);
 
 // Payment CRUD
+router.post('/payments', auditLog('CREATE', 'payments'), recordPayment);
 router.get('/payments', getPayments);
 router.get('/payments/:id', async (req, res) => {
   try {
@@ -124,7 +125,10 @@ router.get('/journal-entries/:id', async (req, res) => {
   }
 });
 
-// Chart of accounts
+// Post (finalize) a journal entry
+router.put('/journal-entries/:id/post', auditLog('UPDATE', 'journal_entries'), postJournalEntry);
+
+// Chart of Accounts
 router.get('/chart-of-accounts', getChartOfAccounts);
 
 export default router;

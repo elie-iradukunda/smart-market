@@ -48,7 +48,7 @@ export default function ReceptionTopNav({ onMenuClick }: ReceptionTopNavProps) {
           <Link to="/dashboard/reception" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
             Overview
           </Link>
-          {currentUserHasPermission('lead.create') && (
+          {currentUserHasPermission('lead.manage') && (
             <Link to="/crm/leads" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
               Leads
             </Link>
@@ -58,7 +58,7 @@ export default function ReceptionTopNav({ onMenuClick }: ReceptionTopNavProps) {
               Customers
             </Link>
           )}
-          {currentUserHasPermission('quote.create') && (
+          {currentUserHasPermission('quote.manage') && (
             <Link to="/crm/quotes" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
               Quotes
             </Link>

@@ -608,9 +608,13 @@ export const createStockMovement = async (req, res) => {
       // Handle different movement types
       switch (movementType) {
         case 'in':
+        case 'grn':
+        case 'return':
           newStock = currentStock + movementQty;
           break;
         case 'out':
+        case 'issue':
+        case 'damage':
           if (currentStock < movementQty) {
             await connection.rollback();
             return res.status(400).json({ 
@@ -627,7 +631,7 @@ export const createStockMovement = async (req, res) => {
           await connection.rollback();
           return res.status(400).json({ 
             success: false,
-            error: 'Invalid movement type. Must be "in", "out", or "adjustment"' 
+            error: 'Invalid movement type. Must be "in", "out", "adjustment", "grn", "issue", "return", or "damage"' 
           });
       }
 

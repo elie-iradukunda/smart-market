@@ -16,6 +16,8 @@ export default function CheckoutPage() {
         zipCode: '',
     })
 
+    const [mtnPhoneNumber, setMtnPhoneNumber] = useState('')
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setShippingInfo({ ...shippingInfo, [e.target.name]: e.target.value })
     }
@@ -27,6 +29,11 @@ export default function CheckoutPage() {
 
         if (!shippingInfo.address || !shippingInfo.city || !shippingInfo.zipCode) {
             toast.error('Please fill in all shipping information')
+            return
+        }
+
+        if (!mtnPhoneNumber) {
+            toast.error('Please enter your MTN Mobile Money phone number')
             return
         }
 
@@ -50,7 +57,8 @@ export default function CheckoutPage() {
                     image: item.image,
                 })),
                 total: getCartTotal(),
-                paymentMethod: 'cod'
+                paymentMethod: 'mtn',
+                mtnPhoneNumber: mtnPhoneNumber
             }
 
             const token = sessionStorage.getItem('token')
@@ -80,7 +88,22 @@ export default function CheckoutPage() {
             navigate(`/order-tracking?orderId=${data.orderId}`)
         } catch (error: any) {
             console.error('Order placement error:', error)
-            toast.error(error.message || 'Failed to place order. Please try again.')
+
+            let errorMessage = error.message || 'Failed to place order. Please try again.'
+
+            // enhance error message for common payment issues
+            if (errorMessage.toLowerCase().includes('insufficient funds') || errorMessage.toLowerCase().includes('not enough')) {
+                errorMessage = 'Payment failed: Insufficient funds on your mobile money account. Please top up and try again.'
+            } else if (errorMessage.toLowerCase().includes('timeout') || errorMessage.toLowerCase().includes('timed out')) {
+                errorMessage = 'Payment timed out. Please check your phone for the prompt and try again.'
+            } else if (errorMessage.toLowerCase().includes('user cancelled') || errorMessage.toLowerCase().includes('rejected')) {
+                errorMessage = 'Payment was cancelled or rejected. Please try again.'
+            }
+
+            toast.error(errorMessage, {
+                autoClose: 5000,
+                position: "top-center"
+            })
         } finally {
             setIsSubmitting(false)
         }
@@ -203,11 +226,34 @@ export default function CheckoutPage() {
                                     <CreditCard className="w-6 h-6 text-blue-600" />
                                     Payment Method
                                 </h2>
-                                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <p className="text-blue-800 font-medium">Cash on Delivery</p>
-                                    <p className="text-blue-600 text-sm mt-1">
-                                        Pay when you receive your order
+                                <div className="p-4 border-2 border-yellow-500 bg-yellow-50 rounded-lg">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <p className="font-medium text-gray-900">MTN Mobile Money</p>
+                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">
+                                            Secure Payment
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-600 mb-4">
+                                        Pay securely with MTN MoMo
                                     </p>
+
+                                    {/* MTN Phone Number Input */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            MTN Mobile Money Number *
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            value={mtnPhoneNumber}
+                                            onChange={(e) => setMtnPhoneNumber(e.target.value)}
+                                            placeholder="078XXXXXXX"
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            required
+                                        />
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            You will receive a payment prompt on your phone
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -220,7 +266,7 @@ export default function CheckoutPage() {
                                 {isSubmitting ? (
                                     <span className="flex items-center gap-2">
                                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        Processing...
+                                        Check your phone to confirm...
                                     </span>
                                 ) : (
                                     <>

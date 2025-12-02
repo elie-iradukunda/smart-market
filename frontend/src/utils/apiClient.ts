@@ -235,3 +235,93 @@ export function getDashboardPathForRole(roleId: number | null | undefined): stri
       return '/dashboard/owner'
   }
 }
+
+// --- CRM & Inventory API Helpers ---
+
+export async function fetchLeads() {
+  const res = await fetch(`${API_BASE}/leads`, {
+    headers: { Authorization: `Bearer ${getAuthToken()}` },
+  })
+  if (!res.ok) throw new Error('Failed to fetch leads')
+  return res.json()
+}
+
+export async function fetchLead(id: string | number) {
+  const res = await fetch(`${API_BASE}/leads/${id}`, {
+    headers: { Authorization: `Bearer ${getAuthToken()}` },
+  })
+  if (!res.ok) throw new Error('Failed to fetch lead')
+  return res.json()
+}
+
+export async function createLead(data: any) {
+  const res = await fetch(`${API_BASE}/leads`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error('Failed to create lead')
+  return res.json()
+}
+
+export async function fetchMaterials() {
+  const res = await fetch(`${API_BASE}/materials`, {
+    headers: { Authorization: `Bearer ${getAuthToken()}` },
+  })
+  if (!res.ok) throw new Error('Failed to fetch materials')
+  return res.json()
+}
+
+export async function createCustomer(data: any) {
+  const res = await fetch(`${API_BASE}/customers`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error('Failed to create customer')
+  return res.json()
+}
+
+export async function fetchCustomers() {
+  const res = await fetch(`${API_BASE}/customers`, {
+    headers: { Authorization: `Bearer ${getAuthToken()}` },
+  })
+  if (!res.ok) throw new Error('Failed to fetch customers')
+  return res.json()
+}
+
+export async function fetchQuotes() {
+  const res = await fetch(`${API_BASE}/quotes`, {
+    headers: { Authorization: `Bearer ${getAuthToken()}` },
+  })
+  if (!res.ok) throw new Error('Failed to fetch quotes')
+  return res.json()
+}
+
+export async function createQuote(data: any) {
+  const res = await fetch(`${API_BASE}/quotes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error('Failed to create quote')
+  return res.json()
+}
+
+export async function approveQuote(id: number) {
+  const res = await fetch(`${API_BASE}/quotes/${id}/approve`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${getAuthToken()}` },
+  })
+  if (!res.ok) throw new Error('Failed to approve quote')
+  return res.json()
+}

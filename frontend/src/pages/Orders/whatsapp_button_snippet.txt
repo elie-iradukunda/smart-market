@@ -1,0 +1,23 @@
+                {/* Technician quick access to production materials view */}
+                {isTechnician && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/production/work-orders/${id}`)}
+                    className="col-span-2 mt-2 inline-flex items-center justify-center rounded-full border border-indigo-500 bg-white px-4 py-2 text-xs font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50"
+                  >
+                    Open technician materials view
+                  </button>
+                )}
+
+                {/* WhatsApp contact button for ready orders */}
+                {statusCode === 'ready' && (
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppContact}
+                    className="col-span-2 mt-2 inline-flex items-center justify-center gap-2 rounded-full border border-green-500 bg-green-50 px-4 py-2 text-xs font-semibold text-green-700 shadow-sm hover:bg-green-100 transition"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Notify Customer via WhatsApp
+                  </button>
+                )}
+              </div>

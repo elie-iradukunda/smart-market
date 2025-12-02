@@ -4,12 +4,12 @@ import { useParams, useNavigate } from 'react-router-dom'
 
 import { fetchOrder, createInvoice, recordPayment, updateOrderStatus, initiateLanariPayment, checkLanariPaymentStatus } from '../../api/apiClient'
 
-import { CheckCircle, Clock, DollarSign, Package, Truck, User } from 'lucide-react'
+import { CheckCircle, Clock, DollarSign, Package, Truck, User, MessageCircle } from 'lucide-react'
 import OwnerTopNav from '@/components/layout/OwnerTopNav'
 import ControllerTopNav from '@/components/layout/ControllerTopNav'
 import SalesTopNav from '@/components/layout/SalesTopNav'
 import { getAuthUser } from '@/utils/apiClient'
-import ConditionalReceptionLayout from '@/components/layout/ConditionalReceptionLayout'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 // --- Utility Functions for Design ---
 
@@ -183,10 +183,19 @@ export default function OrderDetailPage() {
     }
   }
 
+  const handleWhatsAppContact = () => {
+    if (!order) return
+    const phone = order.customer_phone || order.phone || ''
+    const message = `Hello ${order.customer_name || 'valued customer'}! Your order #${order.id} is ready for pickup. Please visit us at your earliest convenience. Thank you!`
+    const whatsappUrl = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`
+    window.open(whatsappUrl, '_blank')
+  }
+
+
   // --- Render Functions for Feedback ---
   if (loading) {
     return (
-      <ConditionalReceptionLayout>
+      <DashboardLayout>
         <div className="min-h-screen bg-slate-50">
           {!isReception && (
             <>
@@ -199,13 +208,13 @@ export default function OrderDetailPage() {
             <p className="text-lg text-gray-600">Loading Order Details for ID: {id}...</p>
           </div>
         </div>
-      </ConditionalReceptionLayout>
+      </DashboardLayout>
     )
   }
 
   if (error || !order) {
     return (
-      <ConditionalReceptionLayout>
+      <DashboardLayout>
         <div className="min-h-screen bg-slate-50">
           {!isReception && (
             <>
@@ -219,7 +228,7 @@ export default function OrderDetailPage() {
             <p className="text-sm mt-1">{error || `Order with ID ${id} not found.`}</p>
           </div>
         </div>
-      </ConditionalReceptionLayout>
+      </DashboardLayout>
     )
   }
   // --- End Render Functions for Feedback ---
@@ -234,7 +243,7 @@ export default function OrderDetailPage() {
   const currentStageIndex = Math.max(stageStatusCodes.indexOf(statusCode), 0)
 
   return (
-    <ConditionalReceptionLayout>
+    <DashboardLayout>
       <div className="min-h-screen bg-slate-50">
         {!isReception && (
           <>
@@ -464,6 +473,6 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </div>
-    </ConditionalReceptionLayout>
+    </DashboardLayout>
   )
 }

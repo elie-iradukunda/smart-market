@@ -255,7 +255,10 @@ export const recordPayment = async (req, res) => {
       [invoice_id]
     );
 
-    const status = payments[0].total_paid >= invoice[0].amount ? 'paid' : 'partial';
+    const totalPaid = payments[0].total_paid || 0;
+    const invoiceAmount = invoice[0].amount;
+    const remainingBalance = invoiceAmount - totalPaid;
+    const status = totalPaid >= invoiceAmount ? 'paid' : 'partial';
     
     await pool.execute('UPDATE invoices SET status = ? WHERE id = ?', [status, invoice_id]);
     
@@ -283,7 +286,13 @@ export const recordPayment = async (req, res) => {
       }
     }
     
-    res.json({ message: 'Payment recorded' });
+    res.json({ 
+      message: status === 'paid' ? 'Payment recorded - Invoice fully paid' : 'Payment recorded - Partial payment',
+      status: status,
+      totalPaid: totalPaid,
+      invoiceAmount: invoiceAmount,
+      remainingBalance: remainingBalance > 0 ? remainingBalance : 0
+    });
   } catch (error) {
     console.error('Payment recording error:', error);
     res.status(500).json({ error: 'Payment recording failed' });
@@ -308,8 +317,9 @@ export const createPOSSale = async (req, res) => {
     );
 
     const pos_id = result.insertId;
+    let totalCOGS = 0;
 
-    // Record POS line items and update inventory/stock movements for each material sold
+    // Record POS line items and update inventory
     for (const item of items) {
       // Save the POS item row
       await pool.execute(
@@ -317,32 +327,99 @@ export const createPOSSale = async (req, res) => {
         [pos_id, item.item_id, item.quantity, item.price]
       );
 
-      // Decrement material stock based on quantity sold
-      await pool.execute(
-        'UPDATE materials SET current_stock = current_stock - ? WHERE id = ?',
-        [item.quantity, item.item_id]
-      );
+      // Get product cost for COGS calculation (assuming 60% of price if no cost field)
+      // In a real system, you'd fetch the actual cost_price from products table
+      const costPerUnit = item.price * 0.6; 
+      totalCOGS += costPerUnit * item.quantity;
 
-      // Log a stock movement of type "issue" so inventory history stays consistent
+      // Decrement product stock based on quantity sold
       await pool.execute(
-        'INSERT INTO stock_movements (material_id, type, quantity, reference, user_id) VALUES (?, ?, ?, ?, ?)',
-        [item.item_id, 'issue', item.quantity, `POS-${pos_id}`, req.user.id]
+        'UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?',
+        [item.quantity, item.item_id]
       );
     }
 
     // Also create an order so the sale appears in production/finance flows
     let order_id = null;
     if (customer_id) {
-      const [orderResult] = await pool.execute(
-        'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
-        [customer_id, 'ready', total]
-      );
-      order_id = orderResult.insertId;
+      try {
+        const [orderResult] = await pool.execute(
+          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
+          [customer_id, 'ready', total]
+        );
+        order_id = orderResult.insertId;
+      } catch (orderError) {
+        console.error('Order creation failed (non-critical):', orderError);
+      }
     }
 
-    res.status(201).json({ id: pos_id, order_id, message: 'POS sale recorded' });
+    // AUTO-GENERATE JOURNAL ENTRIES
+    try {
+      // Get account IDs
+      const [accounts] = await pool.execute(`
+        SELECT id, account_code FROM chart_of_accounts 
+        WHERE account_code IN ('1000', '4000', '5000', '1300')
+      `);
+      
+      const accountMap = {};
+      accounts.forEach(acc => {
+        accountMap[acc.account_code] = acc.id;
+      });
+
+      const cashAccountId = accountMap['1000'];        // Cash
+      const salesRevenueId = accountMap['4000'];       // Sales Revenue
+      const cogsAccountId = accountMap['5000'];        // Cost of Goods Sold
+      const inventoryAccountId = accountMap['1300'];   // Inventory
+
+      if (cashAccountId && salesRevenueId) {
+        // Journal Entry 1: Record the sale
+        const [journalResult] = await pool.execute(
+          'INSERT INTO journal_entries (date, description) VALUES (CURDATE(), ?)',
+          [`POS Sale #${pos_id} - Cash Sale`]
+        );
+        const journal_id = journalResult.insertId;
+
+        // Debit: Cash (Asset increases)
+        await pool.execute(
+          'INSERT INTO journal_lines (journal_id, account_id, debit, credit) VALUES (?, ?, ?, ?)',
+          [journal_id, cashAccountId, total, 0]
+        );
+
+        // Credit: Sales Revenue (Revenue increases)
+        await pool.execute(
+          'INSERT INTO journal_lines (journal_id, account_id, debit, credit) VALUES (?, ?, ?, ?)',
+          [journal_id, salesRevenueId, 0, total]
+        );
+
+        // Journal Entry 2: Record Cost of Goods Sold
+        if (cogsAccountId && inventoryAccountId && totalCOGS > 0) {
+          const [cogsJournalResult] = await pool.execute(
+            'INSERT INTO journal_entries (date, description) VALUES (CURDATE(), ?)',
+            [`POS Sale #${pos_id} - Cost of Goods Sold`]
+          );
+          const cogs_journal_id = cogsJournalResult.insertId;
+
+          // Debit: COGS (Expense increases)
+          await pool.execute(
+            'INSERT INTO journal_lines (journal_id, account_id, debit, credit) VALUES (?, ?, ?, ?)',
+            [cogs_journal_id, cogsAccountId, totalCOGS, 0]
+          );
+
+          // Credit: Inventory (Asset decreases)
+          await pool.execute(
+            'INSERT INTO journal_lines (journal_id, account_id, debit, credit) VALUES (?, ?, ?, ?)',
+            [cogs_journal_id, inventoryAccountId, 0, totalCOGS]
+          );
+        }
+      }
+    } catch (journalError) {
+      console.error('Journal entry creation failed (non-critical):', journalError);
+    }
+
+    res.status(201).json({ id: pos_id, order_id, message: 'POS sale recorded with journal entries' });
   } catch (error) {
-    res.status(500).json({ error: 'POS sale failed' });
+    console.error('POS sale error:', error);
+    res.status(500).json({ error: 'POS sale failed', details: error.message });
   }
 };
 
@@ -503,15 +580,85 @@ export const getPOSSales = async (req, res) => {
 
 export const getJournalEntries = async (req, res) => {
   try {
-    const [entries] = await pool.execute(`
-      SELECT * FROM journal_entries ORDER BY date DESC
+    // Fetch journal lines with account information and real status
+    const [journalLines] = await pool.execute(`
+      SELECT 
+        jl.id,
+        je.id as journal_id,
+        je.date,
+        je.description,
+        je.status,
+        coa.id as account_id,
+        coa.name as account_name,
+        coa.account_code,
+        coa.type as account_type,
+        jl.debit,
+        jl.credit
+      FROM journal_lines jl
+      JOIN journal_entries je ON jl.journal_id = je.id
+      JOIN chart_of_accounts coa ON jl.account_id = coa.id
+      ORDER BY je.date DESC, je.id DESC, jl.id ASC
     `);
-    res.json(entries);
+    
+    res.json(journalLines);
   } catch (error) {
     console.error('Journal entries error:', error);
     res.status(500).json({ error: 'Failed to fetch journal entries' });
   }
 };
+
+export const postJournalEntry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if journal entry exists and is not already posted
+    const [entry] = await pool.execute(
+      'SELECT status FROM journal_entries WHERE id = ?',
+      [id]
+    );
+    
+    if (entry.length === 0) {
+      return res.status(404).json({ error: 'Journal entry not found' });
+    }
+    
+    if (entry[0].status === 'posted') {
+      return res.status(400).json({ error: 'Journal entry is already posted' });
+    }
+    
+    // Verify that debits equal credits
+    const [lines] = await pool.execute(
+      'SELECT SUM(debit) as total_debit, SUM(credit) as total_credit FROM journal_lines WHERE journal_id = ?',
+      [id]
+    );
+    
+    const totalDebit = parseFloat(lines[0].total_debit) || 0;
+    const totalCredit = parseFloat(lines[0].total_credit) || 0;
+    
+    if (Math.abs(totalDebit - totalCredit) > 0.01) {
+      return res.status(400).json({ 
+        error: 'Cannot post unbalanced entry. Debits must equal credits.',
+        totalDebit,
+        totalCredit
+      });
+    }
+    
+    // Update status to posted
+    await pool.execute(
+      'UPDATE journal_entries SET status = ? WHERE id = ?',
+      ['posted', id]
+    );
+    
+    res.json({ 
+      message: 'Journal entry posted successfully',
+      id: id,
+      status: 'posted'
+    });
+  } catch (error) {
+    console.error('Post journal entry error:', error);
+    res.status(500).json({ error: 'Failed to post journal entry' });
+  }
+};
+
 
 export const getChartOfAccounts = async (req, res) => {
   try {
