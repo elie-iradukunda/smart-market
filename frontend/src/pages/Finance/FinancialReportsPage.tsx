@@ -6,6 +6,7 @@ import { fetchFinancialOverview, fetchInvoices, fetchPayments, fetchSalesReport 
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { getAuthUser } from '@/utils/apiClient'
 import { ArrowUpRight, ArrowDownRight, TrendingUp, DollarSign, CreditCard, FileText } from 'lucide-react'
+import { formatCurrency } from '@/utils/formatters'
 
 // Simple CSS Bar Chart Component
 const SalesTrendChart = ({ data }) => {
@@ -43,7 +44,7 @@ const SalesTrendChart = ({ data }) => {
                   style={{ height: `${Math.max(height, 2)}%` }}
                 >
                   <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
-                    ${value.toFixed(2)}
+                    {formatCurrency(value)}
                   </div>
                 </div>
               </div>
@@ -103,7 +104,7 @@ const RecentTransactions = ({ payments, invoices }) => {
                     {new Date(t.date).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900">
-                    ${parseFloat(t.amount || t.total || 0).toFixed(2)}
+                    {formatCurrency(t.amount || t.total || 0)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`inline-flex px-2 text-xs font-semibold leading-5 rounded-full ${(t.status === 'paid' || t.status === 'completed')
@@ -163,24 +164,24 @@ export default function FinancialReportsPage() {
     overview
       ? {
         label: 'Revenue (last 30 days)',
-        value: `$${normalizeNumber(overview.total_revenue).toFixed(2)}`,
+        value: formatCurrency(overview.total_revenue),
         trend: '+12.5%', // Placeholder trend logic
         icon: DollarSign,
         color: 'bg-green-50 text-green-700 border-green-200'
       }
-      : { label: 'Revenue (last 30 days)', value: loading ? 'Loading...' : '$0.00', trend: '', icon: DollarSign, color: 'bg-gray-50 text-gray-700' },
+      : { label: 'Revenue (last 30 days)', value: loading ? 'Loading...' : 'RF 0.00', trend: '', icon: DollarSign, color: 'bg-gray-50 text-gray-700' },
     overview
       ? {
         label: 'Outstanding AR',
-        value: `$${normalizeNumber(overview.outstanding_amount).toFixed(2)}`,
+        value: formatCurrency(overview.outstanding_amount),
         trend: '-2.3%', // Placeholder trend logic
         icon: FileText,
         color: 'bg-amber-50 text-amber-700 border-amber-200'
       }
-      : { label: 'Outstanding AR', value: loading ? 'Loading...' : '$0.00', trend: '', icon: FileText, color: 'bg-gray-50 text-gray-700' },
+      : { label: 'Outstanding AR', value: loading ? 'Loading...' : 'RF 0.00', trend: '', icon: FileText, color: 'bg-gray-50 text-gray-700' },
     {
       label: 'Payments (30 days)',
-      value: `$${normalizeNumber(totalPaymentsLast30).toFixed(2)}`,
+      value: formatCurrency(totalPaymentsLast30),
       trend: '+5.4%',
       icon: CreditCard,
       color: 'bg-blue-50 text-blue-700 border-blue-200'

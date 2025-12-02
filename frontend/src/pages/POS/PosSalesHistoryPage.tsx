@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { DollarSign, User, Calendar, Clock, Download, AlertTriangle, Loader, Package, CreditCard, PiggyBank } from 'lucide-react'
 import { fetchPOSSales } from '../../api/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { formatCurrency } from '@/utils/formatters'
 
 const getPaymentColor = (method) => {
     switch (method) {
@@ -18,11 +19,6 @@ const getPaymentColor = (method) => {
             return 'bg-gray-100 text-gray-800 border-gray-300';
     }
 };
-
-const formatCurrency = (amount) => {
-    if (typeof amount !== 'number' || isNaN(amount)) return '$0.00';
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 const StateFeedback = ({ error, loading, salesLength }) => {
     if (error) {

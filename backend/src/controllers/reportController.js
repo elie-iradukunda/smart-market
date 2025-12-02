@@ -10,31 +10,16 @@ export const getSalesReport = async (req, res) => {
     
     const [sales] = await pool.execute(`
       SELECT 
-        date,
-        COUNT(*) as orders_count,
-        COALESCE(SUM(amount), 0) as total_sales,
-        COALESCE(AVG(amount), 0) as avg_order_value
-      FROM (
-        -- Sales from Quotes (Orders)
-        SELECT 
-          DATE(o.created_at) as date,
-          q.total_amount as amount
-        FROM orders o
-        JOIN quotes q ON o.quote_id = q.id
-        WHERE DATE(o.created_at) BETWEEN ? AND ?
-
-        UNION ALL
-
-        -- Sales from POS
-        SELECT 
-          DATE(created_at) as date,
-          total as amount
-        FROM pos_sales
-        WHERE DATE(created_at) BETWEEN ? AND ?
-      ) as combined_sales
-      GROUP BY date
+        DATE(o.created_at) as date,
+        COUNT(o.id) as orders_count,
+        COALESCE(SUM(q.total_amount), 0) as total_sales,
+        COALESCE(AVG(q.total_amount), 0) as avg_order_value
+      FROM orders o
+      LEFT JOIN quotes q ON o.quote_id = q.id
+      WHERE DATE(o.created_at) BETWEEN ? AND ?
+      GROUP BY DATE(o.created_at)
       ORDER BY date DESC
-    `, [startDate, endDate, startDate, endDate]);
+    `, [startDate, endDate]);
     
     res.json(sales);
   } catch (error) {
