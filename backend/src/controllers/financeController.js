@@ -317,8 +317,9 @@ export const createPOSSale = async (req, res) => {
     );
 
     const pos_id = result.insertId;
+    let totalCOGS = 0;
 
-    // Record POS line items and update inventory/stock movements for each material sold
+    // Record POS line items and update inventory
     for (const item of items) {
       // Save the POS item row
       await pool.execute(
@@ -326,12 +327,16 @@ export const createPOSSale = async (req, res) => {
         [pos_id, item.item_id, item.quantity, item.price]
       );
 
+      // Get product cost for COGS calculation (assuming 60% of price if no cost field)
+      // In a real system, you'd fetch the actual cost_price from products table
+      const costPerUnit = item.price * 0.6; 
+      totalCOGS += costPerUnit * item.quantity;
+
       // Decrement product stock based on quantity sold
       await pool.execute(
         'UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?',
         [item.quantity, item.item_id]
       );
-
     }
 
     // Also create an order so the sale appears in production/finance flows
@@ -347,74 +352,71 @@ export const createPOSSale = async (req, res) => {
         console.error('Order creation failed (non-critical):', orderError);
       }
     }
-    if (customer_id) {
-      try {
-        const [orderResult] = await pool.execute(
-          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
-          [customer_id, 'ready', total]
+
+    // AUTO-GENERATE JOURNAL ENTRIES
+    try {
+      // Get account IDs
+      const [accounts] = await pool.execute(`
+        SELECT id, account_code FROM chart_of_accounts 
+        WHERE account_code IN ('1000', '4000', '5000', '1300')
+      `);
+      
+      const accountMap = {};
+      accounts.forEach(acc => {
+        accountMap[acc.account_code] = acc.id;
+      });
+
+      const cashAccountId = accountMap['1000'];        // Cash
+      const salesRevenueId = accountMap['4000'];       // Sales Revenue
+      const cogsAccountId = accountMap['5000'];        // Cost of Goods Sold
+      const inventoryAccountId = accountMap['1300'];   // Inventory
+
+      if (cashAccountId && salesRevenueId) {
+        // Journal Entry 1: Record the sale
+        const [journalResult] = await pool.execute(
+          'INSERT INTO journal_entries (date, description) VALUES (CURDATE(), ?)',
+          [`POS Sale #${pos_id} - Cash Sale`]
         );
-        order_id = orderResult.insertId;
-      } catch (orderError) {
-        console.error('Order creation failed (non-critical):', orderError);
-      }
-    }
-    if (customer_id) {
-      try {
-        const [orderResult] = await pool.execute(
-          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
-          [customer_id, 'ready', total]
+        const journal_id = journalResult.insertId;
+
+        // Debit: Cash (Asset increases)
+        await pool.execute(
+          'INSERT INTO journal_lines (journal_id, account_id, debit, credit) VALUES (?, ?, ?, ?)',
+          [journal_id, cashAccountId, total, 0]
         );
-        order_id = orderResult.insertId;
-      } catch (orderError) {
-        console.error('Order creation failed (non-critical):', orderError);
-      }
-    }
-    if (customer_id) {
-      try {
-        const [orderResult] = await pool.execute(
-          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
-          [customer_id, 'ready', total]
+
+        // Credit: Sales Revenue (Revenue increases)
+        await pool.execute(
+          'INSERT INTO journal_lines (journal_id, account_id, debit, credit) VALUES (?, ?, ?, ?)',
+          [journal_id, salesRevenueId, 0, total]
         );
-        order_id = orderResult.insertId;
-      } catch (orderError) {
-        console.error('Order creation failed (non-critical):', orderError);
+
+        // Journal Entry 2: Record Cost of Goods Sold
+        if (cogsAccountId && inventoryAccountId && totalCOGS > 0) {
+          const [cogsJournalResult] = await pool.execute(
+            'INSERT INTO journal_entries (date, description) VALUES (CURDATE(), ?)',
+            [`POS Sale #${pos_id} - Cost of Goods Sold`]
+          );
+          const cogs_journal_id = cogsJournalResult.insertId;
+
+          // Debit: COGS (Expense increases)
+          await pool.execute(
+            'INSERT INTO journal_lines (journal_id, account_id, debit, credit) VALUES (?, ?, ?, ?)',
+            [cogs_journal_id, cogsAccountId, totalCOGS, 0]
+          );
+
+          // Credit: Inventory (Asset decreases)
+          await pool.execute(
+            'INSERT INTO journal_lines (journal_id, account_id, debit, credit) VALUES (?, ?, ?, ?)',
+            [cogs_journal_id, inventoryAccountId, 0, totalCOGS]
+          );
+        }
       }
-    }
-    if (customer_id) {
-      try {
-        const [orderResult] = await pool.execute(
-          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
-          [customer_id, 'ready', total]
-        );
-        order_id = orderResult.insertId;
-      } catch (orderError) {
-        console.error('Order creation failed (non-critical):', orderError);
-      }
-    }
-    if (customer_id) {
-      try {
-        const [orderResult] = await pool.execute(
-          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
-          [customer_id, 'ready', total]
-        );
-        order_id = orderResult.insertId;
-      } catch (orderError) {
-        console.error('Order creation failed (non-critical):', orderError);
-      }
-    }
-    if (customer_id) {
-      try {
-        const [orderResult] = await pool.execute(
-          'INSERT INTO orders (quote_id, customer_id, status, due_date, deposit_paid, balance) VALUES (NULL, ?, ?, NULL, 0, ?)',
-          [customer_id, 'ready', total]
-        );
-        order_id = orderResult.insertId;
-      } catch (orderError) {
-        console.error('Order creation failed (non-critical):', orderError);
-      }
+    } catch (journalError) {
+      console.error('Journal entry creation failed (non-critical):', journalError);
     }
 
-    res.status(201).json({ id: pos_id, order_id, message: 'POS sale recorded' });
+    res.status(201).json({ id: pos_id, order_id, message: 'POS sale recorded with journal entries' });
   } catch (error) {
     console.error('POS sale error:', error);
     res.status(500).json({ error: 'POS sale failed', details: error.message });
@@ -578,10 +580,27 @@ export const getPOSSales = async (req, res) => {
 
 export const getJournalEntries = async (req, res) => {
   try {
-    const [entries] = await pool.execute(`
-      SELECT * FROM journal_entries ORDER BY date DESC
+    // Fetch journal lines with account information
+    const [journalLines] = await pool.execute(`
+      SELECT 
+        jl.id,
+        je.id as journal_id,
+        je.date,
+        je.description,
+        coa.id as account_id,
+        coa.name as account_name,
+        coa.account_code,
+        coa.type as account_type,
+        jl.debit,
+        jl.credit,
+        'draft' as status
+      FROM journal_lines jl
+      JOIN journal_entries je ON jl.journal_id = je.id
+      JOIN chart_of_accounts coa ON jl.account_id = coa.id
+      ORDER BY je.date DESC, je.id DESC, jl.id ASC
     `);
-    res.json(entries);
+    
+    res.json(journalLines);
   } catch (error) {
     console.error('Journal entries error:', error);
     res.status(500).json({ error: 'Failed to fetch journal entries' });

@@ -24,6 +24,7 @@ router.get('/invoices/:id', getInvoice);
 router.put('/invoices/:id', auditLog('UPDATE', 'invoices'), updateInvoice);
 
 // Payment CRUD
+router.post('/payments', auditLog('CREATE', 'payments'), recordPayment);
 router.get('/payments', getPayments);
 router.get('/payments/:id', async (req, res) => {
   try {
@@ -124,7 +125,7 @@ router.get('/journal-entries/:id', async (req, res) => {
   }
 });
 
-// Chart of accounts
+// Chart of Accounts
 router.get('/chart-of-accounts', getChartOfAccounts);
 
 export default router;

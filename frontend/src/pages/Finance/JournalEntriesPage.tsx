@@ -16,11 +16,23 @@ import {
 
 // Helper to format currency
 const formatCurrency = (amount, isDebit) => {
-  if (typeof amount !== 'number' || isNaN(amount)) return 'N/A'
+  // Check if amount is null, undefined, or not a number
+  if (amount === null || amount === undefined || (typeof amount !== 'number' && isNaN(parseFloat(amount)))) {
+    return <span className="text-gray-400">—</span>
+  }
+
+  // Convert to number if it's a string
+  const numAmount = typeof amount === 'number' ? amount : parseFloat(amount)
+
+  // Only show colored amounts for non-zero values
+  if (numAmount === 0) {
+    return <span className="font-mono text-gray-400">—</span>
+  }
+
   const colorClass = isDebit ? 'text-green-700' : 'text-red-700'
   return (
     <span className={`font-mono font-bold ${colorClass}`}>
-      {`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+      {`$${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
     </span>
   )
 }
@@ -112,6 +124,7 @@ export default function JournalEntriesPage() {
     fetchJournalEntries()
       .then((data) => {
         if (!isMounted) return
+        console.log('Journal entries data:', data) // Debug log
         setJournals(Array.isArray(data) ? data : [])
       })
       .catch((err) => {
@@ -166,12 +179,18 @@ export default function JournalEntriesPage() {
             </div>
             <div className="rounded-xl px-4 py-3 border shadow-md bg-blue-50 border-blue-200">
               <p className="text-sm font-medium text-gray-700">Last Post Date</p>
-              <p className="mt-1 text-2xl font-extrabold text-blue-700">N/A</p>
+              <p className="mt-1 text-2xl font-extrabold text-blue-700">
+                {journals.length > 0 && journals[0].date
+                  ? new Date(journals[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                  : 'N/A'}
+              </p>
               <p className="text-xs text-gray-500 mt-1">Date of latest entry.</p>
             </div>
             <div className="rounded-xl px-4 py-3 border shadow-md bg-amber-50 border-amber-200">
               <p className="text-sm font-medium text-gray-700">Draft Entries</p>
-              <p className="mt-1 text-2xl font-extrabold text-amber-700">N/A</p>
+              <p className="mt-1 text-2xl font-extrabold text-amber-700">
+                {journals.filter(j => j.status?.toLowerCase() === 'draft').length}
+              </p>
               <p className="text-xs text-gray-500 mt-1">Pending review.</p>
             </div>
           </div>
@@ -179,7 +198,7 @@ export default function JournalEntriesPage() {
       </div>
 
       {/* Journal Entries List */}
-      <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+      <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 mt-6">
         <div className="p-6 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <p className="text-xl font-semibold text-gray-900">Entry List ({filtered.length})</p>
@@ -218,15 +237,42 @@ export default function JournalEntriesPage() {
               </thead>
 
               <tbody className="bg-white divide-y divide-gray-100">
-                {filtered.map((j) => (
-                  <tr key={j.id} className="hover:bg-gray-50/50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{j.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{j.date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600 font-medium">{j.account_name || 'N/A'}</td>
-                    <td className="px-6 py-4 max-w-xs truncate text-sm text-gray-500" title={j.description}>{j.description}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">{formatCurrency(j.debit, true)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">{formatCurrency(j.credit, false)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm"><JournalStatusPill status={j.status} /></td>
+                {filtered.map((j, index) => (
+                  <tr
+                    key={j.id}
+                    className={`hover:bg-indigo-50/30 transition-colors duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'
+                      }`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 text-sm font-bold">
+                        {j.id}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
+                      {j.date ? new Date(j.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-indigo-700">{j.account_name || 'N/A'}</span>
+                        {j.account_code && (
+                          <span className="text-xs text-gray-500">{j.account_code}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 max-w-xs">
+                      <p className="text-sm text-gray-600 truncate" title={j.description}>
+                        {j.description}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold">
+                      {formatCurrency(j.debit, true)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold">
+                      {formatCurrency(j.credit, false)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <JournalStatusPill status={j.status} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
