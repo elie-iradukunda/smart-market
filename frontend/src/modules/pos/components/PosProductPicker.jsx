@@ -47,7 +47,7 @@ export default function PosProductPicker({ onAdd }) {
               className="flex items-center justify-between rounded border border-gray-200 bg-white px-3 py-2 text-left hover:bg-gray-50"
             >
               <span className="text-gray-800">{p.name || p.material_name || p.sku}</span>
-              <span className="text-gray-700">{p.price != null ? `$${p.price}` : ''}</span>
+              <span className="text-gray-700">{p.price != null ? `RF ${p.price}` : ''}</span>
             </button>
           ))}
         </div>

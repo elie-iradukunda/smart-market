@@ -280,7 +280,17 @@ export const createPurchaseOrder = async (req, res) => {
   try {
     const { 
       supplier_id, 
+      reference_number,
+      order_date,
+      expected_delivery,
+      delivery_address,
+      payment_terms,
+      notes,
+      items,
+      subtotal,
+      tax,
       total,
+      created_by,
       status = 'pending'
     } = req.body;
 
@@ -292,9 +302,9 @@ export const createPurchaseOrder = async (req, res) => {
       });
     }
 
-    // Check if supplier exists
+    // Check if supplier exists and get supplier details
     const [supplier] = await connection.execute(
-      'SELECT id, name FROM suppliers WHERE id = ?', 
+      'SELECT id, name, email, contact, phone FROM suppliers WHERE id = ?', 
       [supplier_id]
     );
     
@@ -308,26 +318,99 @@ export const createPurchaseOrder = async (req, res) => {
     await connection.beginTransaction();
 
     try {
-      // Create the purchase order
+      // Create the purchase order with all fields
       const [result] = await connection.execute(
-        `INSERT INTO purchase_orders (supplier_id, total, status) VALUES (?, ?, ?)`,
-        [supplier_id, total, status]
+        `INSERT INTO purchase_orders (
+          supplier_id, reference_number, order_date, expected_delivery, 
+          delivery_address, payment_terms, notes, subtotal, tax, total, 
+          created_by, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          supplier_id, 
+          reference_number || `PO-${Date.now().toString().slice(-6)}`,
+          order_date || new Date(),
+          expected_delivery,
+          delivery_address,
+          payment_terms || 'net_30',
+          notes,
+          subtotal || 0,
+          tax || 0,
+          total,
+          created_by,
+          status
+        ]
       );
 
       const poId = result.insertId;
 
+      // Insert purchase order items if provided
+      if (items && Array.isArray(items) && items.length > 0) {
+        for (const item of items) {
+          await connection.execute(
+            `INSERT INTO purchase_order_items (
+              purchase_order_id, material_id, quantity, unit_price, total
+            ) VALUES (?, ?, ?, ?, ?)`,
+            [
+              poId,
+              item.material_id,
+              item.quantity,
+              item.unit_price,
+              item.total || (item.quantity * item.unit_price)
+            ]
+          );
+        }
+      }
+
       await connection.commit();
 
-      // Get the created PO
+      // Get the created PO with items for email
       const [createdPO] = await connection.execute(
-        'SELECT * FROM purchase_orders WHERE id = ?',
+        `SELECT po.*, s.name as supplier_name, s.email as supplier_email, 
+                s.contact as supplier_contact, s.phone as supplier_phone
+         FROM purchase_orders po
+         LEFT JOIN suppliers s ON po.supplier_id = s.id
+         WHERE po.id = ?`,
         [poId]
       );
+
+      // Get PO items with material details
+      const [poItems] = await connection.execute(
+        `SELECT poi.*, m.name as material_name, m.unit as material_unit
+         FROM purchase_order_items poi
+         LEFT JOIN materials m ON poi.material_id = m.id
+         WHERE poi.purchase_order_id = ?`,
+        [poId]
+      );
+
+      // Send email to supplier if email exists
+      if (supplier[0].email) {
+        try {
+          const emailService = (await import('../services/emailService.js')).default;
+          
+          const emailData = {
+            ...createdPO[0],
+            items: poItems,
+            total_amount: total,
+            tax_rate: 18
+          };
+
+          await emailService.sendPurchaseOrder(supplier[0].email, emailData);
+          console.log(`Purchase order email sent to supplier: ${supplier[0].email}`);
+        } catch (emailError) {
+          console.error('Failed to send purchase order email:', emailError);
+          // Don't fail the request if email fails
+        }
+      } else {
+        console.warn(`Supplier ${supplier[0].name} has no email address. PO email not sent.`);
+      }
 
       res.status(201).json({
         success: true,
         message: 'Purchase order created successfully',
-        data: createdPO[0]
+        data: {
+          ...createdPO[0],
+          items: poItems
+        }
       });
 
     } catch (error) {
@@ -779,13 +862,28 @@ export const getStockMovements = async (req, res) => {
 export const createSupplier = async (req, res) => {
     const connection = await pool.getConnection();
     try {
-        const { name, contact, rating } = req.body;
+        const { 
+            name, 
+            contact, 
+            email,
+            phone,
+            address,
+            city,
+            country,
+            tax_id,
+            payment_terms,
+            bank_name,
+            bank_account,
+            notes,
+            rating,
+            is_active
+        } = req.body;
 
         // Validate required fields
-        if (!name || !contact) {
+        if (!name) {
             return res.status(400).json({ 
                 success: false,
-                error: 'Name and contact information are required' 
+                error: 'Supplier name is required' 
             });
         }
 
@@ -806,10 +904,29 @@ export const createSupplier = async (req, res) => {
                 });
             }
 
-            // Create supplier
+            // Create supplier with all fields
             const [result] = await connection.execute(
-                `INSERT INTO suppliers (name, contact, rating) VALUES (?, ?, ?)`,
-                [name.trim(), contact, rating || 0]
+                `INSERT INTO suppliers (
+                    name, contact, email, phone, address, city, country,
+                    tax_id, payment_terms, bank_name, bank_account, notes,
+                    rating, is_active
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    name.trim(), 
+                    contact || null,
+                    email || null,
+                    phone || null,
+                    address || null,
+                    city || null,
+                    country || 'Rwanda',
+                    tax_id || null,
+                    payment_terms || 'net_30',
+                    bank_name || null,
+                    bank_account || null,
+                    notes || null,
+                    rating || 0,
+                    is_active !== undefined ? is_active : true
+                ]
             );
 
             await connection.commit();
@@ -819,6 +936,28 @@ export const createSupplier = async (req, res) => {
                 'SELECT * FROM suppliers WHERE id = ?',
                 [result.insertId]
             );
+
+            // Send welcome email
+            if (email) {
+                try {
+                    const emailService = (await import('../services/emailService.js')).default;
+                    await emailService.sendSupplierWelcome(email, {
+                        company_name: name,
+                        contact_name: contact,
+                        phone: phone,
+                        address: address,
+                        city: city,
+                        country: country,
+                        tax_id: tax_id,
+                        payment_terms: payment_terms,
+                        bank_name: bank_name,
+                        bank_account: bank_account
+                    });
+                    console.log(`Supplier welcome email sent to: ${email}`);
+                } catch (emailError) {
+                    console.error('Failed to send supplier welcome email:', emailError);
+                }
+            }
 
             res.status(201).json({
                 success: true,
@@ -927,7 +1066,22 @@ export const updateSupplier = async (req, res) => {
     const connection = await pool.getConnection();
     try {
         const { id } = req.params;
-        const { name, contact, rating } = req.body;
+        const { 
+            name, 
+            contact, 
+            email,
+            phone,
+            address,
+            city,
+            country,
+            tax_id,
+            payment_terms,
+            bank_name,
+            bank_account,
+            notes,
+            rating,
+            is_active
+        } = req.body;
 
         await connection.beginTransaction();
 
@@ -946,10 +1100,41 @@ export const updateSupplier = async (req, res) => {
                 });
             }
 
-            // Update supplier
+            // Update supplier with all fields
             await connection.execute(
-                `UPDATE suppliers SET name = ?, contact = ?, rating = ? WHERE id = ?`,
-                [name, contact, rating || 0, id]
+                `UPDATE suppliers SET 
+                    name = ?, 
+                    contact = ?, 
+                    email = ?,
+                    phone = ?,
+                    address = ?,
+                    city = ?,
+                    country = ?,
+                    tax_id = ?,
+                    payment_terms = ?,
+                    bank_name = ?,
+                    bank_account = ?,
+                    notes = ?,
+                    rating = ?,
+                    is_active = ?
+                WHERE id = ?`,
+                [
+                    name, 
+                    contact || null,
+                    email || null,
+                    phone || null,
+                    address || null,
+                    city || null,
+                    country || 'Rwanda',
+                    tax_id || null,
+                    payment_terms || 'net_30',
+                    bank_name || null,
+                    bank_account || null,
+                    notes || null,
+                    rating || 0,
+                    is_active !== undefined ? is_active : true,
+                    id
+                ]
             );
 
             await connection.commit();

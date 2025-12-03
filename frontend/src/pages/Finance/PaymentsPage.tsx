@@ -124,8 +124,8 @@ export default function PaymentsPage() {
   }, 0)
 
   const formatCurrency = (value: number) => {
-    if (typeof value !== 'number' || isNaN(value)) return '$0.00'
-    return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    if (typeof value !== 'number' || isNaN(value)) return 'RF 0.00'
+    return `RF ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
   const formatMethod = (m: string | null | undefined) => {

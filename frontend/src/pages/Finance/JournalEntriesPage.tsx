@@ -32,7 +32,7 @@ const formatCurrency = (amount, isDebit) => {
   const colorClass = isDebit ? 'text-green-700' : 'text-red-700'
   return (
     <span className={`font-mono font-bold ${colorClass}`}>
-      {`$${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+      {`RF ${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
     </span>
   )
 }

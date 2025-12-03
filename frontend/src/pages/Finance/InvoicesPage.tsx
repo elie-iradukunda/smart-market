@@ -27,7 +27,7 @@ import { fetchInvoices, createInvoice, fetchOrders } from '../../api/apiClient'
 const formatCurrency = (amount) => {
   if (typeof amount !== 'number' || isNaN(amount)) return 'N/A'
   // Use a strong color for financial figures
-  return <span className="font-extrabold text-blue-700">{`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
+  return <span className="font-extrabold text-blue-700">{`RF ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
 }
 
 // Helper to style the Invoice Status pill

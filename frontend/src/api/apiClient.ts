@@ -14,8 +14,12 @@ export interface Supplier extends SupplierMaterial {
   email: string;
   phone: string;
   address: string;
+  city: string;
+  country: string;
   tax_id: string;
   payment_terms: string;
+  bank_name: string;
+  bank_account: string;
   rating: number;
   notes: string;
   is_active: boolean;
@@ -147,7 +151,7 @@ export async function fetchDashboardStats() {
   const invoices = invoicesRes.ok ? await invoicesRes.json() : []
 
   const materials = materialsData.data || materialsData || []
-  
+
   const activeOrders = orders.filter((o: any) => o.status !== 'delivered' && o.status !== 'cancelled').length
   const pendingWorkOrders = workOrders.filter((w: any) => w.status !== 'completed').length
   const lowStockItems = materials.filter((m: any) => m.current_stock <= (m.reorder_level || 10)).length
@@ -2344,7 +2348,7 @@ export async function fetchProducts() {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
-  
+
   const res = await fetch(`${API_BASE}/products`, { headers })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
@@ -2359,7 +2363,7 @@ export async function fetchProduct(id: number | string) {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
-  
+
   const res = await fetch(`${API_BASE}/products/${id}`, { headers })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))

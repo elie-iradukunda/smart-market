@@ -92,7 +92,7 @@ export default function InventoryDashboard() {
                     <TrendingUp size={20} />
                   </div>
                   <p className="text-sm font-medium text-gray-400">Stock Value</p>
-                  <p className="text-2xl font-bold text-white mt-1">$45.2k</p>
+                  <p className="text-2xl font-bold text-white mt-1">RF 45.2k</p>
                 </div>
                 <div className="col-span-2 rounded-2xl bg-white/5 p-6 backdrop-blur-sm border border-white/10">
                   <div className="flex items-center justify-between">

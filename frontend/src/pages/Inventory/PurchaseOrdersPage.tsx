@@ -134,7 +134,7 @@ export default function PurchaseOrdersPage() {
                       <td className="px-6 py-4">
                         <div className="font-medium text-gray-900">{po.supplier_name}</div>
                       </td>
-                      <td className="px-6 py-4 text-right font-medium text-gray-900">${po.total}</td>
+                      <td className="px-6 py-4 text-right font-medium text-gray-900">RF {po.total}</td>
                       <td className="px-6 py-4">
                         {getStatusBadge(po.status)}
                       </td>

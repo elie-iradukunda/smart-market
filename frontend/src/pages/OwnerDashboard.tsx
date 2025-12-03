@@ -189,7 +189,7 @@ export default function OwnerDashboard() {
               </div>
               <div className="rounded-2xl bg-emerald-50 px-4 py-3 border border-emerald-100 shadow-sm">
                 <dt className="text-[11px] font-medium text-emerald-700">Invoices unpaid</dt>
-                <dd className="mt-1 text-xl font-bold text-emerald-900">$3,200</dd>
+                <dd className="mt-1 text-xl font-bold text-emerald-900">RF 3,200</dd>
               </div>
               <div className="rounded-2xl bg-amber-50 px-4 py-3 border border-amber-200 shadow-sm">
                 <dt className="text-[11px] font-medium text-amber-700">Materials at risk</dt>

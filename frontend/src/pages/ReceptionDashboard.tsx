@@ -133,7 +133,7 @@ export default function ReceptionDashboard() {
           {currentUserHasPermission('order.view') && (
             <button
               type="button"
-              onClick={() => navigate('crm/orders')}
+              onClick={() => navigate('/orders')}
               className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between"
             >
               <div>
