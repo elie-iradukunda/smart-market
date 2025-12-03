@@ -38,7 +38,7 @@ export default function OwnerTopNav({ onMenuClick }: { onMenuClick?: () => void 
 
   const handleLogout = () => {
     clearAuth()
-    navigate('/login')
+    window.location.href = '/login'
   }
 
   const handleSearchSubmit = (e) => {

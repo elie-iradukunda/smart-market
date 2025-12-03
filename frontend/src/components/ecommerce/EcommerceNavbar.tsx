@@ -4,12 +4,17 @@ import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function EcommerceNavbar() {
-    const { getCartCount } = useCart()
+    const { getCartCount, clearCart } = useCart()
     const { user, logout, isAuthenticated } = useAuth()
     const location = useLocation()
     const cartCount = getCartCount()
 
     const isActive = (path: string) => location.pathname === path
+
+    const handleLogout = () => {
+        clearCart()
+        logout()
+    }
 
     return (
         <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
@@ -79,7 +84,7 @@ export default function EcommerceNavbar() {
                                     </span>
                                 </div>
                                 <button
-                                    onClick={logout}
+                                    onClick={handleLogout}
                                     className="p-2 text-gray-700 hover:text-red-600 transition-colors"
                                     title="Logout"
                                 >

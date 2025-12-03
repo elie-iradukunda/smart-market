@@ -68,6 +68,21 @@ export const processLanariPayment = async (req, res) => {
     if (invoice.length === 0) {
       return res.status(404).json({ error: 'Invoice not found' });
     }
+
+    // Check for overpayment
+    const [existingPayments] = await pool.execute(
+      'SELECT SUM(amount) as total_paid FROM payments WHERE invoice_id = ? AND status = "completed"',
+      [invoice_id]
+    );
+    const totalPaidSoFar = parseFloat(existingPayments[0].total_paid || 0);
+    const remainingBalance = parseFloat(invoice[0].amount) - totalPaidSoFar;
+
+    if (parseFloat(amount) > remainingBalance) {
+      return res.status(400).json({ 
+        error: `Payment amount exceeds remaining balance. You can only pay up to ${remainingBalance}`,
+        remainingBalance 
+      });
+    }
     
     // Create payment record first
     const [result] = await pool.execute(
@@ -244,21 +259,34 @@ export const recordPayment = async (req, res) => {
     if (invoice.length === 0) {
       return res.status(404).json({ error: 'Invoice not found' });
     }
+
+    const invoiceAmount = parseFloat(invoice[0].amount);
+
+    // Calculate total paid so far
+    const [existingPayments] = await pool.execute(
+      'SELECT SUM(amount) as total_paid FROM payments WHERE invoice_id = ? AND status = "completed"',
+      [invoice_id]
+    );
+    const totalPaidSoFar = parseFloat(existingPayments[0].total_paid || 0);
+    const remainingBalance = invoiceAmount - totalPaidSoFar;
+
+    // Check for overpayment
+    if (parseFloat(amount) > remainingBalance) {
+      return res.status(400).json({ 
+        error: `Payment amount exceeds remaining balance. You can only pay up to ${remainingBalance}`,
+        remainingBalance 
+      });
+    }
     
     const [result] = await pool.execute(
       'INSERT INTO payments (invoice_id, method, amount, user_id, reference, status) VALUES (?, ?, ?, ?, ?, ?)',
       [invoice_id, method || 'cash', amount, req.user.id, reference || null, 'completed']
     );
 
-    const [payments] = await pool.execute(
-      'SELECT SUM(amount) as total_paid FROM payments WHERE invoice_id = ?',
-      [invoice_id]
-    );
-
-    const totalPaid = payments[0].total_paid || 0;
-    const invoiceAmount = invoice[0].amount;
-    const remainingBalance = invoiceAmount - totalPaid;
-    const status = totalPaid >= invoiceAmount ? 'paid' : 'partial';
+    // Recalculate total paid after new payment
+    const newTotalPaid = totalPaidSoFar + parseFloat(amount);
+    const newRemainingBalance = invoiceAmount - newTotalPaid;
+    const status = newTotalPaid >= invoiceAmount ? 'paid' : 'partial';
     
     await pool.execute('UPDATE invoices SET status = ? WHERE id = ?', [status, invoice_id]);
     
@@ -289,9 +317,9 @@ export const recordPayment = async (req, res) => {
     res.json({ 
       message: status === 'paid' ? 'Payment recorded - Invoice fully paid' : 'Payment recorded - Partial payment',
       status: status,
-      totalPaid: totalPaid,
+      totalPaid: newTotalPaid,
       invoiceAmount: invoiceAmount,
-      remainingBalance: remainingBalance > 0 ? remainingBalance : 0
+      remainingBalance: newRemainingBalance > 0 ? newRemainingBalance : 0
     });
   } catch (error) {
     console.error('Payment recording error:', error);
@@ -521,7 +549,15 @@ export const getInvoice = async (req, res) => {
     
     const [payments] = await pool.execute('SELECT * FROM payments WHERE invoice_id = ?', [id]);
     
-    res.json({ ...invoice[0], payments });
+    const totalPaid = payments.reduce((sum, p) => sum + (p.status === 'completed' ? parseFloat(p.amount) : 0), 0);
+    const remainingBalance = parseFloat(invoice[0].amount) - totalPaid;
+
+    res.json({ 
+      ...invoice[0], 
+      payments,
+      total_paid: totalPaid,
+      remaining_balance: remainingBalance > 0 ? remainingBalance : 0
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch invoice' });
   }
@@ -572,8 +608,25 @@ export const getPOSSales = async (req, res) => {
       JOIN users u ON ps.cashier_id = u.id
       ORDER BY ps.created_at DESC
     `);
-    res.json(sales);
+
+    // Fetch line items for each sale
+    const salesWithItems = await Promise.all(sales.map(async (sale) => {
+      const [items] = await pool.execute(`
+        SELECT pi.*, p.name as product_name
+        FROM pos_items pi
+        LEFT JOIN products p ON pi.item_id = p.id
+        WHERE pi.pos_id = ?
+      `, [sale.id]);
+      
+      return {
+        ...sale,
+        items: items
+      };
+    }));
+
+    res.json(salesWithItems);
   } catch (error) {
+    console.error('Failed to fetch POS sales:', error);
     res.status(500).json({ error: 'Failed to fetch POS sales' });
   }
 };

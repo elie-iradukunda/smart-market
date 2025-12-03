@@ -152,13 +152,49 @@ export const broadcastToSegment = async (req, res) => {
   }
 };
 
+// Create a new campaign
+export const createCampaign = async (req, res) => {
+  try {
+    const { name, platform, budget } = req.body;
+    
+    if (!name || !platform) {
+      return res.status(400).json({ error: 'Missing required fields: name, platform' });
+    }
+    
+    const [result] = await pool.execute(
+      'INSERT INTO campaigns (title, platform, budget, status) VALUES (?, ?, ?, ?)',
+      [name, platform, budget || 0, 'active']
+    );
+    
+    res.json({
+      success: true,
+      id: result.insertId,
+      message: 'Campaign created successfully'
+    });
+  } catch (error) {
+    console.error('Create campaign error:', error);
+    res.status(500).json({ error: 'Failed to create campaign' });
+  }
+};
+
 // Get all campaigns
 export const getCampaigns = async (req, res) => {
   try {
     const [campaigns] = await pool.execute(
       'SELECT * FROM campaigns ORDER BY created_at DESC'
     );
-    res.json(campaigns);
+    
+    // Map database fields to frontend expected format
+    const formattedCampaigns = campaigns.map(campaign => ({
+      id: campaign.id,
+      name: campaign.title || `Campaign #${campaign.id}`,
+      channel: campaign.platform || 'email',
+      budget: campaign.budget || 0,
+      status: campaign.status || 'active',
+      created_at: campaign.created_at
+    }));
+    
+    res.json(formattedCampaigns);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch campaigns' });
   }

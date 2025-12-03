@@ -74,7 +74,7 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen: b
 
   const handleLogout = () => {
     clearAuth();
-    navigate('/login');
+    window.location.href = '/login';
   };
 
   return (

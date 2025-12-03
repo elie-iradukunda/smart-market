@@ -147,16 +147,10 @@ export default function MarketingDashboard() {
                   Ad performance
                 </Link>
                 <Link
-                  to="/crm/leads"
+                  to="/marketing/ads"
                   className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
                 >
-                  Leads
-                </Link>
-                <Link
-                  to="/finance/reports"
-                  className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
-                >
-                  Marketing ROI
+                  Ads Management
                 </Link>
                 <Link
                   to="/ai/overview"

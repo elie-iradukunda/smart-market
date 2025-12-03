@@ -43,12 +43,6 @@ const sidebarItems: SidebarItem[] = [
         permission: 'ad.view',
     },
     {
-        label: 'Leads',
-        path: '/crm/leads',
-        icon: Users,
-        permission: 'lead.manage',
-    },
-    {
         label: 'Performance',
         path: '/marketing/ad-performance',
         icon: BarChart3,
@@ -86,7 +80,7 @@ const MarketingSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (
 
     const handleLogout = () => {
         clearAuth()
-        navigate('/login')
+        window.location.href = '/login'
     }
 
     // Filter items based on permissions
