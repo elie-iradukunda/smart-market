@@ -111,6 +111,7 @@ const ROUTE_PERMISSIONS = {
   
   // Production
   'GET /work-orders': [PERMISSIONS.WORKORDER_VIEW],
+  'GET /work-orders/:id': [PERMISSIONS.WORKORDER_VIEW],
   'POST /work-orders': [PERMISSIONS.WORKORDER_CREATE],
   'PUT /work-orders/:id': [PERMISSIONS.WORKORDER_UPDATE],
   'POST /work-logs': [PERMISSIONS.WORKLOG_CREATE],
