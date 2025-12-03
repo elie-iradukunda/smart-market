@@ -19,12 +19,10 @@ import marketingRoutes from './routes/marketing.js';
 import communicationRoutes from './routes/communication.js';
 import aiRoutes from './routes/ai.js';
 import reportRoutes from './routes/reports.js';
-import uploadRoutes from './routes/upload.js';
-import roleRoutes from './routes/roles.js';
-import paymentRoutes from './routes/payments.js';
 import productRoutes from './routes/products.js';
 import productImageUploadRoutes from './routes/productImageUpload.js';
 import ecommerceOrdersRoutes from './routes/ecommerceOrders.js';
+import adsRoutes from './routes/ads.js';
 
 import './jobs/scheduler.js';
 
@@ -92,6 +90,38 @@ app.get('/api/work-orders/:id', async (req, res) => {
     res.json(workOrder[0]);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch work order' });
+  }
+});
+
+
+// Direct public ads routes (no authentication required)
+app.get('/api/ads/public', async (req, res) => {
+  try {
+    const [ads] = await pool.execute(
+      `SELECT id, title, description, image_url, link_url, button_text, background_color, text_color, display_order, impressions, clicks FROM ads WHERE is_active = true AND (start_date IS NULL OR start_date <= CURDATE()) AND (end_date IS NULL OR end_date >= CURDATE()) ORDER BY display_order ASC, created_at DESC`
+    );
+    res.json(ads);
+  } catch (error) {
+    console.error('Error fetching public ads:', error);
+    res.status(500).json({ error: 'Failed to fetch ads' });
+  }
+});
+
+app.post('/api/ads/public/:id/impression', async (req, res) => {
+  try {
+    await pool.execute('UPDATE ads SET impressions = impressions + 1 WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to track impression' });
+  }
+});
+
+app.post('/api/ads/public/:id/click', async (req, res) => {
+  try {
+    await pool.execute('UPDATE ads SET clicks = clicks + 1 WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to track click' });
   }
 });
 
@@ -369,6 +399,7 @@ app.use('/api', inventoryRoutes);
 app.use('/api', productionRoutes);
 app.use('/api', financeRoutes);
 app.use('/api', marketingRoutes);
+app.use('/api', adsRoutes);
 app.use('/api', communicationRoutes);
 app.use('/api', aiRoutes);
 app.use('/api', reportRoutes);

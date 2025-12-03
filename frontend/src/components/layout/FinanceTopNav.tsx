@@ -33,7 +33,7 @@ export default function FinanceTopNav({ onMenuClick }: { onMenuClick?: () => voi
 
   const handleLogout = () => {
     clearAuth()
-    navigate('/login')
+    window.location.href = '/login'
   }
 
   const handleSearchSubmit = (e) => {

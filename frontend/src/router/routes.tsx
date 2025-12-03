@@ -48,6 +48,7 @@ import FinancialReportsPage from '../pages/Finance/FinancialReportsPage';
 import CampaignsPage from '../pages/Marketing/CampaignsPage';
 import CampaignDetailPage from '../pages/Marketing/CampaignDetailPage';
 import AdPerformancePage from '../pages/Marketing/AdPerformancePage';
+import AdsManagementPage from '../pages/Marketing/AdsManagementPage';
 
 import InboxPage from '../pages/Communications/InboxPage';
 import ConversationDetailPage from '../pages/Communications/ConversationDetailPage';
@@ -116,6 +117,7 @@ export const routes = [
   { path: '/marketing/campaigns', element: <CampaignsPage /> },
   { path: '/marketing/campaigns/:id', element: <CampaignDetailPage /> },
   { path: '/marketing/ad-performance', element: <AdPerformancePage /> },
+  { path: '/marketing/ads', element: <AdsManagementPage /> },
 
   { path: '/communications/inbox', element: <InboxPage /> },
   { path: '/communications/conversations/:id', element: <ConversationDetailPage /> },

@@ -7,9 +7,8 @@ import { Menu } from 'lucide-react'
 const MARKETING_LINKS = [
   { path: '/dashboard/marketing', label: 'Overview' },
   { path: '/marketing/campaigns', label: 'Campaigns' },
+  { path: '/marketing/ads', label: 'Ads Management' },
   { path: '/marketing/ad-performance', label: 'Ad performance' },
-  { path: '/crm/leads', label: 'Leads' },
-  { path: '/finance/reports', label: 'Marketing ROI' },
   { path: '/ai/overview', label: 'AI insights' },
 ]
 
@@ -28,7 +27,7 @@ export default function MarketingTopNav({ onMenuClick }: MarketingTopNavProps) {
 
   const handleLogout = () => {
     clearAuth()
-    navigate('/login')
+    window.location.href = '/login'
   }
 
   return (

@@ -86,6 +86,9 @@ export function getAuthUser(): ApiUser | null {
 export function clearAuth() {
   localStorage.removeItem('auth_token')
   localStorage.removeItem('auth_user')
+  localStorage.removeItem('cart')
+  sessionStorage.removeItem('token')
+  sessionStorage.removeItem('currentUser')
 }
 
 // Simple permission mapping per role_id for UI visibility (must stay in sync with backend seeds)

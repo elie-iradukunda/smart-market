@@ -10,7 +10,8 @@ import {
     ChevronDown,
     ChevronRight,
     LogOut,
-    Target
+    Target,
+    Monitor
 } from 'lucide-react'
 import { clearAuth, getAuthUser, currentUserHasPermission } from '@/utils/apiClient'
 
@@ -36,10 +37,10 @@ const sidebarItems: SidebarItem[] = [
         permission: 'campaign.manage',
     },
     {
-        label: 'Leads',
-        path: '/crm/leads',
-        icon: Users,
-        permission: 'lead.manage',
+        label: 'Ads Management',
+        path: '/marketing/ads',
+        icon: Monitor,
+        permission: 'ad.view',
     },
     {
         label: 'Performance',
@@ -79,7 +80,7 @@ const MarketingSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (
 
     const handleLogout = () => {
         clearAuth()
-        navigate('/login')
+        window.location.href = '/login'
     }
 
     // Filter items based on permissions

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchOrders } from '../../api/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { ListOrdered, Users, Tag, Clock, Package, AlertTriangle, ChevronRight, Dices } from 'lucide-react'
+import { ListOrdered, Users, Tag, Clock, Package, AlertTriangle, ChevronRight, Dices, ChevronLeft } from 'lucide-react'
 
 // --- Utility Functions for Design ---
 
@@ -59,11 +59,12 @@ const getPaymentStatusClasses = (paymentStatus) => {
 // --- OrdersPage Component ---
 
 export default function OrdersPage() {
-  // KEEPING ALL STATE AND BACKEND LOGIC AS IS
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filterMode, setFilterMode] = useState<'active' | 'delivered' | 'all'>('active')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 8
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -80,6 +81,7 @@ export default function OrdersPage() {
           date: order.date || new Date(Date.now() - Math.random() * 86400000 * 30).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric' }),
         })) : []
         setOrders(processedData)
+        setCurrentPage(1)
       })
       .catch(err => {
         if (!isMounted) return
@@ -101,6 +103,23 @@ export default function OrdersPage() {
     if (filterMode === 'active') return status !== 'delivered'
     return true
   })
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedOrders = filteredOrders.slice(startIndex, endIndex)
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
+  const handleFilterChange = (mode) => {
+    setFilterMode(mode)
+    setCurrentPage(1) // Reset to first page when filter changes
+  }
 
   // Component to render the status pill
   const StatusPill = ({ status }) => (
@@ -133,7 +152,7 @@ export default function OrdersPage() {
     if (loading) {
       return (
         <div className="flex items-center justify-center p-10">
-          <Dices className="h-6 w-6 mr-3 text-blue-500 animate-spin-slow" /> {/* Custom animation class assumed */}
+          <Dices className="h-6 w-6 mr-3 text-blue-500 animate-spin" />
           <p className="text-base text-gray-500">Fetching the latest orders, please wait...</p>
         </div>
       )
@@ -168,84 +187,6 @@ export default function OrdersPage() {
                   Active Orders & History
                 </h1>
               </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-
-                  {/* Table Header - Sticky and Blue Tinted */}
-                  <thead className="bg-indigo-50/70 border-b border-indigo-200 sticky top-0 z-10">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        Order #
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        <Users className="inline h-4 w-4 mr-2" />
-                        Customer
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        <Clock className="inline h-4 w-4 mr-2" />
-                        Date
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        <Tag className="inline h-4 w-4 mr-2" />
-                        Total
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                        Payment
-                      </th>
-                      <th className="px-6 py-4"></th>
-                    </tr>
-                  </thead>
-
-                  {/* Table Body - Dynamic Rows with Hover and Transition */}
-                  <tbody className="bg-white divide-y divide-gray-100">
-                    {filteredOrders.map((order, index) => (
-                      <tr
-                        key={order.id}
-                        onClick={() => navigate(`/orders/${order.id}`)}
-                        // Hover and Transition effects
-                        className="group hover:bg-blue-50/50 transition duration-300 ease-in-out cursor-pointer transform hover:shadow-lg hover:z-20 relative"
-                        // Simple "fade-up" effect on initial load (requires external CSS library like animate.css or custom keyframes)
-                        style={{ animation: `fadeInUp 0.5s ease-out forwards`, animationDelay: `${index * 0.05}s`, opacity: 0 }}
-                      >
-                        {/* Order ID/Number */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 transition duration-300 group-hover:text-indigo-800">
-                          #{String(order.id).substring(0, 8).toUpperCase()}
-                        </td>
-                        {/* Customer */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 transition duration-300 group-hover:text-gray-800">
-                          {order.customer}
-                        </td>
-                        {/* Date */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 transition duration-300">
-                          {order.date || 'N/A'}
-                        </td>
-                        {/* Total - Uses the formatted span for blue color */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {formatCurrency(order.total)}
-                        </td>
-                        {/* Status */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <StatusPill status={order.status} />
-                        </td>
-                        {/* Payment Status */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <PaymentStatusPill paymentStatus={order.paymentStatus} />
-                        </td>
-                        {/* Action/View Link with animation */}
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <span className="inline-flex items-center text-blue-600 opacity-80 group-hover:opacity-100 group-hover:font-semibold transition-all duration-300">
-                            Details
-                            <ChevronRight className="h-4 w-4 ml-1 transition-transform duration-300 group-hover:translate-x-1" />
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             </div>
 
             {/* Orders Table/List Section - Elevated Design */}
@@ -260,21 +201,21 @@ export default function OrdersPage() {
                     <div className="inline-flex gap-2 bg-slate-100 rounded-full p-1">
                       <button
                         type="button"
-                        onClick={() => setFilterMode('active')}
+                        onClick={() => handleFilterChange('active')}
                         className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${filterMode === 'active' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}
                       >
                         Active
                       </button>
                       <button
                         type="button"
-                        onClick={() => setFilterMode('delivered')}
+                        onClick={() => handleFilterChange('delivered')}
                         className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${filterMode === 'delivered' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}
                       >
                         Delivered
                       </button>
                       <button
                         type="button"
-                        onClick={() => setFilterMode('all')}
+                        onClick={() => handleFilterChange('all')}
                         className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${filterMode === 'all' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}
                       >
                         All
@@ -314,14 +255,11 @@ export default function OrdersPage() {
 
                       {/* Table Body - Dynamic Rows with Hover and Transition */}
                       <tbody className="bg-white divide-y divide-gray-100">
-                        {filteredOrders.map((order, index) => (
+                        {paginatedOrders.map((order, index) => (
                           <tr
                             key={order.id}
                             onClick={() => navigate(`/orders/${order.id}`)}
-                            // Hover and Transition effects
                             className="group hover:bg-blue-50/50 transition duration-300 ease-in-out cursor-pointer transform hover:shadow-lg hover:z-20 relative"
-                            // Simple "fade-up" effect on initial load (requires external CSS library like animate.css or custom keyframes)
-                            style={{ animation: `fadeInUp 0.5s ease-out forwards`, animationDelay: `${index * 0.05}s`, opacity: 0 }}
                           >
                             {/* Order ID/Number */}
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 transition duration-300 group-hover:text-indigo-800">
@@ -359,6 +297,60 @@ export default function OrdersPage() {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                      <div className="text-sm text-gray-600">
+                        Showing {startIndex + 1} to {Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length} orders
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => goToPage(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="p-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+
+                        <div className="flex items-center gap-1">
+                          {[...Array(totalPages)].map((_, i) => {
+                            const page = i + 1
+                            // Show first page, last page, current page, and pages around current
+                            if (
+                              page === 1 ||
+                              page === totalPages ||
+                              (page >= currentPage - 1 && page <= currentPage + 1)
+                            ) {
+                              return (
+                                <button
+                                  key={page}
+                                  onClick={() => goToPage(page)}
+                                  className={`px-3 py-1 rounded-lg text-sm font-medium transition ${currentPage === page
+                                      ? 'bg-indigo-600 text-white'
+                                      : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                    }`}
+                                >
+                                  {page}
+                                </button>
+                              )
+                            } else if (page === currentPage - 2 || page === currentPage + 2) {
+                              return <span key={page} className="px-2 text-gray-400">...</span>
+                            }
+                            return null
+                          })}
+                        </div>
+
+                        <button
+                          onClick={() => goToPage(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="p-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

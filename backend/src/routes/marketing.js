@@ -5,6 +5,7 @@ import {
   broadcastToAllCustomers, 
   broadcastToSegment,
   getCampaigns,
+  createCampaign,
   getCampaign
 } from '../controllers/marketingController.js';
 
@@ -19,6 +20,7 @@ router.post('/broadcast/segment', broadcastToSegment);
 
 // Campaign tracking
 router.get('/campaigns', getCampaigns);
+router.post('/campaigns', createCampaign);
 router.get('/campaigns/:id', getCampaign);
 
 export default router;

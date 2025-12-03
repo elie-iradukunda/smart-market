@@ -54,7 +54,18 @@ export const createWorkOrder = async (req, res) => {
 
 export const getWorkOrders = async (req, res) => {
   try {
-    const [workOrders] = await pool.execute('SELECT * FROM work_orders ORDER BY id DESC');
+    const [workOrders] = await pool.execute(`
+      SELECT 
+        wo.*,
+        u.name as assigned_user_name,
+        o.id as order_number,
+        c.name as customer_name
+      FROM work_orders wo
+      LEFT JOIN users u ON wo.assigned_to = u.id
+      LEFT JOIN orders o ON wo.order_id = o.id
+      LEFT JOIN customers c ON o.customer_id = c.id
+      ORDER BY wo.id DESC
+    `);
     res.json(workOrders);
   } catch (error) {
     console.error('Get work orders error:', error);
@@ -65,7 +76,22 @@ export const getWorkOrders = async (req, res) => {
 export const getWorkOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const [workOrder] = await pool.execute('SELECT * FROM work_orders WHERE id = ?', [id]);
+    const [workOrder] = await pool.execute(`
+      SELECT 
+        wo.*,
+        u.name as assigned_user_name,
+        u.email as assigned_user_email,
+        o.id as order_number,
+        o.status as order_status,
+        o.quote_id,
+        c.name as customer_name,
+        c.email as customer_email
+      FROM work_orders wo
+      LEFT JOIN users u ON wo.assigned_to = u.id
+      LEFT JOIN orders o ON wo.order_id = o.id
+      LEFT JOIN customers c ON o.customer_id = c.id
+      WHERE wo.id = ?
+    `, [id]);
     
     if (workOrder.length === 0) {
       return res.status(404).json({ error: 'Work order not found' });
