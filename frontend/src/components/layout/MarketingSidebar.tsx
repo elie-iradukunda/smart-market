@@ -10,7 +10,8 @@ import {
     ChevronDown,
     ChevronRight,
     LogOut,
-    Target
+    Target,
+    Monitor
 } from 'lucide-react'
 import { clearAuth, getAuthUser, currentUserHasPermission } from '@/utils/apiClient'
 
@@ -34,6 +35,12 @@ const sidebarItems: SidebarItem[] = [
         path: '/marketing/campaigns',
         icon: Megaphone,
         permission: 'campaign.manage',
+    },
+    {
+        label: 'Ads Management',
+        path: '/marketing/ads',
+        icon: Monitor,
+        permission: 'ad.view',
     },
     {
         label: 'Leads',

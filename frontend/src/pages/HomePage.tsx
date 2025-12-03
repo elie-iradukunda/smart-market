@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import ProductCard from '@/components/ecommerce/ProductCard'
 import { fetchProducts } from '@/data/products'
 import { Product } from '@/contexts/CartContext'
-import { ArrowRight, ShoppingBag, Truck, Shield, Headphones, Sparkles, Palette, Zap } from 'lucide-react'
+import { ArrowRight, ShoppingBag, Headphones, Sparkles, Palette, Zap } from 'lucide-react'
+import AdsCarousel from '@/components/ads/AdsCarousel'
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -66,6 +67,13 @@ export default function HomePage() {
           <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
             <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white" />
           </svg>
+        </div>
+      </section>
+
+      {/* Ads Carousel Section */}
+      <section className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AdsCarousel />
         </div>
       </section>
 
