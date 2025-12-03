@@ -126,7 +126,7 @@ export default function InventoryReportsPage() {
               <DollarSign size={16} className="text-indigo-500" />
             </div>
             <p className="text-2xl font-bold text-indigo-900">
-              {stats.totalValue ? `$${stats.totalValue.toFixed(2)}` : '$0.00'}
+              {stats.totalValue ? `RF ${stats.totalValue.toFixed(2)}` : 'RF 0.00'}
             </p>
           </div>
         </div>
@@ -273,7 +273,7 @@ export default function InventoryReportsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {po.total_amount != null ? `$${Number(po.total_amount).toFixed(2)}` : '—'}
+                        {po.total_amount != null ? `RF ${Number(po.total_amount).toFixed(2)}` : '—'}
                       </td>
                     </tr>
                   ))}

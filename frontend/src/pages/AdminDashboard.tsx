@@ -87,7 +87,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="rounded-xl bg-white/70 px-4 py-3 border border-gray-100 shadow-lg">
                   <dt className="text-xs font-medium text-gray-500">Invoices unpaid</dt>
-                  <dd className="mt-1 text-2xl font-bold text-gray-900">$3,200</dd>
+                  <dd className="mt-1 text-2xl font-bold text-gray-900">RF 3,200</dd>
                 </div>
                 {/* Highlight Card for Alerts - Made slightly more subtle/premium */}
                 <div className="rounded-xl bg-amber-50/90 px-4 py-3 border border-amber-200 shadow-lg ring-1 ring-amber-500/10">

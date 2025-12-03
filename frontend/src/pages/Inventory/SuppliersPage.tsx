@@ -27,8 +27,12 @@ interface SupplierFormData {
   email: string;
   phone: string;
   address: string;
+  city: string;
+  country: string;
   tax_id: string;
   payment_terms: PaymentTerm;
+  bank_name: string;
+  bank_account: string;
   rating: number;
   notes: string;
   is_active: boolean;
@@ -74,8 +78,12 @@ const initialFormState: SupplierFormData = {
   email: '',
   phone: '',
   address: '',
+  city: '',
+  country: 'Rwanda',
   tax_id: '',
   payment_terms: 'net_30',
+  bank_name: '',
+  bank_account: '',
   rating: 0,
   notes: '',
   is_active: true,
@@ -153,8 +161,12 @@ export default function SuppliersPage() {
       email: supplier.email,
       phone: supplier.phone,
       address: supplier.address,
+      city: supplier.city,
+      country: supplier.country,
       tax_id: supplier.tax_id,
       payment_terms: supplier.payment_terms,
+      bank_name: supplier.bank_name,
+      bank_account: supplier.bank_account,
       rating: supplier.rating,
       notes: supplier.notes,
       is_active: supplier.is_active,
@@ -190,8 +202,12 @@ export default function SuppliersPage() {
         email: form.email,
         phone: form.phone,
         address: form.address,
+        city: form.city,
+        country: form.country,
         tax_id: form.tax_id,
         payment_terms: form.payment_terms,
+        bank_name: form.bank_name,
+        bank_account: form.bank_account,
         rating: Number(form.rating) || 0,
         notes: form.notes,
         is_active: form.is_active,
@@ -362,6 +378,35 @@ export default function SuppliersPage() {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+                      City
+                    </label>
+                    <input
+                      id="city"
+                      type="text"
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                      placeholder="Kigali"
+                      value={form.city}
+                      onChange={(e) => setForm({ ...form, city: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+                      Country
+                    </label>
+                    <input
+                      id="country"
+                      type="text"
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                      placeholder="Rwanda"
+                      value={form.country}
+                      onChange={(e) => setForm({ ...form, country: e.target.value })}
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label htmlFor="material_id" className="block text-sm font-medium text-gray-700 mb-1">
                     Material Supplied
@@ -394,6 +439,35 @@ export default function SuppliersPage() {
                     onChange={(e) => setForm({ ...form, material_notes: e.target.value })}
                     placeholder="Any specific notes about this material from this supplier"
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="bank_name" className="block text-sm font-medium text-gray-700 mb-1">
+                      Bank Name
+                    </label>
+                    <input
+                      id="bank_name"
+                      type="text"
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                      placeholder="Bank of Kigali"
+                      value={form.bank_name}
+                      onChange={(e) => setForm({ ...form, bank_name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="bank_account" className="block text-sm font-medium text-gray-700 mb-1">
+                      Bank Account
+                    </label>
+                    <input
+                      id="bank_account"
+                      type="text"
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+                      placeholder="000-0000-000"
+                      value={form.bank_account}
+                      onChange={(e) => setForm({ ...form, bank_account: e.target.value })}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

@@ -638,7 +638,7 @@ class EmailService {
 
   // Supplier Welcome Email
   async sendSupplierWelcome(to, data) {
-    const subject = `Welcome to ${COMPANY_NAME} - Supplier Portal Access`;
+    const subject = `Welcome to ${COMPANY_NAME} - Supplier Registration Confirmation`;
     const content = `
     <!DOCTYPE html>
     <html>
@@ -652,52 +652,73 @@ class EmailService {
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center;">
           <h1 style="margin: 0; font-size: 28px; font-weight: bold;">WELCOME TO ${COMPANY_NAME.toUpperCase()}</h1>
-          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Supplier Portal Access</p>
+          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Supplier Registration Confirmation</p>
         </div>
         
         <!-- Content -->
         <div style="padding: 30px;">
           <p style="margin: 0 0 20px 0; color: #666; line-height: 1.6;">Dear ${data.contact_name || 'Valued Supplier'},</p>
-          <p style="margin: 0 0 20px 0; color: #666; line-height: 1.6;">Welcome to the ${COMPANY_NAME} supplier portal! We're excited to have you as one of our trusted suppliers.</p>
+          <p style="margin: 0 0 20px 0; color: #666; line-height: 1.6;">Welcome to the ${COMPANY_NAME} supplier network! We have successfully registered your company in our system.</p>
+          <p style="margin: 0 0 20px 0; color: #666; line-height: 1.6;">Please review the details we have on file for you below:</p>
           
-          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #28a745;">
-            <h3 style="margin: 0 0 15px 0; color: #155724; font-size: 20px;">Your Account Details</h3>
-            <table style="width: 100%; border-collapse: collapse;">
+          <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #28a745;">
+            <h3 style="margin: 0 0 20px 0; color: #155724; font-size: 18px; border-bottom: 1px solid #e9ecef; padding-bottom: 10px;">Company Information</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
               <tr>
-                <td style="padding: 8px 0; color: #666; width: 120px;"><strong>Company:</strong></td>
+                <td style="padding: 8px 0; color: #666; width: 140px;"><strong>Company Name:</strong></td>
                 <td style="padding: 8px 0; color: #333; font-weight: bold;">${data.company_name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;"><strong>Contact Person:</strong></td>
+                <td style="padding: 8px 0; color: #333;">${data.contact_name || 'N/A'}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #666;"><strong>Email:</strong></td>
                 <td style="padding: 8px 0; color: #333;">${to}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #666;"><strong>Contact:</strong></td>
-                <td style="padding: 8px 0; color: #333;">${data.contact_name || 'N/A'}</td>
+                <td style="padding: 8px 0; color: #666;"><strong>Phone:</strong></td>
+                <td style="padding: 8px 0; color: #333;">${data.phone || 'N/A'}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #666; vertical-align: top;"><strong>Next Steps:</strong></td>
+                <td style="padding: 8px 0; color: #666; vertical-align: top;"><strong>Address:</strong></td>
                 <td style="padding: 8px 0; color: #333;">
-                  <ol style="margin: 0; padding-left: 20px;">
-                    <li style="margin-bottom: 8px;">Log in to the supplier portal using the button below</li>
-                    <li style="margin-bottom: 8px;">Complete your supplier profile</li>
-                    <li>Upload your product catalog and pricing</li>
-                  </ol>
+                  ${data.address || ''}<br>
+                  ${data.city ? data.city + ', ' : ''}${data.country || ''}
                 </td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;"><strong>Tax ID:</strong></td>
+                <td style="padding: 8px 0; color: #333;">${data.tax_id || 'N/A'}</td>
+              </tr>
+            </table>
+
+            <h3 style="margin: 25px 0 20px 0; color: #155724; font-size: 18px; border-bottom: 1px solid #e9ecef; padding-bottom: 10px;">Financial Details</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 8px 0; color: #666; width: 140px;"><strong>Payment Terms:</strong></td>
+                <td style="padding: 8px 0; color: #333; text-transform: capitalize;">${(data.payment_terms || 'net_30').replace('_', ' ')}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;"><strong>Bank Name:</strong></td>
+                <td style="padding: 8px 0; color: #333;">${data.bank_name || 'N/A'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;"><strong>Bank Account:</strong></td>
+                <td style="padding: 8px 0; color: #333;">${data.bank_account || 'N/A'}</td>
               </tr>
             </table>
           </div>
           
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.SUPPLIER_PORTAL_URL || 'https://suppliers.smartmarket.rw/login'}" 
-               style="display: inline-block; background-color: #28a745; color: white; text-decoration: none; padding: 12px 25px; border-radius: 4px; font-weight: bold; font-size: 16px;">
-              Access Supplier Portal
-            </a>
+          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <p style="margin: 0; color: #155724; font-size: 14px;">
+              <strong>Note:</strong> If any of these details are incorrect, please reply to this email immediately so we can update our records.
+            </p>
           </div>
           
-          <p style="margin: 0 0 20px 0; color: #666; line-height: 1.6;">If you have any questions or need assistance, please don't hesitate to contact our supplier relations team at ${ADMIN_EMAIL}.</p>
+          <p style="margin: 0 0 20px 0; color: #666; line-height: 1.6;">We look forward to a successful partnership!</p>
           
-          <p style="margin: 0; color: #666; line-height: 1.6;">We look forward to a successful partnership!</p>
+          <p style="margin: 0; color: #666; line-height: 1.6;">Best regards,<br>The ${COMPANY_NAME} Procurement Team</p>
         </div>
         
         <!-- Footer -->
@@ -711,6 +732,7 @@ class EmailService {
     `;
     return this.sendEmail(to, subject, content);
   }
+
 
   // Purchase Order Email
   async sendPurchaseOrder(to, data) {
