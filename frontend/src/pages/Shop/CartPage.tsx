@@ -1,13 +1,98 @@
+import React, { useState } from 'react'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react'
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Package } from 'lucide-react'
 
 // Helper to get full image URL
 const getImageUrl = (path: string) => {
     if (!path) return ''
     if (path.startsWith('http')) return path
     return `http://localhost:3000${path}`
+}
+
+// Cart Item Component
+interface CartItemProps {
+    item: any
+    onRemove: (id: number) => void
+    onUpdateQuantity: (id: number, quantity: number) => void
+}
+
+const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onUpdateQuantity }) => {
+    const [imageError, setImageError] = useState(false)
+    const hasImage = item.image && !imageError
+    const imageUrl = getImageUrl(item.image || '')
+
+    return (
+        <div className="bg-white rounded-xl shadow-sm p-6 flex gap-6 hover:shadow-md transition-shadow">
+            {/* Product Image */}
+            <div className="w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+                {hasImage && imageUrl ? (
+                    <img
+                        src={imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        onError={() => setImageError(true)}
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+                        <Package className="w-10 h-10 text-gray-400" strokeWidth={1.5} />
+                    </div>
+                )}
+            </div>
+
+            {/* Product Info */}
+            <div className="flex-1 flex flex-col justify-between">
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                        {item.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm line-clamp-2">
+                        {item.description}
+                    </p>
+                </div>
+
+                <div className="flex items-center justify-between mt-4">
+                    {/* Quantity Controls */}
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                        >
+                            <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="w-12 text-center font-semibold">
+                            {item.quantity}
+                        </span>
+                        <button
+                            onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    {/* Price */}
+                    <div className="text-right">
+                        <p className="text-2xl font-bold text-gray-900">
+                            {(item.price * item.quantity).toLocaleString('en-RW')} RF
+                        </p>
+                        <p className="text-sm text-gray-500">
+                            {item.price.toLocaleString('en-RW')} RF each
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Remove Button */}
+            <button
+                onClick={() => onRemove(item.id)}
+                className="text-red-500 hover:text-red-700 transition-colors"
+            >
+                <Trash2 className="w-5 h-5" />
+            </button>
+        </div>
+    )
 }
 
 export default function CartPage() {
@@ -62,70 +147,12 @@ export default function CartPage() {
                     {/* Cart Items */}
                     <div className="lg:col-span-2 space-y-4">
                         {cart.map((item) => (
-                            <div
+                            <CartItem
                                 key={item.id}
-                                className="bg-white rounded-xl shadow-sm p-6 flex gap-6 hover:shadow-md transition-shadow"
-                            >
-                                {/* Product Image */}
-                                <div className="w-32 h-32 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
-                                    <img
-                                        src={getImageUrl(item.image)}
-                                        alt={item.name}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-
-                                {/* Product Info */}
-                                <div className="flex-1 flex flex-col justify-between">
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                            {item.name}
-                                        </h3>
-                                        <p className="text-gray-600 text-sm line-clamp-2">
-                                            {item.description}
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-center justify-between mt-4">
-                                        {/* Quantity Controls */}
-                                        <div className="flex items-center gap-3">
-                                            <button
-                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                                            >
-                                                <Minus className="w-4 h-4" />
-                                            </button>
-                                            <span className="w-12 text-center font-semibold">
-                                                {item.quantity}
-                                            </span>
-                                            <button
-                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                                            >
-                                                <Plus className="w-4 h-4" />
-                                            </button>
-                                        </div>
-
-                                        {/* Price */}
-                                        <div className="text-right">
-                                            <p className="text-2xl font-bold text-gray-900">
-                                                {(item.price * item.quantity).toLocaleString('en-RW')} RF
-                                            </p>
-                                            <p className="text-sm text-gray-500">
-                                                {item.price.toLocaleString('en-RW')} RF each
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Remove Button */}
-                                <button
-                                    onClick={() => removeFromCart(item.id)}
-                                    className="text-red-500 hover:text-red-700 transition-colors"
-                                >
-                                    <Trash2 className="w-5 h-5" />
-                                </button>
-                            </div>
+                                item={item}
+                                onRemove={removeFromCart}
+                                onUpdateQuantity={updateQuantity}
+                            />
                         ))}
                     </div>
 

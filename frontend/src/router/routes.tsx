@@ -22,6 +22,8 @@ import OrderDetailPage from '../pages/Orders/OrderDetailPage';
 
 import WorkOrdersBoardPage from '../pages/Production/WorkOrdersBoardPage';
 import WorkOrderDetailPage from '../pages/Production/WorkOrderDetailPage';
+import ProductionSchedulePage from '../pages/Production/ProductionSchedulePage';
+import NewWorkOrderPage from '../pages/Production/NewWorkOrderPage';
 
 import MaterialsPage from '../pages/Inventory/MaterialsPage';
 import MaterialDetailPage from '../pages/Inventory/MaterialDetailPage';
@@ -33,6 +35,7 @@ import StockMovementsPage from '../pages/Inventory/StockMovementsPage';
 import InventoryReportsPage from '../pages/Inventory/InventoryReportsPage';
 import ProductsPage from '../pages/Inventory/ProductsPage';
 import OperationsReportsPage from '../pages/Reports/OperationsReportsPage';
+import ProductionReportsPage from '../pages/Reports/ProductionReportsPage';
 
 import PosTerminalPage from '../pages/POS/PosTerminalPage';
 import PosSalesHistoryPage from '../pages/POS/PosSalesHistoryPage';
@@ -90,6 +93,8 @@ export const routes = [
 
   { path: '/production/work-orders', element: <WorkOrdersBoardPage /> },
   { path: '/production/work-orders/:id', element: <WorkOrderDetailPage /> },
+  { path: '/production/schedule', element: <ProductionSchedulePage /> },
+  { path: '/production/new-order', element: <NewWorkOrderPage /> },
 
   { path: '/inventory/materials', element: <MaterialsPage /> },
   { path: '/inventory/materials/:sku', element: <MaterialDetailPage /> },
@@ -102,6 +107,7 @@ export const routes = [
   { path: '/inventory/products', element: <ProductsPage /> },
 
   { path: '/reports/operations', element: <OperationsReportsPage /> },
+  { path: '/reports/production', element: <ProductionReportsPage /> },
 
   { path: '/pos/terminal', element: <PosTerminalPage /> },
   { path: '/pos/sales-history', element: <PosSalesHistoryPage /> },

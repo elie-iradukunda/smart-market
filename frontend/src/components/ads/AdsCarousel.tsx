@@ -72,8 +72,13 @@ export default function AdsCarousel() {
 
     if (isLoading) {
         return (
-            <div className="w-full h-96 bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 animate-pulse rounded-2xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+            <div className="w-full h-96 md:h-[500px] bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 animate-pulse rounded-2xl relative overflow-hidden">
+                <div 
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    style={{
+                        animation: 'shimmer 2s linear infinite',
+                    }}
+                />
             </div>
         )
     }
@@ -100,35 +105,62 @@ export default function AdsCarousel() {
                                     : 'opacity-0 translate-x-full scale-95 z-0'
                             }`}
                         style={{
-                            backgroundColor: ad.background_color || '#4F46E5',
+                            backgroundColor: ad.background_color || '#7C3AED',
                             color: ad.text_color || '#FFFFFF',
                         }}
                     >
-                        {/* Animated gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-transparent to-black/20 animate-gradient" />
-
                         {/* Background Image with Ken Burns effect */}
-                        {ad.image_url && (
+                        {ad.image_url && getImageUrl(ad.image_url) ? (
                             <div className="absolute inset-0 overflow-hidden">
-                                <div
-                                    className="absolute inset-0 bg-cover bg-center opacity-40 animate-ken-burns"
+                                <img
+                                    src={getImageUrl(ad.image_url)!}
+                                    alt={ad.title}
+                                    className="absolute inset-0 w-full h-full object-cover"
                                     style={{
-                                        backgroundImage: `url(${getImageUrl(ad.image_url)})`,
-                                        backgroundSize: '110%'
+                                        animation: 'kenBurns 20s ease-in-out infinite',
+                                    }}
+                                    onError={(e) => {
+                                        // Hide image on error, show gradient background instead
+                                        e.currentTarget.style.display = 'none'
                                     }}
                                 />
+                                {/* Overlay for better text readability */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/10" />
                             </div>
+                        ) : (
+                            /* Subtle gradient overlay when no image - using ad's background color */
+                            <div 
+                                className="absolute inset-0"
+                                style={{
+                                    background: `linear-gradient(135deg, ${ad.background_color || '#7C3AED'} 0%, ${ad.background_color || '#6D28D9'} 50%, ${ad.background_color || '#5B21B6'} 100%)`,
+                                }}
+                            />
                         )}
 
                         {/* Content */}
                         <div className="relative h-full flex items-center justify-center px-8 md:px-16 z-20">
                             <div className="max-w-4xl text-center space-y-6">
-                                <h2 className="text-4xl md:text-6xl font-bold leading-tight drop-shadow-2xl animate-fade-in-up">
+                                <h2 
+                                    className="text-4xl md:text-6xl font-bold leading-tight"
+                                    style={{
+                                        animation: 'fadeInUp 0.6s ease-out forwards',
+                                        color: ad.text_color || '#FFFFFF',
+                                        textShadow: '2px 2px 8px rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.3)',
+                                    }}
+                                >
                                     {ad.title}
                                 </h2>
 
                                 {ad.description && (
-                                    <p className="text-lg md:text-2xl opacity-90 max-w-2xl mx-auto drop-shadow-lg animate-fade-in-up animation-delay-200">
+                                    <p 
+                                        className="text-lg md:text-2xl max-w-2xl mx-auto"
+                                        style={{
+                                            animation: 'fadeInUp 0.6s ease-out 0.2s forwards',
+                                            opacity: 0,
+                                            color: ad.text_color || '#FFFFFF',
+                                            textShadow: '1px 1px 4px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.3)',
+                                        }}
+                                    >
                                         {ad.description}
                                     </p>
                                 )}
@@ -136,7 +168,11 @@ export default function AdsCarousel() {
                                 {ad.link_url && (
                                     <button
                                         onClick={() => handleAdClick(ad)}
-                                        className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-900 rounded-full font-semibold text-lg hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl hover:scale-110 transform group/btn animate-fade-in-up animation-delay-400"
+                                        className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-900 rounded-full font-semibold text-lg hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl hover:scale-110 transform group/btn"
+                                        style={{
+                                            animation: 'fadeInUp 0.6s ease-out 0.4s forwards',
+                                            opacity: 0,
+                                        }}
                                     >
                                         {ad.button_text || 'Learn More'}
                                         <ExternalLink className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
@@ -146,15 +182,50 @@ export default function AdsCarousel() {
                         </div>
 
                         {/* Floating decorative elements with infinite animations */}
-                        <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-float" />
-                        <div className="absolute top-20 right-20 w-24 h-24 bg-white/10 rounded-full blur-2xl animate-float animation-delay-1000" />
-                        <div className="absolute bottom-10 right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-float animation-delay-2000" />
-                        <div className="absolute bottom-20 left-20 w-28 h-28 bg-white/10 rounded-full blur-2xl animate-float animation-delay-3000" />
+                        <div 
+                            className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-3xl"
+                            style={{
+                                animation: 'float 6s ease-in-out infinite',
+                            }}
+                        />
+                        <div 
+                            className="absolute top-20 right-20 w-24 h-24 bg-white/10 rounded-full blur-2xl"
+                            style={{
+                                animation: 'float 6s ease-in-out 1s infinite',
+                            }}
+                        />
+                        <div 
+                            className="absolute bottom-10 right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"
+                            style={{
+                                animation: 'float 6s ease-in-out 2s infinite',
+                            }}
+                        />
+                        <div 
+                            className="absolute bottom-20 left-20 w-28 h-28 bg-white/10 rounded-full blur-2xl"
+                            style={{
+                                animation: 'float 6s ease-in-out 3s infinite',
+                            }}
+                        />
 
                         {/* Sparkle effects */}
-                        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/60 rounded-full animate-sparkle" />
-                        <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-white/60 rounded-full animate-sparkle animation-delay-1000" />
-                        <div className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-white/60 rounded-full animate-sparkle animation-delay-2000" />
+                        <div 
+                            className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/60 rounded-full"
+                            style={{
+                                animation: 'sparkle 2s ease-in-out infinite',
+                            }}
+                        />
+                        <div 
+                            className="absolute top-1/3 right-1/3 w-2 h-2 bg-white/60 rounded-full"
+                            style={{
+                                animation: 'sparkle 2s ease-in-out 1s infinite',
+                            }}
+                        />
+                        <div 
+                            className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-white/60 rounded-full"
+                            style={{
+                                animation: 'sparkle 2s ease-in-out 2s infinite',
+                            }}
+                        />
                     </div>
                 ))}
             </div>

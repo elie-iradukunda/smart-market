@@ -4,7 +4,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
     LayoutDashboard,
     ClipboardList,
-    ShoppingCart,
     Package,
     ChevronDown,
     ChevronRight,
@@ -14,14 +13,7 @@ import {
     BarChart3
 } from 'lucide-react'
 import { clearAuth, getAuthUser, currentUserHasPermission } from '@/utils/apiClient'
-
-interface SidebarItem {
-    label: string
-    path?: string
-    icon: React.ElementType
-    permission?: string | null
-    children?: SidebarItem[]
-}
+import { filterSidebarItemsByPermission, SidebarItem } from '@/utils/sidebarUtils'
 
 const sidebarItems: SidebarItem[] = [
     {
@@ -33,22 +25,16 @@ const sidebarItems: SidebarItem[] = [
     {
         label: 'Production',
         icon: ClipboardList,
-        permission: null,
+        permission: 'workorder.view', // Parent requires at least workorder.view to show
         children: [
             { label: 'Work Orders', path: '/production/work-orders', icon: ClipboardList, permission: 'workorder.view' },
             { label: 'Schedule', path: '/production/schedule', icon: ClipboardList, permission: 'workorder.view' },
         ]
     },
     {
-        label: 'Orders',
-        path: '/orders',
-        icon: ShoppingCart,
-        permission: 'order.view',
-    },
-    {
         label: 'Inventory',
         icon: Package,
-        permission: null,
+        permission: 'material.view', // Parent requires at least material.view to show
         children: [
             { label: 'Materials', path: '/inventory/materials', icon: Package, permission: 'material.view' },
             { label: 'Suppliers', path: '/inventory/suppliers', icon: Truck, permission: 'supplier.view' },
@@ -90,23 +76,21 @@ const ProductionManagerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setI
     }
 
     // Filter items based on permissions
-    const filterItemsByPermission = (items: SidebarItem[]): SidebarItem[] => {
-        return items.filter(item => {
-            // If item has permission requirement, check it
-            if (item.permission && !currentUserHasPermission(item.permission)) {
-                return false
-            }
-            // If item has children, filter them too
-            if (item.children) {
-                item.children = filterItemsByPermission(item.children)
-                // Only show parent if it has visible children
-                return item.children.length > 0
-            }
-            return true
-        })
+    // Create a shallow copy to avoid mutating the original (icons are preserved)
+    const filteredItems = filterSidebarItemsByPermission([...sidebarItems])
+    
+    // Debug: Log filtered items (remove in production)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Production Manager Sidebar - Filtered Items:', {
+        originalCount: sidebarItems.length,
+        filteredCount: filteredItems.length,
+        filteredItems: filteredItems.map(item => ({
+          label: item.label,
+          permission: item.permission,
+          hasPermission: item.permission ? currentUserHasPermission(item.permission) : 'N/A'
+        }))
+      })
     }
-
-    const filteredItems = filterItemsByPermission([...sidebarItems])
 
     return (
         <>

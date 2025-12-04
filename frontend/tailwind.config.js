@@ -38,6 +38,10 @@ export default {
       animation: {
         'gradient': 'gradient 3s ease infinite',
         'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+        'ken-burns': 'kenBurns 20s ease-in-out infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'sparkle': 'sparkle 2s ease-in-out infinite',
+        'shimmer': 'shimmer 2s linear infinite',
       },
       keyframes: {
         gradient: {
@@ -52,6 +56,43 @@ export default {
           '100%': {
             opacity: '1',
             transform: 'translateY(0)',
+          },
+        },
+        kenBurns: {
+          '0%': {
+            transform: 'scale(1) translate(0, 0)',
+          },
+          '50%': {
+            transform: 'scale(1.1) translate(-2%, -2%)',
+          },
+          '100%': {
+            transform: 'scale(1) translate(0, 0)',
+          },
+        },
+        float: {
+          '0%, 100%': {
+            transform: 'translateY(0px)',
+          },
+          '50%': {
+            transform: 'translateY(-20px)',
+          },
+        },
+        sparkle: {
+          '0%, 100%': {
+            opacity: '0',
+            transform: 'scale(0)',
+          },
+          '50%': {
+            opacity: '1',
+            transform: 'scale(1)',
+          },
+        },
+        shimmer: {
+          '0%': {
+            transform: 'translateX(-100%)',
+          },
+          '100%': {
+            transform: 'translateX(100%)',
           },
         },
       },

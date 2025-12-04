@@ -7,7 +7,13 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "migrate": "node migrations/migrate.js"
+    "migrate": "node migrations/migrate.js",
+    "create-ads": "node create-professional-ads.js",
+    "cleanup-ads": "node cleanup-test-ads.js",
+    "fix-ads": "node fix-ads-display.js",
+    "check-ads": "node check-ads.js",
+    "fix-permissions": "node fix-order-permissions.js",
+    "fix-all-permissions": "node fix-all-role-permissions.js"
   },
   "dependencies": {
     "axios": "^1.13.2",

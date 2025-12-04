@@ -13,15 +13,8 @@ import {
     Archive,
     ShoppingBag
 } from 'lucide-react'
-import { clearAuth, getAuthUser, currentUserHasPermission } from '@/utils/apiClient'
-
-interface SidebarItem {
-    label: string
-    path?: string
-    icon: React.ElementType
-    permission?: string | null
-    children?: SidebarItem[]
-}
+import { clearAuth, getAuthUser } from '@/utils/apiClient'
+import { filterSidebarItemsByPermission, SidebarItem } from '@/utils/sidebarUtils'
 
 const sidebarItems: SidebarItem[] = [
     {
@@ -90,20 +83,7 @@ const InventoryManagerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIs
     }
 
     // Filter items based on permissions
-    const filterItemsByPermission = (items: SidebarItem[]): SidebarItem[] => {
-        return items.filter(item => {
-            if (item.permission && !currentUserHasPermission(item.permission)) {
-                return false
-            }
-            if (item.children) {
-                item.children = filterItemsByPermission(item.children)
-                return item.children.length > 0
-            }
-            return true
-        })
-    }
-
-    const filteredItems = filterItemsByPermission([...sidebarItems])
+    const filteredItems = filterSidebarItemsByPermission([...sidebarItems])
 
     return (
         <>

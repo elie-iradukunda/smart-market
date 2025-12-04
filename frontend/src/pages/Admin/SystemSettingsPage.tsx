@@ -74,7 +74,7 @@ export default function SystemSettingsPage() {
                 </div>
                 <div className="flex justify-between items-center py-2">
                   <label htmlFor="currency" className="text-sm font-medium text-gray-700">Base Currency</label>
-                  <input id="currency" type="text" defaultValue="USD" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-800 w-1/3" />
+                  <input id="currency" type="text" defaultValue="RWF" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-800 w-1/3" />
                 </div>
               </div>
             </div>

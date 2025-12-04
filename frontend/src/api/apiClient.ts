@@ -1245,6 +1245,14 @@ export async function fetchOrders() {
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
+    if (res.status === 403) {
+      const errorMsg = data.error || data.message || 'Insufficient permissions'
+      // Provide more helpful error message
+      if (errorMsg.toLowerCase().includes('permission') || errorMsg.toLowerCase().includes('forbidden')) {
+        throw new Error(`Insufficient permissions. ${data.required ? `Required: ${data.required}. ` : ''}Please log out and log back in to refresh your session.`)
+      }
+      throw new Error(errorMsg)
+    }
     throw new Error(data.error || 'Failed to fetch orders')
   }
 

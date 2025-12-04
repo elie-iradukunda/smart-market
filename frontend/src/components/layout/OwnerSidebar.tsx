@@ -14,44 +14,44 @@ import {
     BarChart3
 } from 'lucide-react'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
-
-interface SidebarItem {
-    label: string
-    path?: string
-    icon: React.ElementType
-    children?: SidebarItem[]
-}
+import { filterSidebarItemsByPermission, SidebarItem } from '@/utils/sidebarUtils'
 
 const sidebarItems: SidebarItem[] = [
     {
         label: 'Dashboard',
         path: '/dashboard/owner',
         icon: LayoutDashboard,
+        permission: null,
     },
     {
         label: 'Operations',
         path: '/orders',
         icon: ShoppingCart,
+        permission: 'order.view',
     },
     {
         label: 'Finance',
         path: '/finance/reports',
         icon: DollarSign,
+        permission: 'report.view',
     },
     {
         label: 'Sales & CRM',
         path: '/crm/leads',
         icon: BarChart3,
+        permission: 'lead.manage',
     },
     {
         label: 'Team',
         path: '/admin/users',
         icon: Users,
+        permission: 'user.manage',
     },
     {
         label: 'Settings',
         path: '/admin/system-settings',
         icon: Settings,
+        permission: 'settings.manage',
     },
 ]
 
@@ -81,6 +81,9 @@ const OwnerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
         clearAuth()
         navigate('/login')
     }
+
+    // Filter items based on permissions (Owner sees everything, but this ensures consistency)
+    const filteredItems = filterSidebarItemsByPermission([...sidebarItems])
 
     return (
         <>
@@ -121,7 +124,7 @@ const OwnerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
 
                 {/* Navigation Items */}
                 <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
-                    {sidebarItems.map((item) => (
+                    {filteredItems.map((item) => (
                         <div key={item.label}>
                             {item.children ? (
                                 <div className="space-y-1">

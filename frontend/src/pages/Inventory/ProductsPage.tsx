@@ -1,13 +1,83 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { fetchProducts, createProduct, deleteProduct, uploadProductImage } from '@/api/apiClient'
-import { Plus, Trash2, Package, Upload, X } from 'lucide-react'
+import { Plus, Trash2, Package, Upload, X, Image as ImageIcon } from 'lucide-react'
 
 // Helper to get full image URL
 const getImageUrl = (path: string) => {
     if (!path) return ''
     if (path.startsWith('http')) return path
     return `http://localhost:3000${path}`
+}
+
+// Category color mapping for better visual distinction
+const getCategoryColor = (category: string) => {
+    const colors: Record<string, { bg: string; text: string; border: string }> = {
+        'Banners': { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
+        'Printing': { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-300' },
+        'Design': { bg: 'bg-pink-100', text: 'text-pink-700', border: 'border-pink-300' },
+        'Garments': { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
+        'Signage': { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300' },
+        'Promotional': { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300' },
+    }
+    return colors[category] || { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300' }
+}
+
+// Product Row Component
+interface ProductRowProps {
+    product: any
+    onDelete: (id: number) => void
+}
+
+const ProductRow: React.FC<ProductRowProps> = ({ product, onDelete }) => {
+    const [imageError, setImageError] = useState(false)
+    const categoryColors = getCategoryColor(product.category || 'Other')
+    const hasImage = product.image && !imageError
+    const imageUrl = getImageUrl(product.image || '')
+
+    return (
+        <tr className="hover:bg-gray-50">
+            <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                    <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
+                        {hasImage && imageUrl ? (
+                            <img 
+                                src={imageUrl} 
+                                alt={product.name}
+                                className="h-12 w-12 rounded-lg object-cover"
+                                onError={() => setImageError(true)}
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-blue-50 to-purple-50">
+                                <Package className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+                            </div>
+                        )}
+                    </div>
+                    <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                        <div className="text-sm text-gray-500 truncate max-w-xs">{product.description}</div>
+                    </div>
+                </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+                {product.category ? (
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border} border text-xs font-semibold rounded-full`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${categoryColors.text.replace('text-', 'bg-')}`} />
+                        {product.category}
+                    </span>
+                ) : (
+                    <span className="text-sm text-gray-400 italic">Uncategorized</span>
+                )}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">RF {Number(product.price).toFixed(2)}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.stock_quantity}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button onClick={() => onDelete(product.id)} className="text-red-600 hover:text-red-900 ml-4">
+                    <Trash2 size={18} />
+                </button>
+            </td>
+        </tr>
+    )
 }
 
 export default function ProductsPage() {
@@ -141,31 +211,7 @@ export default function ProductsPage() {
                                 <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">No products found</td></tr>
                             ) : (
                                 products.map((product) => (
-                                    <tr key={product.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className="h-10 w-10 flex-shrink-0 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
-                                                    {product.image ? (
-                                                        <img src={getImageUrl(product.image)} alt="" className="h-10 w-10 rounded-lg object-cover" />
-                                                    ) : (
-                                                        <Package size={20} />
-                                                    )}
-                                                </div>
-                                                <div className="ml-4">
-                                                    <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                                                    <div className="text-sm text-gray-500 truncate max-w-xs">{product.description}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.category}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">RF {Number(product.price).toFixed(2)}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.stock_quantity}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button onClick={() => handleDelete(product.id)} className="text-red-600 hover:text-red-900 ml-4">
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </td>
-                                    </tr>
+                                    <ProductRow key={product.id} product={product} onDelete={handleDelete} />
                                 ))
                             )}
                         </tbody>

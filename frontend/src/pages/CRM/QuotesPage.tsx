@@ -7,10 +7,7 @@ import { Link } from 'react-router-dom'
 // It is left here as requested.
 import { fetchQuotes, createQuote, approveQuote, fetchCustomers, fetchLead, fetchLeads } from '../../api/apiClient'
 
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
-import ReceptionTopNav from '@/components/layout/ReceptionTopNav'
-import SalesTopNav from '@/components/layout/SalesTopNav'
-import OwnerSideNav from '@/components/layout/OwnerSideNav'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { getAuthUser } from '@/utils/apiClient'
 
 // Import necessary icons
@@ -267,25 +264,12 @@ export default function QuotesPage() {
   })
 
   const user = getAuthUser()
-  const isReception = user?.role_id === 2
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
-      {isReception ? (
-        <ReceptionTopNav />
-      ) : (
-        <>
-          <OwnerTopNav />
-          <SalesTopNav />
-        </>
-      )}
-
-      {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
-      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-6">
-        <div className="flex gap-6">
-          <OwnerSideNav />
-
-          <main className="flex-1 space-y-8 max-w-6xl mx-auto">
+    <DashboardLayout>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="space-y-6 lg:space-y-8">
 
             {/* Header Card */}
             <div className="rounded-3xl bg-gradient-to-r from-[#043b84] via-[#0555b0] to-[#0fb3ff] p-7 sm:p-8 shadow-2xl border border-blue-500/40">
@@ -399,7 +383,7 @@ export default function QuotesPage() {
                             }}
                           />
                           <p className="text-[11px] text-slate-600">
-                            Line total: {row.unitPrice && row.quantity ? (Number(row.unitPrice) * Number(row.quantity)).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '--'}
+                            Line total: {row.unitPrice && row.quantity ? `RF ${(Number(row.unitPrice) * Number(row.quantity)).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : '--'}
                           </p>
                         </div>
                       ))}
@@ -461,7 +445,7 @@ export default function QuotesPage() {
                           >
                             <td className="px-4 py-3 font-medium text-slate-900">{q.id}</td>
                             <td className="px-4 py-3 text-slate-800">{q.customerName}</td>
-                            <td className="px-4 py-3 text-right font-semibold text-indigo-700">${q.value ? q.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}</td>
+                            <td className="px-4 py-3 text-right font-semibold text-indigo-700">{q.value ? `RF ${q.value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : 'N/A'}</td>
                             <td className="px-4 py-3">
                               {getStatusTag(q.status)}
                             </td>
@@ -503,7 +487,7 @@ export default function QuotesPage() {
                             <p className="text-slate-500">Value</p>
                             <p className="mt-1 text-sm font-semibold text-slate-900">
                               {selectedQuote.value
-                                ? `$${selectedQuote.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                ? `RF ${selectedQuote.value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
                                 : 'N/A'}
                             </p>
                           </div>
@@ -540,9 +524,9 @@ export default function QuotesPage() {
                 </div>
               )}
             </div>
-          </main>
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

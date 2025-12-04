@@ -5,7 +5,7 @@ import { fetchPOSSales, createCustomer, createPOSSale, fetchCustomers, fetchMate
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import CampaignPerformanceWidget from '../modules/dashboards/components/CampaignPerformanceWidget'
 import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
-import { User, Calendar, CreditCard, Download, AlertTriangle, Loader, Package, PiggyBank } from 'lucide-react'
+import { User, Calendar, CreditCard, Download, AlertTriangle, Loader, Package, PiggyBank, ArrowRight } from 'lucide-react'
 
 export default function SalesDashboard() {
   const [posSummary, setPosSummary] = useState({ todayTotal: 0, todayCount: 0, last7Total: 0 })
@@ -250,74 +250,90 @@ export default function SalesDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-emerald-50/50 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl space-y-8">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50/30">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="space-y-6 lg:space-y-8">
+            {/* Header section - Responsive grid */}
+            <div className="grid gap-6 lg:grid-cols-[1.8fr,1fr] items-stretch">
+              {/* Main Welcome Card */}
+              <div className="rounded-2xl lg:rounded-3xl border border-gray-200/80 bg-white/80 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 border border-emerald-200/50 mb-4">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Sales</p>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold text-gray-900 leading-tight">
+                    Convert more{' '}
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600">
+                      leads into orders
+                    </span>
+                  </h1>
+                  <p className="mt-4 text-sm sm:text-base text-gray-600 max-w-2xl leading-relaxed">
+                    See how sales campaigns and offers are turning into revenue so reps know where to focus.
+                  </p>
+                </div>
 
-          {/* Header section */}
-          <div className="grid gap-6 lg:grid-cols-[2fr,1.3fr] items-stretch">
-            <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-8 sm:p-10 shadow-xl flex flex-col justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">Sales</p>
-                <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight">
-                  Convert more
-                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600"> leads into orders</span>
-                </h1>
-                <p className="mt-4 text-base text-gray-600 max-w-2xl">
-                  See how sales campaigns and offers are turning into revenue so reps know where to focus.
-                </p>
+                {/* Quick Links */}
+                <div className="mt-6 sm:mt-8 flex flex-wrap gap-2 sm:gap-3">
+                  <Link
+                    to="/crm/leads"
+                    className="group inline-flex items-center gap-2 rounded-lg sm:rounded-full bg-emerald-50 hover:bg-emerald-100 px-4 py-2 text-xs sm:text-sm font-medium text-emerald-700 border border-emerald-200/50 hover:border-emerald-300 transition-all duration-200 hover:shadow-md"
+                  >
+                    Leads
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </Link>
+                  <Link
+                    to="/crm/quotes"
+                    className="group inline-flex items-center gap-2 rounded-lg sm:rounded-full bg-blue-50 hover:bg-blue-100 px-4 py-2 text-xs sm:text-sm font-medium text-blue-700 border border-blue-200/50 hover:border-blue-300 transition-all duration-200 hover:shadow-md"
+                  >
+                    Quotes
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </Link>
+                  <Link
+                    to="/orders"
+                    className="group inline-flex items-center gap-2 rounded-lg sm:rounded-full bg-indigo-50 hover:bg-indigo-100 px-4 py-2 text-xs sm:text-sm font-medium text-indigo-700 border border-indigo-200/50 hover:border-indigo-300 transition-all duration-200 hover:shadow-md"
+                  >
+                    Orders
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </Link>
+                  <Link
+                    to="/communications/inbox"
+                    className="group inline-flex items-center gap-2 rounded-lg sm:rounded-full bg-purple-50 hover:bg-purple-100 px-4 py-2 text-xs sm:text-sm font-medium text-purple-700 border border-purple-200/50 hover:border-purple-300 transition-all duration-200 hover:shadow-md"
+                  >
+                    Inbox
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </Link>
+                  <Link
+                    to="/marketing/campaigns"
+                    className="group inline-flex items-center gap-2 rounded-lg sm:rounded-full bg-pink-50 hover:bg-pink-100 px-4 py-2 text-xs sm:text-sm font-medium text-pink-700 border border-pink-200/50 hover:border-pink-300 transition-all duration-200 hover:shadow-md"
+                  >
+                    Campaigns
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </Link>
+                </div>
               </div>
-              <div className="mt-6 flex flex-wrap gap-2 text-xs">
-                <Link
-                  to="/crm/leads"
-                  className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
-                >
-                  Leads
-                </Link>
-                <Link
-                  to="/crm/quotes"
-                  className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
-                >
-                  Quotes
-                </Link>
-                <Link
-                  to="/orders"
-                  className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
-                >
-                  Orders
-                </Link>
-                <Link
-                  to="/communications/inbox"
-                  className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
-                >
-                  Inbox
-                </Link>
-                <Link
-                  to="/marketing/campaigns"
-                  className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 font-medium text-gray-800 border border-gray-200 hover:bg-gray-100"
-                >
-                  Campaigns
-                </Link>
+
+              {/* Image Card - Hidden on mobile */}
+              <div className="hidden md:block rounded-2xl lg:rounded-3xl overflow-hidden border border-gray-200/80 bg-gradient-to-br from-emerald-900 to-teal-900 shadow-2xl relative group">
+                <img
+                  src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                  alt="Sales team collaborating"
+                  className="h-full w-full object-cover opacity-60 group-hover:opacity-70 transition-opacity duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950/95 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 flex flex-col justify-end p-6 lg:p-8">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-3 w-fit">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-white/90">Sales Snapshot</p>
+                  </div>
+                  <p className="text-sm lg:text-base font-medium text-white/95 max-w-sm leading-relaxed">
+                    Quickly see which initiatives are driving quotes and orders this week.
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="rounded-3xl overflow-hidden border border-gray-900/10 bg-gray-900 shadow-2xl relative">
-              <img
-                src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1200"
-                alt="Sales team collaborating"
-                className="h-full w-full object-cover opacity-70"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-950/90 via-gray-950/20" />
-              <div className="absolute inset-0 flex flex-col justify-end p-6">
-                <p className="text-sm font-medium uppercase tracking-wider text-emerald-200">Sales snapshot</p>
-                <p className="mt-2 text-base text-gray-100 max-w-sm">
-                  Quickly see which initiatives are driving quotes and orders this week.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Key sales actions for accountants */}
-          <div className="grid gap-4 md:grid-cols-3">
+            {/* Key sales actions for accountants */}
+            <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-emerald-100 bg-white/95 p-4 shadow-sm flex flex-col justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">1. Capture interest</p>
@@ -377,10 +393,10 @@ export default function SalesDashboard() {
                 </Link>
               </div>
             </div>
-          </div>
+            </div>
 
-          {/* Main widgets area */}
-          <div className="grid gap-6 lg:grid-cols-3 items-start">
+            {/* Main widgets area */}
+            <div className="grid gap-6 lg:grid-cols-3 items-start">
             <div className="lg:col-span-2 space-y-6">
               <div className="rounded-2xl border border-gray-100 bg-white/95 shadow-md">
                 <CampaignPerformanceWidget />
@@ -395,12 +411,12 @@ export default function SalesDashboard() {
               <div className="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">POS sales (Sales rep)</p>
                 <p className="mt-1 text-sm text-emerald-900">
-                  Today: <span className="font-bold">{posSummary.todayTotal.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</span>
+                  Today: <span className="font-bold">RF {posSummary.todayTotal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                 </p>
                 <p className="mt-1 text-xs text-emerald-800">
                   {posSummary.todayCount} transactions today · Last 7 days POS total:{' '}
                   <span className="font-semibold">
-                    {posSummary.last7Total.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                    RF {posSummary.last7Total.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </span>
                 </p>
                 <div className="mt-3">
@@ -413,10 +429,10 @@ export default function SalesDashboard() {
                 </div>
               </div>
             </div>
-          </div>
+            </div>
 
-          {/* Quick POS actions so Sales can work tickets from same dashboard */}
-          <div className="mt-4 grid gap-6 lg:grid-cols-2 items-start">
+            {/* Quick POS actions so Sales can work tickets from same dashboard */}
+            <div className="mt-4 grid gap-6 lg:grid-cols-2 items-start">
             {lookupError && (
               <div className="lg:col-span-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs text-red-700">
                 {lookupError}
@@ -582,10 +598,10 @@ export default function SalesDashboard() {
                 </div>
               </form>
             </div>
-          </div>
+            </div>
 
-          {/* Embedded Daily Sales Transactions report (same data as POS Daily Sales page) */}
-          <div className="mt-8 rounded-3xl border border-gray-100 bg-white/95 shadow-xl overflow-hidden">
+            {/* Embedded Daily Sales Transactions report (same data as POS Daily Sales page) */}
+            <div className="mt-8 rounded-3xl border border-gray-100 bg-white/95 shadow-xl overflow-hidden">
             <div className="p-6 border-b border-gray-100">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
@@ -617,7 +633,7 @@ export default function SalesDashboard() {
                 <p className="text-xs text-gray-600 mt-1">
                   Total for {posFilter.date}:{' '}
                   <span className="font-semibold text-gray-900">
-                    {totalForFilterDay.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                    RF {totalForFilterDay.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </span>
                 </p>
               </div>
@@ -655,13 +671,13 @@ export default function SalesDashboard() {
               <div className="rounded-xl border border-green-100 bg-green-50 px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-green-700">Total sales</p>
                 <p className="mt-1 text-xl font-bold text-green-800">
-                  {totalForFilterDay.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                  RF {totalForFilterDay.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </p>
               </div>
               <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-indigo-700">Average ticket</p>
                 <p className="mt-1 text-xl font-bold text-indigo-800">
-                  {averageTicketForDay.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                  RF {averageTicketForDay.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </p>
               </div>
             </div>
@@ -726,7 +742,7 @@ export default function SalesDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-3 text-right text-gray-900 font-bold font-mono text-sm">
-                          {sale.total.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                          RF {sale.total.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </td>
                         <td className="px-6 py-3 text-gray-600 font-medium">
                           {sale.date}{' '}
@@ -738,6 +754,7 @@ export default function SalesDashboard() {
                 </table>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>

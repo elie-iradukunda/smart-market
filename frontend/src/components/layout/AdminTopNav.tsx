@@ -32,55 +32,64 @@ export default function AdminTopNav({ onMenuClick }: AdminTopNavProps) {
   }
 
   return (
-    <nav className="bg-slate-900/95 text-slate-50 shadow-md sticky top-0 z-40">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
+    <header className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white shadow-lg sticky top-0 z-30 backdrop-blur-sm border-b border-slate-800/50">
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6 h-14 sm:h-16 flex items-center justify-between gap-3 sm:gap-6">
+        {/* Left: Mobile Menu + Role Badge */}
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-shrink-0">
           <button
             type="button"
-            className="md:hidden text-slate-300 hover:text-white"
+            className="md:hidden p-2 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors"
             onClick={onMenuClick}
+            aria-label="Toggle menu"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-5 w-5" />
           </button>
 
-          <div className="flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-indigo-400 text-xs font-bold text-slate-900">
-              AD
-            </span>
-            <div className="leading-tight">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-indigo-200/80">Role</p>
-              <p className="text-sm font-semibold">Admin</p>
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-blue-400/30 rounded-full blur-md"></div>
+              <span className="relative inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-xs sm:text-sm font-bold text-white shadow-lg ring-2 ring-white/20">
+                AD
+              </span>
+            </div>
+            <div className="leading-tight hidden sm:block">
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-slate-200/90 font-medium">Role</p>
+              <p className="text-xs sm:text-sm font-bold text-white">Admin</p>
             </div>
           </div>
         </div>
 
-        <div className="hidden md:flex items-center gap-4 text-xs font-medium">
+        {/* Center: Navigation Links */}
+        <nav className="hidden md:flex items-center gap-2 lg:gap-3 flex-1 justify-center">
           {ADMIN_LINKS.map((link) => (
             <Link
               key={link.path}
               to={link.path}
-              className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-50"
+              className="group relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-full text-xs sm:text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-105"
             >
-              {link.label}
+              <span className="relative z-10">{link.label}</span>
+              <div className="absolute inset-0 rounded-lg sm:rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </Link>
           ))}
-        </div>
+        </nav>
 
-        <div className="flex items-center gap-3">
+        {/* Right: Change Password + Logout */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <Link
             to="/account/change-password"
-            className="hidden sm:inline text-xs font-medium text-slate-100/80 hover:text-white underline underline-offset-2"
+            className="hidden lg:inline text-xs font-medium text-white/70 hover:text-white underline underline-offset-2 transition-colors"
           >
             Change password
           </Link>
           <button
             onClick={handleLogout}
-            className="text-xs font-medium text-red-100 hover:text-white border border-red-300/70 bg-red-500/10 hover:bg-red-500/80 rounded-full px-3 py-1 transition"
+            className="group relative px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white border border-red-400/60 bg-red-500/20 hover:bg-red-500/40 hover:border-red-400 rounded-lg sm:rounded-full transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-red-500/20"
           >
-            Logout
+            <span className="relative z-10">Logout</span>
+            <div className="absolute inset-0 rounded-lg sm:rounded-full bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </button>
         </div>
       </div>
-    </nav>
+    </header>
   )
 }

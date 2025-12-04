@@ -20,6 +20,7 @@ import LegacyBusinessApp from './LegacyBusinessApp'
 
 // E-commerce pages
 import ProductsPage from './pages/Shop/ProductsPage'
+import ProductDetailsPage from './pages/Shop/ProductDetailsPage'
 import CartPage from './pages/Shop/CartPage'
 import ShopLoginPage from './pages/Shop/ShopLoginPage'
 import ShopRegisterPage from './pages/Shop/ShopRegisterPage'
@@ -46,6 +47,7 @@ function App() {
             {/* E-commerce Routes */}
             <Route path="/" element={<EcommerceLayout><HomePage /></EcommerceLayout>} />
             <Route path="/products" element={<EcommerceLayout><ProductsPage /></EcommerceLayout>} />
+            <Route path="/products/:id" element={<EcommerceLayout><ProductDetailsPage /></EcommerceLayout>} />
             <Route path="/cart" element={<EcommerceLayout><CartPage /></EcommerceLayout>} />
             <Route path="/shop/login" element={<ShopLoginPage />} />
             <Route path="/shop/register" element={<ShopRegisterPage />} />

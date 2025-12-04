@@ -19,95 +19,92 @@ export default function PosTopNav({ onMenuClick }: { onMenuClick?: () => void })
   if (!isPosRole) return null
 
   return (
-    <header className="bg-slate-900 text-slate-100 shadow-md">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-6">
-        <div className="flex items-center gap-2">
+    <header className="bg-gradient-to-r from-purple-900 via-pink-900 to-purple-900 text-white shadow-lg sticky top-0 z-30 backdrop-blur-sm border-b border-purple-800/50">
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6 h-14 sm:h-16 flex items-center justify-between gap-3 sm:gap-6">
+        {/* Left: Mobile Menu + Role Badge */}
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-shrink-0">
           {onMenuClick && (
             <button
               type="button"
-              className="lg:hidden -ml-2 p-2 text-slate-200 hover:text-white"
+              className="lg:hidden p-2 rounded-lg text-purple-200 hover:text-white hover:bg-white/10 transition-colors"
               onClick={onMenuClick}
+              aria-label="Toggle menu"
             >
-              <Menu size={24} />
+              <Menu size={20} />
             </button>
           )}
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-xs font-bold text-slate-900">
-            POS
-          </span>
-          <div className="leading-tight">
-            <p className="text-xs uppercase tracking-[0.18em] text-amber-200/80">Role</p>
-            <p className="text-sm font-semibold">Cashier</p>
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-purple-400/30 rounded-full blur-md"></div>
+              <span className="relative inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-pink-500 text-[10px] sm:text-xs font-bold text-white shadow-lg ring-2 ring-white/20">
+                POS
+              </span>
+            </div>
+            <div className="leading-tight hidden sm:block">
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-purple-200/90 font-medium">Role</p>
+              <p className="text-xs sm:text-sm font-bold text-white">Cashier</p>
+            </div>
           </div>
         </div>
 
-        <nav className="hidden md:flex items-center gap-4 text-xs font-medium">
-          <Link to="/dashboard/pos" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-            Overview
+        {/* Center: Navigation Links */}
+        <nav className="hidden md:flex items-center gap-2 lg:gap-3 flex-1 justify-center overflow-x-auto">
+          <Link 
+            to="/dashboard/pos" 
+            className="group relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-full text-xs sm:text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-105 whitespace-nowrap"
+          >
+            <span className="relative z-10">Overview</span>
+            <div className="absolute inset-0 rounded-lg sm:rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </Link>
 
-          {/* POS core */}
           {currentUserHasPermission('pos.create') && (
-            <Link to="/pos/terminal" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              POS Terminal
+            <Link 
+              to="/pos/terminal" 
+              className="group relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-full text-xs sm:text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-105 whitespace-nowrap"
+            >
+              <span className="relative z-10">POS Terminal</span>
+              <div className="absolute inset-0 rounded-lg sm:rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </Link>
           )}
           {currentUserHasPermission('pos.create') && (
-            <Link to="/pos/sales-history" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Sales History
+            <Link 
+              to="/pos/sales-history" 
+              className="group relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-full text-xs sm:text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-105 whitespace-nowrap"
+            >
+              <span className="relative z-10">Sales History</span>
+              <div className="absolute inset-0 rounded-lg sm:rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </Link>
           )}
-
-          {/* CRM quick links */}
           {currentUserHasPermission('customer.view') && (
-            <Link to="/crm/customers" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Customers
-            </Link>
-          )}
-          {currentUserHasPermission('lead.create') && (
-            <Link to="/crm/leads" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Leads
-            </Link>
-          )}
-          {currentUserHasPermission('quote.create') && (
-            <Link to="/crm/quotes" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Quotes
+            <Link 
+              to="/crm/customers" 
+              className="group relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-full text-xs sm:text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-105 whitespace-nowrap"
+            >
+              <span className="relative z-10">Customers</span>
+              <div className="absolute inset-0 rounded-lg sm:rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </Link>
           )}
           {currentUserHasPermission('order.view') && (
-            <Link to="/orders" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Orders
-            </Link>
-          )}
-
-          {/* Finance */}
-          {currentUserHasPermission('invoice.create') && (
-            <Link to="/finance/invoices" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Invoices
-            </Link>
-          )}
-          {currentUserHasPermission('payment.create') && (
-            <Link to="/finance/payments" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Payments
-            </Link>
-          )}
-          {currentUserHasPermission('journal.create') && (
-            <Link to="/finance/journals" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Journals
-            </Link>
-          )}
-          {currentUserHasPermission('report.view') && (
-            <Link to="/finance/reports" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-100">
-              Reports
+            <Link 
+              to="/orders" 
+              className="group relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-full text-xs sm:text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-105 whitespace-nowrap"
+            >
+              <span className="relative z-10">Orders</span>
+              <div className="absolute inset-0 rounded-lg sm:rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </Link>
           )}
         </nav>
 
-        <button
-          onClick={handleLogout}
-          className="text-xs font-medium text-red-200 hover:text-white border border-red-400/60 bg-red-500/10 hover:bg-red-500/80 rounded-full px-3 py-1 transition"
-        >
-          Logout
-        </button>
+        {/* Right: Logout Button */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <button
+            onClick={handleLogout}
+            className="group relative px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white border border-red-400/60 bg-red-500/20 hover:bg-red-500/40 hover:border-red-400 rounded-lg sm:rounded-full transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-red-500/20"
+          >
+            <span className="relative z-10">Logout</span>
+            <div className="absolute inset-0 rounded-lg sm:rounded-full bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          </button>
+        </div>
       </div>
     </header>
   )

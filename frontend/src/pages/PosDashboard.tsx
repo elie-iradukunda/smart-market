@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { fetchPOSSales, fetchMaterials } from '@/api/apiClient'
-import { ShoppingCart, DollarSign, Package, Loader, AlertTriangle } from 'lucide-react'
+import { ShoppingCart, DollarSign, Package, Loader, AlertTriangle, ArrowRight } from 'lucide-react'
 
 export default function PosDashboard() {
   const [sales, setSales] = useState<any[]>([])
@@ -92,70 +92,96 @@ export default function PosDashboard() {
 
   return (
     <DashboardLayout>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">POS Dashboard</h1>
-        <p className="text-sm text-gray-600 mt-1">Point of Sale overview and quick actions</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-xl shadow-md p-6 border border-purple-100 hover:shadow-lg transition">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-full mr-4">
-              <ShoppingCart className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Today's Sales</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.todaySalesCount}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-md p-6 border border-green-100 hover:shadow-lg transition">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-full mr-4">
-              <DollarSign className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Today's Revenue</p>
-              <p className="text-3xl font-bold text-gray-900">
-                ${stats.todayRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50/30">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="space-y-6 lg:space-y-8">
+            {/* Header section */}
+            <div className="rounded-2xl lg:rounded-3xl border border-gray-200/80 bg-white/80 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100/80 border border-purple-200/50 mb-4">
+                <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-purple-700">Point of Sale</p>
+              </div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold text-gray-900 leading-tight">
+                POS{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600">
+                  Dashboard
+                </span>
+              </h1>
+              <p className="mt-4 text-sm sm:text-base text-gray-600 max-w-2xl leading-relaxed">
+                Point of Sale overview and quick actions for managing retail transactions.
               </p>
             </div>
-          </div>
-        </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border border-pink-100 hover:shadow-lg transition">
-          <div className="flex items-center">
-            <div className="p-3 bg-pink-100 rounded-full mr-4">
-              <Package className="w-6 h-6 text-pink-600" />
+            {/* Stats Cards - Responsive grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="group relative rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm p-5 sm:p-6 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-600"></div>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">Today's Sales</p>
+                    <p className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 transition-transform duration-300 group-hover:scale-105">
+                      {stats.todaySalesCount}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-purple-50 group-hover:scale-110 transition-transform duration-300">
+                    <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="group relative rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm p-5 sm:p-6 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-emerald-600"></div>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">Today's Revenue</p>
+                    <p className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 transition-transform duration-300 group-hover:scale-105">
+                      ${stats.todayRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-green-50 group-hover:scale-110 transition-transform duration-300">
+                    <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="group relative rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm p-5 sm:p-6 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden sm:col-span-2 lg:col-span-1">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 to-rose-600"></div>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">Available Products</p>
+                    <p className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 transition-transform duration-300 group-hover:scale-105">
+                      {stats.availableProducts}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-pink-50 group-hover:scale-110 transition-transform duration-300">
+                    <Package className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600" />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Available Products</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.availableProducts}</p>
+
+            {/* Quick Actions */}
+            <div className="rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+              <div className="flex flex-wrap gap-3 sm:gap-4">
+                <Link
+                  to="/pos/terminal"
+                  className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  Open POS Terminal
+                  <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </Link>
+                <Link
+                  to="/pos/sales-history"
+                  className="group inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-lg sm:rounded-xl font-semibold border-2 border-gray-300 hover:bg-gray-50 hover:border-purple-300 transition-all duration-200"
+                >
+                  View Sales History
+                  <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="flex flex-wrap gap-4">
-          <Link
-            to="/pos/terminal"
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-pink-700 transition"
-          >
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            Open POS Terminal
-          </Link>
-          <Link
-            to="/pos/history"
-            className="inline-flex items-center px-6 py-3 bg-white text-gray-700 rounded-lg font-semibold border-2 border-gray-300 hover:bg-gray-50 hover:border-purple-300 transition"
-          >
-            View Sales History
-          </Link>
         </div>
       </div>
     </DashboardLayout>

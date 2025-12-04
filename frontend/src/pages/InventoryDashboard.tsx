@@ -42,97 +42,105 @@ export default function InventoryDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        {/* Header section */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 to-gray-800 p-8 text-white shadow-2xl sm:p-10">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-64 w-64 rounded-full bg-teal-500/20 blur-3xl"></div>
-
-          <div className="relative z-10 grid gap-8 lg:grid-cols-2 lg:items-center">
-            <div>
-              <div className="inline-flex items-center rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300 ring-1 ring-inset ring-emerald-500/20">
-                Inventory Management
-              </div>
-              <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-                Keep materials <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">available</span>
-              </h1>
-              <p className="mt-4 text-lg text-gray-300 max-w-xl">
-                Monitor stock levels, track movements, and manage suppliers efficiently. Never let production wait for materials again.
-              </p>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  to="/inventory/materials"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50 transition-all hover:scale-105"
-                >
-                  <Package size={18} />
-                  Manage Materials
-                </Link>
-                <Link
-                  to="/inventory/purchase-orders"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/20 transition-all"
-                >
-                  <DollarSign size={18} />
-                  Purchase Orders
-                </Link>
-              </div>
-            </div>
-
-            <div className="hidden lg:block">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-2xl bg-white/5 p-6 backdrop-blur-sm border border-white/10">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 mb-4">
-                    <AlertTriangle size={20} />
-                  </div>
-                  <p className="text-sm font-medium text-gray-400">Low Stock Items</p>
-                  <p className="text-2xl font-bold text-white mt-1">12</p>
-                </div>
-                <div className="rounded-2xl bg-white/5 p-6 backdrop-blur-sm border border-white/10">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-500/20 text-teal-400 mb-4">
-                    <TrendingUp size={20} />
-                  </div>
-                  <p className="text-sm font-medium text-gray-400">Stock Value</p>
-                  <p className="text-2xl font-bold text-white mt-1">RF 45.2k</p>
-                </div>
-                <div className="col-span-2 rounded-2xl bg-white/5 p-6 backdrop-blur-sm border border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-400">Pending Orders</p>
-                      <p className="text-2xl font-bold text-white mt-1">5</p>
-                    </div>
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 opacity-80"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main widgets area */}
-        <div className="grid gap-8 lg:grid-cols-3 items-start">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-gray-900">Stock Alerts</h3>
-                <Link to="/inventory/reports" className="text-sm font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-                  View Report <ArrowRight size={16} />
-                </Link>
-              </div>
-              <StockAlerts />
-            </div>
-          </div>
-
-          {canCreateMaterial && (
-            <div className="rounded-3xl border border-emerald-100 bg-gradient-to-b from-emerald-50/50 to-white p-6 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                  <Plus size={20} />
-                </div>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50/30">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="space-y-6 lg:space-y-8">
+            {/* Header section - Responsive grid */}
+            <div className="grid gap-6 lg:grid-cols-[1.8fr,1fr] items-stretch">
+              {/* Main Welcome Card */}
+              <div className="rounded-2xl lg:rounded-3xl border border-gray-200/80 bg-white/80 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Quick Add</h3>
-                  <p className="text-xs text-gray-500">Add new material to inventory</p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 border border-emerald-200/50 mb-4">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Inventory Management</p>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold text-gray-900 leading-tight">
+                    Keep materials{' '}
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600">
+                      available
+                    </span>
+                  </h1>
+                  <p className="mt-4 text-sm sm:text-base text-gray-600 max-w-2xl leading-relaxed">
+                    Monitor stock levels, track movements, and manage suppliers efficiently. Never let production wait for materials again.
+                  </p>
+                </div>
+
+                {/* Quick Links */}
+                <div className="mt-6 sm:mt-8 flex flex-wrap gap-2 sm:gap-3">
+                  <Link
+                    to="/inventory/materials"
+                    className="group inline-flex items-center gap-2 rounded-lg sm:rounded-full bg-emerald-50 hover:bg-emerald-100 px-4 py-2 text-xs sm:text-sm font-medium text-emerald-700 border border-emerald-200/50 hover:border-emerald-300 transition-all duration-200 hover:shadow-md"
+                  >
+                    <Package size={16} />
+                    Manage Materials
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </Link>
+                  <Link
+                    to="/inventory/purchase-orders"
+                    className="group inline-flex items-center gap-2 rounded-lg sm:rounded-full bg-teal-50 hover:bg-teal-100 px-4 py-2 text-xs sm:text-sm font-medium text-teal-700 border border-teal-200/50 hover:border-teal-300 transition-all duration-200 hover:shadow-md"
+                  >
+                    <DollarSign size={16} />
+                    Purchase Orders
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </Link>
                 </div>
               </div>
+
+              {/* Stats Card - Hidden on mobile */}
+              <div className="hidden md:block rounded-2xl lg:rounded-3xl border border-gray-200/80 bg-gradient-to-br from-emerald-900 to-teal-900 shadow-2xl relative p-6 lg:p-8">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-xl bg-white/5 p-4 backdrop-blur-sm border border-white/10">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 mb-3">
+                      <AlertTriangle size={18} />
+                    </div>
+                    <p className="text-xs font-medium text-gray-300">Low Stock Items</p>
+                    <p className="text-xl font-bold text-white mt-1">12</p>
+                  </div>
+                  <div className="rounded-xl bg-white/5 p-4 backdrop-blur-sm border border-white/10">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-500/20 text-teal-400 mb-3">
+                      <TrendingUp size={18} />
+                    </div>
+                    <p className="text-xs font-medium text-gray-300">Stock Value</p>
+                    <p className="text-xl font-bold text-white mt-1">RF 45.2k</p>
+                  </div>
+                  <div className="col-span-2 rounded-xl bg-white/5 p-4 backdrop-blur-sm border border-white/10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-gray-300">Pending Orders</p>
+                        <p className="text-xl font-bold text-white mt-1">5</p>
+                      </div>
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 opacity-80"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main widgets area - Responsive grid */}
+            <div className="grid gap-6 lg:grid-cols-3 items-start">
+              <div className="lg:col-span-2">
+                <div className="rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-gray-900">Stock Alerts</h3>
+                    <Link to="/inventory/reports" className="text-sm font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+                      View Report <ArrowRight size={16} />
+                    </Link>
+                  </div>
+                  <StockAlerts />
+                </div>
+              </div>
+
+              {canCreateMaterial && (
+                <div className="rounded-xl lg:rounded-2xl border border-emerald-200/80 bg-gradient-to-b from-emerald-50/50 to-white/80 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                      <Plus size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">Quick Add</h3>
+                      <p className="text-xs text-gray-500">Add new material to inventory</p>
+                    </div>
+                  </div>
 
               {error && (
                 <div className="mb-4 rounded-xl bg-red-50 border border-red-100 p-3">
@@ -197,9 +205,11 @@ export default function InventoryDashboard() {
                 >
                   {saving ? 'Saving...' : 'Create Material'}
                 </button>
-              </form>
+                  </form>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </DashboardLayout>

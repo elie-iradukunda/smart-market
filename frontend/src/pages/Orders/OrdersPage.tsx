@@ -141,10 +141,19 @@ export default function OrdersPage() {
   // Component for the Loading/Error/Empty states
   const StateFeedback = () => {
     if (error) {
+      const isPermissionError = error.toLowerCase().includes('insufficient permissions') || 
+                                error.toLowerCase().includes('forbidden') ||
+                                error.toLowerCase().includes('permission')
+      
       return (
-        <div className="flex items-center justify-center p-10 text-red-700 bg-red-50 border border-red-300 rounded-b-3xl">
-          <AlertTriangle className="h-6 w-6 mr-3 animate-pulse" />
-          <p className="text-base font-medium">{error}</p>
+        <div className="flex flex-col items-center justify-center p-10 text-red-700 bg-red-50 border border-red-300 rounded-b-3xl">
+          <AlertTriangle className="h-6 w-6 mb-3 animate-pulse" />
+          <p className="text-base font-medium mb-2">{error}</p>
+          {isPermissionError && (
+            <p className="text-sm text-red-600 mt-2 text-center max-w-md">
+              💡 <strong>Tip:</strong> If permissions were recently updated, please log out and log back in to refresh your session.
+            </p>
+          )}
         </div>
       )
     }

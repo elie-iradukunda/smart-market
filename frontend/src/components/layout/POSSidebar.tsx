@@ -12,32 +12,29 @@ import {
     Receipt
 } from 'lucide-react'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
-
-interface SidebarItem {
-    label: string
-    path?: string
-    icon: React.ElementType
-    children?: SidebarItem[]
-}
+import { filterSidebarItemsByPermission, SidebarItem } from '@/utils/sidebarUtils'
 
 const sidebarItems: SidebarItem[] = [
     {
         label: 'Overview',
         path: '/dashboard/pos',
         icon: LayoutDashboard,
+        permission: null,
     },
     {
         label: 'Point of Sale',
         icon: ShoppingCart,
+        permission: null,
         children: [
-            { label: 'POS Terminal', path: '/pos/terminal', icon: Receipt },
-            { label: 'Sales History', path: '/pos/sales-history', icon: History },
+            { label: 'POS Terminal', path: '/pos/terminal', icon: Receipt, permission: 'pos.create' },
+            { label: 'Sales History', path: '/pos/sales-history', icon: History, permission: 'payment.view' },
         ]
     },
     {
         label: 'Settings',
         path: '/settings',
         icon: Settings,
+        permission: null,
     },
 ]
 
@@ -68,6 +65,9 @@ const POSSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen
         navigate('/login')
     }
 
+    // Filter items based on permissions
+    const filteredItems = filterSidebarItemsByPermission([...sidebarItems])
+
     return (
         <>
             {/* Mobile Overlay */}
@@ -94,7 +94,7 @@ const POSSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen
 
                 {/* Navigation Items */}
                 <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
-                    {sidebarItems.map((item) => (
+                    {filteredItems.map((item) => (
                         <div key={item.label}>
                             {item.children ? (
                                 <div className="space-y-1">

@@ -13,46 +13,45 @@ import {
   Box
 } from 'lucide-react';
 import { clearAuth } from '@/utils/apiClient';
-
-interface SidebarItem {
-  label: string;
-  path?: string;
-  icon: React.ElementType;
-  children?: SidebarItem[];
-}
+import { filterSidebarItemsByPermission, SidebarItem } from '@/utils/sidebarUtils';
 
 const sidebarItems: SidebarItem[] = [
   {
     label: 'Overview',
     path: '/dashboard/inventory',
     icon: LayoutDashboard,
+    permission: null,
   },
   {
     label: 'Inventory',
     icon: Package,
+    permission: null,
     children: [
-      { label: 'Materials', path: '/inventory/materials', icon: Box },
-      { label: 'Stock Movements', path: '/inventory/stock-movements', icon: ArrowLeftRight },
-      { label: 'BOM Templates', path: '/inventory/bom-templates', icon: FileText },
+      { label: 'Materials', path: '/inventory/materials', icon: Box, permission: 'material.view' },
+      { label: 'Stock Movements', path: '/inventory/stock-movements', icon: ArrowLeftRight, permission: 'inventory.manage' },
+      { label: 'BOM Templates', path: '/inventory/bom-templates', icon: FileText, permission: 'inventory.manage' },
     ]
   },
   {
     label: 'Procurement',
     icon: ShoppingCart,
+    permission: null,
     children: [
-      { label: 'Purchase Orders', path: '/inventory/purchase-orders', icon: ShoppingCart },
-      { label: 'Suppliers', path: '/inventory/suppliers', icon: Truck },
+      { label: 'Purchase Orders', path: '/inventory/purchase-orders', icon: ShoppingCart, permission: 'inventory.manage' },
+      { label: 'Suppliers', path: '/inventory/suppliers', icon: Truck, permission: 'supplier.view' },
     ]
   },
   {
     label: 'Reports',
     path: '/inventory/reports',
     icon: FileText,
+    permission: 'report.view',
   },
   {
     label: 'Settings',
     path: '/inventory/settings',
     icon: Settings,
+    permission: null,
   }
 ];
 
@@ -76,6 +75,9 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen: b
     clearAuth();
     window.location.href = '/login';
   };
+
+  // Filter items based on permissions
+  const filteredItems = filterSidebarItemsByPermission([...sidebarItems]);
 
   return (
     <>
@@ -103,7 +105,7 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen: b
 
         {/* Navigation Items */}
         <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
-          {sidebarItems.map((item) => (
+          {filteredItems.map((item) => (
             <div key={item.label}>
               {item.children ? (
                 <div className="space-y-1">

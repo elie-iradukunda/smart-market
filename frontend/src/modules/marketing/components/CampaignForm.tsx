@@ -62,7 +62,7 @@ export default function CampaignForm({ onCreated, onClose }) {
         </select>
       </label>
       <label className="text-sm">
-        <span className="block text-gray-700">Daily budget (USD)</span>
+        <span className="block text-gray-700">Daily budget (RWF)</span>
         <input
           type="number"
           value={budget}

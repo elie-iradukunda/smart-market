@@ -99,7 +99,7 @@ export default function LeadForm() {
         </select>
       </label>
       <label className="text-sm">
-        <span className="block text-gray-700">Estimated value (USD)</span>
+        <span className="block text-gray-700">Estimated value (RWF)</span>
         <input
           type="number"
           value={estimatedValue}

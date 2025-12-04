@@ -17,42 +17,40 @@ import {
     LogOut
 } from 'lucide-react'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
-
-interface SidebarItem {
-    label: string
-    path?: string
-    icon: React.ElementType
-    children?: SidebarItem[]
-}
+import { filterSidebarItemsByPermission, SidebarItem } from '@/utils/sidebarUtils'
 
 const sidebarItems: SidebarItem[] = [
     {
         label: 'Overview',
         path: '/dashboard/accountant',
         icon: LayoutDashboard,
+        permission: null,
     },
     {
         label: 'Finance',
         icon: DollarSign,
+        permission: null,
         children: [
-            { label: 'Invoices', path: '/finance/invoices', icon: FileText },
-            { label: 'Payments', path: '/finance/payments', icon: CreditCard },
-            { label: 'Journals', path: '/finance/journals', icon: BookOpen },
-            { label: 'Reports', path: '/finance/reports', icon: PieChart },
+            { label: 'Invoices', path: '/finance/invoices', icon: FileText, permission: 'invoice.view' },
+            { label: 'Payments', path: '/finance/payments', icon: CreditCard, permission: 'payment.view' },
+            { label: 'Journals', path: '/finance/journals', icon: BookOpen, permission: 'journal.create' },
+            { label: 'Reports', path: '/finance/reports', icon: PieChart, permission: 'report.view' },
         ]
     },
     {
         label: 'Point of Sale',
         icon: Receipt,
+        permission: null,
         children: [
-            { label: 'POS Terminal', path: '/pos/terminal', icon: Receipt },
-            { label: 'Sales History', path: '/pos/sales-history', icon: Wallet },
+            { label: 'POS Terminal', path: '/pos/terminal', icon: Receipt, permission: 'pos.create' },
+            { label: 'Sales History', path: '/pos/sales-history', icon: Wallet, permission: 'payment.view' },
         ]
     },
     {
         label: 'Settings',
         path: '/finance/settings',
         icon: Settings,
+        permission: null,
     }
 ]
 
@@ -77,6 +75,9 @@ const FinanceSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (is
         clearAuth()
         navigate('/login')
     }
+
+    // Filter items based on permissions
+    const filteredItems = filterSidebarItemsByPermission([...sidebarItems])
 
     return (
         <>
@@ -104,7 +105,7 @@ const FinanceSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (is
 
                 {/* Navigation Items */}
                 <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
-                    {sidebarItems.map((item) => (
+                    {filteredItems.map((item) => (
                         <div key={item.label}>
                             {item.children ? (
                                 <div className="space-y-1">

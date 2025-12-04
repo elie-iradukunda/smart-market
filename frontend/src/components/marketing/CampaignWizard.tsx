@@ -214,7 +214,7 @@ export default function CampaignWizard({ onClose, onSuccess, connectedChannels }
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Budget (USD) *</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Budget (RWF) *</label>
                                 <input
                                     type="number"
                                     value={formData.budget}

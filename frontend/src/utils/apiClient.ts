@@ -103,93 +103,168 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
         'audit.view',
         'settings.manage',
         'report.view',
+        'customer.view',
+        'order.view',
+        'invoice.view',
+        'payment.view',
       ]
     case 3: // Accountant – finance
       return [
         'invoice.create',
+        'invoice.view',
+        'invoice.send',
         'payment.create',
+        'payment.view',
+        'payment.refund',
         'journal.create',
+        'journal.view',
+        'pos.create',
         'pos.view',
         'report.view',
+        'customer.view',
+        'order.view',
+        'supplier.view',
       ]
     case 4: // Controller – operations oversight
       return [
         'order.view',
+        'order.update',
         'inventory.manage',
         'material.view',
+        'material.create',
+        'supplier.view',
         'report.view',
         'ai.view',
+        'workorder.view',
+        'customer.view',
       ]
     case 5: // Reception – front desk
       return [
         'customer.create',
         'customer.view',
+        'customer.manage',
         'lead.create',
+        'lead.view',
+        'lead.manage',
         'quote.create',
+        'quote.view',
+        'quote.manage',
+        'quote.approve',
         'order.view',
+        'order.create',
         'pos.create',
+        'pos.view',
+        'material.view',
+        'file.upload',
+        'file.view',
+        'invoice.view',
+        'payment.view',
       ]
     case 6: // Technician – production work
       return [
         'worklog.create',
+        'workorder.view',
         'workorder.update',
+        'order.view',
         'order.update',
         'material.view',
+        'file.view',
       ]
     case 7: // Production Manager – production oversight
       return [
         'workorder.view',
         'workorder.create',
         'workorder.update',
+        'worklog.create',
         'order.view',
+        'order.update',
         'material.view',
+        'material.create',
+        'supplier.view',
+        'inventory.manage',
         'report.view',
+        'file.view',
+        'customer.view',
       ]
     case 8: // Inventory Manager – stock management
       return [
         'inventory.manage',
         'material.view',
         'material.create',
+        'material.update',
         'stock.move',
         'stock.adjust',
         'po.create',
         'po.view',
         'po.approve',
         'supplier.view',
+        'supplier.create',
         'report.view',
+        'order.view',
       ]
     case 9: // Sales Rep – CRM and sales
       return [
         'customer.manage',
+        'customer.view',
+        'customer.create',
         'lead.manage',
+        'lead.view',
+        'lead.create',
         'quote.manage',
+        'quote.view',
+        'quote.create',
+        'quote.approve',
         'order.view',
+        'order.create',
+        'pos.create',
+        'pos.view',
         'report.view',
+        'file.upload',
+        'file.view',
+        'invoice.view',
+        'payment.view',
       ]
     case 10: // Marketing Manager – campaigns and analytics
       return [
         'campaign.view',
         'campaign.create',
         'campaign.update',
+        'campaign.manage',
+        'ad.create',
+        'ad.view',
+        'ad.edit',
+        'ad.delete',
         'marketing.analytics',
         'lead.view',
+        'lead.manage',
         'report.view',
         'ai.view',
+        'customer.view',
       ]
     case 11: // POS Cashier – point of sale
       return [
         'pos.create',
         'pos.view',
         'customer.view',
+        'customer.create',
         'invoice.create',
+        'invoice.view',
         'payment.create',
+        'payment.view',
+        'material.view',
+        'lead.create',
+        'quote.create',
       ]
     case 12: // Support Agent – customer support
       return [
         'conversation.view',
         'conversation.create',
+        'message.send',
         'customer.view',
+        'customer.manage',
+        'order.view',
         'file.view',
+        'file.upload',
       ]
     default:
       return []
@@ -198,10 +273,31 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
 
 export function currentUserHasPermission(code: string): boolean {
   const user = getAuthUser()
-  if (!user) return false
+  if (!user) {
+    console.warn('currentUserHasPermission: No user found')
+    return false
+  }
+
   const perms = getPermissionsForRole(user.role_id)
-  if (perms.includes('*')) return true
-  return perms.includes(code)
+
+  // Owner has all permissions
+  if (perms.includes('*')) {
+    return true
+  }
+
+  const hasPermission = perms.includes(code)
+
+  // Debug logging (can be removed in production)
+  if (process.env.NODE_ENV === 'development') {
+    if (!hasPermission && user.role_id === 7) {
+      console.log(`Permission check for Production Manager: ${code} = ${hasPermission}`, {
+        roleId: user.role_id,
+        availablePermissions: perms
+      })
+    }
+  }
+
+  return hasPermission
 }
 
 // Map backend role_id to the correct dashboard route inside the business app
