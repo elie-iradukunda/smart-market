@@ -36,9 +36,9 @@ export default function RevenueOverview() {
   const collected = Math.max(totalRevenue - outstanding, 0);
 
   const metrics = [
-    { label: 'Total Revenue (30 days)', value: `$${totalRevenue.toFixed(2)}`, trend: '' },
-    { label: 'Outstanding Invoices', value: `$${outstanding.toFixed(2)}`, trend: '' },
-    { label: 'Net Collected', value: `$${collected.toFixed(2)}`, trend: '' },
+    { label: 'Total Revenue (30 days)', value: `RF ${totalRevenue.toFixed(2)}`, trend: '' },
+    { label: 'Outstanding Invoices', value: `RF ${outstanding.toFixed(2)}`, trend: '' },
+    { label: 'Net Collected', value: `RF ${collected.toFixed(2)}`, trend: '' },
   ];
 
   return (

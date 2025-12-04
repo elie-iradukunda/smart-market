@@ -5,7 +5,6 @@ import {
     LayoutDashboard,
     MessageSquare,
     Users,
-    FolderOpen,
     ChevronDown,
     ChevronRight,
     LogOut,
@@ -24,7 +23,7 @@ const sidebarItems: SidebarItem[] = [
     },
     {
         label: 'Communications',
-        path: '/communications',
+        path: '/communications/inbox',
         icon: MessageSquare,
         permission: 'conversation.view',
     },
@@ -33,12 +32,6 @@ const sidebarItems: SidebarItem[] = [
         path: '/crm/customers',
         icon: Users,
         permission: 'customer.view',
-    },
-    {
-        label: 'Files',
-        path: '/files',
-        icon: FolderOpen,
-        permission: 'file.view',
     },
 ]
 

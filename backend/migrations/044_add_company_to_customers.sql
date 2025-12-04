@@ -1,0 +1,1 @@
+ALTER TABLE customers ADD COLUMN company VARCHAR(255) AFTER name;

@@ -48,24 +48,48 @@ export const createWorkOrder = async (req, res) => {
     
     res.status(201).json({ id: result.insertId, message: 'Work order created' });
   } catch (error) {
+    console.error('Create work order error:', error);
     res.status(500).json({ error: 'Work order creation failed' });
   }
 };
 
 export const getWorkOrders = async (req, res) => {
   try {
-    const [workOrders] = await pool.execute(`
+    const userId = req.user.id;
+    
+    // Get user's role name to check if they're a technician
+    const [userRoleData] = await pool.execute(
+      'SELECT r.name FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?',
+      [userId]
+    );
+    
+    const roleName = userRoleData[0]?.name?.toLowerCase() || '';
+    
+    let query = `
       SELECT 
         wo.*,
         u.name as assigned_user_name,
         o.id as order_number,
+        o.due_date,
+        o.created_at as order_created_at,
         c.name as customer_name
       FROM work_orders wo
       LEFT JOIN users u ON wo.assigned_to = u.id
       LEFT JOIN orders o ON wo.order_id = o.id
       LEFT JOIN customers c ON o.customer_id = c.id
-      ORDER BY wo.id DESC
-    `);
+    `;
+    
+    let params = [];
+    
+    // If user is a technician, only show work orders assigned to them
+    if (roleName === 'technician') {
+      alsoquery += ' WHERE wo.assigned_to = ?';
+      params.push(userId);
+    }
+    
+    query += ' ORDER BY wo.id DESC';
+    
+    const [workOrders] = await pool.execute(query, params);
     res.json(workOrders);
   } catch (error) {
     console.error('Get work orders error:', error);
@@ -76,6 +100,16 @@ export const getWorkOrders = async (req, res) => {
 export const getWorkOrder = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.id;
+    
+    // Get user's role name
+    const [userRoleData] = await pool.execute(
+      'SELECT r.name FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?',
+      [userId]
+    );
+    
+    const roleName = userRoleData[0]?.name?.toLowerCase() || '';
+    
     const [workOrder] = await pool.execute(`
       SELECT 
         wo.*,
@@ -97,6 +131,11 @@ export const getWorkOrder = async (req, res) => {
       return res.status(404).json({ error: 'Work order not found' });
     }
     
+    // If user is a technician, verify they are assigned to this work order
+    if (roleName === 'technician' && workOrder[0].assigned_to !== userId) {
+      return res.status(403).json({ error: 'You do not have permission to view this work order' });
+    }
+    
     res.json(workOrder[0]);
   } catch (error) {
     console.error('Get work order error:', error);
@@ -116,6 +155,7 @@ export const updateWorkOrder = async (req, res) => {
     
     res.json({ message: 'Work order updated' });
   } catch (error) {
+    console.error('Update work order error:', error);
     res.status(500).json({ error: 'Work order update failed' });
   }
 };
@@ -147,6 +187,7 @@ export const logWork = async (req, res) => {
     
     res.json({ message: 'Work logged' });
   } catch (error) {
+    console.error('Log work error:', error);
     res.status(500).json({ error: 'Work logging failed' });
   }
 };
@@ -189,6 +230,7 @@ export const updateOrderStatus = async (req, res) => {
     
     res.json({ message: 'Order status updated' });
   } catch (error) {
+    console.error('Update order status error:', error);
     res.status(500).json({ error: 'Status update failed' });
   }
 };

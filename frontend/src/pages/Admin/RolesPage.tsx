@@ -54,13 +54,16 @@ export default function RolesPage() {
 
     fetchRolePermissions(selectedRoleId)
       .then((permsForRole) => {
-        const ids = (permsForRole || []).map((p: any) => p.id)
+        // Handle both array and object response formats
+        const permsList = Array.isArray(permsForRole) ? permsForRole : (permsForRole.data || [])
+        const ids = permsList.map((p: any) => p.id)
         setSelectedPermissionIds(ids)
       })
-      .catch(() => {
-        // keep previous permissions if fetch fails
+      .catch((err) => {
+        console.error('Failed to fetch role permissions:', err)
+        setSelectedPermissionIds([])
       })
-  }, [selectedRoleId])
+  }, [selectedRoleId, roles])
 
   const handleSelectRole = (roleId: number) => {
     setSelectedRoleId(roleId)
@@ -82,6 +85,10 @@ export default function RolesPage() {
       const refreshed = await fetchRoles()
       setRoles(refreshed || [])
       setSelectedRoleId(created.id)
+      // Also save permissions for the new role if any were selected (though usually empty for new)
+      if (selectedPermissionIds.length > 0) {
+        await updateRolePermissions(created.id, selectedPermissionIds)
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to create role')
     } finally {
@@ -172,7 +179,7 @@ export default function RolesPage() {
                       </div>
                       <div className="mt-2 sm:mt-0 text-right">
                         <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-xs font-medium">
-                          {role.usersCount || '0'} users
+                          {role.usersCount ?? 0} users
                         </span>
                       </div>
                     </li>
@@ -236,7 +243,7 @@ export default function RolesPage() {
                   <p className="block text-sm font-medium text-gray-700 mb-2">Permissions</p>
                   <div className="max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
                     {permissions.map((perm: any) => (
-                      <label key={perm.id} className="flex items-center justify-between rounded-md bg-white px-3 py-1.5 text-xs border border-gray-100">
+                      <label key={perm.id} className="flex items-center justify-between rounded-md bg-white px-3 py-1.5 text-xs border border-gray-100 cursor-pointer hover:bg-gray-50">
                         <span className="font-mono text-[11px] text-gray-700 mr-3">{perm.code}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-[11px] text-gray-500 hidden sm:inline">{perm.description}</span>
@@ -245,7 +252,7 @@ export default function RolesPage() {
                             checked={selectedPermissionIds.includes(perm.id)}
                             onChange={() => handleTogglePermission(perm.id)}
                             disabled={!canManageRoles}
-                            className="h-3.5 w-3.5 text-blue-600 border-gray-300 rounded"
+                            className="h-3.5 w-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                           />
                         </div>
                       </label>

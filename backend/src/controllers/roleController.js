@@ -17,7 +17,7 @@ export const createRole = async (req, res) => {
 export const getRoles = async (req, res) => {
   try {
     const [roles] = await pool.execute(`
-      SELECT r.*, COUNT(u.id) AS usersCount
+      SELECT r.*, CAST(COUNT(u.id) AS UNSIGNED) AS usersCount
       FROM roles r
       LEFT JOIN users u ON u.role_id = r.id
       GROUP BY r.id, r.name, r.description
@@ -25,6 +25,7 @@ export const getRoles = async (req, res) => {
     `);
     res.json(roles);
   } catch (error) {
+    console.error('Get roles error:', error);
     res.status(500).json({ error: 'Failed to fetch roles' });
   }
 };
@@ -179,15 +180,18 @@ export const updateRolePermissions = async (req, res) => {
 
     await pool.execute('DELETE FROM role_permissions WHERE role_id = ?', [role_id]);
 
-    for (const permission_id of permission_ids) {
-      await pool.execute(
-        'INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)',
-        [role_id, permission_id]
-      );
+    if (permission_ids && permission_ids.length > 0) {
+      for (const permission_id of permission_ids) {
+        await pool.execute(
+          'INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)',
+          [role_id, permission_id]
+        );
+      }
     }
 
     res.json({ message: 'Role permissions updated' });
   } catch (error) {
+    console.error('Update role permissions error:', error);
     res.status(500).json({ error: 'Failed to update role permissions' });
   }
 };

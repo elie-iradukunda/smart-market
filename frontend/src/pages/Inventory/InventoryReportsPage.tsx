@@ -63,183 +63,190 @@ export default function InventoryReportsPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 min-h-screen bg-slate-50/50 pb-10">
         {/* Header */}
-        <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-10 w-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
               <BarChart3 size={20} />
             </div>
-            <p className="text-sm font-semibold uppercase tracking-wider text-purple-700">Analytics</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-indigo-600">Analytics & Reports</p>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-            Stock Health & Performance
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Inventory Intelligence
           </h1>
-          <p className="mt-4 text-base text-gray-600 max-w-2xl">
-            See low stock, out-of-stock and total quantities so you can plan purchase orders and support production.
+          <p className="mt-3 text-base text-slate-500 max-w-2xl leading-relaxed">
+            Real-time insights into stock levels, valuation, and movement history to optimize your supply chain.
           </p>
         </div>
 
         {/* Error message */}
         {error && (
-          <div className="rounded-xl bg-red-50 border border-red-200 p-4">
-            <p className="text-sm text-red-700 font-medium flex items-center gap-2">
-              <AlertTriangle size={16} />
-              {error}
-            </p>
+          <div className="rounded-xl bg-red-50 border border-red-200 p-4 flex items-center gap-3">
+            <AlertTriangle size={20} className="text-red-600" />
+            <p className="text-sm text-red-700 font-medium">{error}</p>
           </div>
         )}
 
         {/* KPI cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Total materials</p>
-              <PackageCheck size={16} className="text-gray-400" />
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-5">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-all duration-200 group">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-indigo-600 transition-colors">Total Items</p>
+              <div className="p-2 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                <PackageCheck size={18} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{stats.totalMaterials}</p>
+            <p className="text-3xl font-bold text-slate-900">{stats.totalMaterials}</p>
           </div>
-          <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Low stock</p>
-              <AlertTriangle size={16} className="text-amber-500" />
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-all duration-200 group">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-amber-600 transition-colors">Low Stock</p>
+              <div className="p-2 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
+                <AlertTriangle size={18} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-amber-900">{stats.lowStock}</p>
+            <p className="text-3xl font-bold text-slate-900">{stats.lowStock}</p>
           </div>
-          <div className="rounded-2xl border border-red-100 bg-red-50 p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Out of stock</p>
-              <PackageX size={16} className="text-red-500" />
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-all duration-200 group">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-red-600 transition-colors">Out of Stock</p>
+              <div className="p-2 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-red-50 group-hover:text-red-600 transition-colors">
+                <PackageX size={18} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-red-900">{stats.outOfStock}</p>
+            <p className="text-3xl font-bold text-slate-900">{stats.outOfStock}</p>
           </div>
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Total Qty</p>
-              <PackageCheck size={16} className="text-emerald-500" />
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-all duration-200 group">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600 transition-colors">Total Qty</p>
+              <div className="p-2 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                <PackageCheck size={18} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-emerald-900">{stats.totalQty}</p>
+            <p className="text-3xl font-bold text-slate-900">{stats.totalQty.toLocaleString()}</p>
           </div>
-          <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">Total Value</p>
-              <DollarSign size={16} className="text-indigo-500" />
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-all duration-200 group">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-blue-600 transition-colors">Valuation</p>
+              <div className="p-2 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                <DollarSign size={18} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-indigo-900">
-              {stats.totalValue ? `RF ${stats.totalValue.toFixed(2)}` : 'RF 0.00'}
+            <p className="text-3xl font-bold text-slate-900">
+              <span className="text-lg font-medium text-slate-400 mr-1">RF</span>
+              {stats.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
 
-        {/* Main content: stock alerts + material table */}
-        <div className="grid gap-6 lg:grid-cols-3 items-start">
-          <div className="lg:col-span-1 space-y-6">
-            <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Stock Alerts</h3>
-              <StockAlerts />
+        {/* Main Table: Material Stock Status */}
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Current Stock Levels</h2>
+              <p className="text-sm text-slate-500 mt-1">Detailed inventory status by item</p>
             </div>
+            {loading && <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 text-xs font-medium text-slate-600 animate-pulse">Updating...</span>}
           </div>
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Material stock status</h2>
-              {loading && <span className="text-xs text-gray-500">Loading…</span>}
-            </div>
-            <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white shadow-sm">
-              <table className="min-w-full divide-y divide-gray-100 text-sm">
-                <thead className="bg-gray-50/50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">SKU</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Stock</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Reorder</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {materials.map((m) => (
-                    <tr key={m.id || m.sku} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-3 whitespace-nowrap text-gray-500 font-mono text-xs">{m.sku}</td>
-                      <td className="px-6 py-3 whitespace-nowrap text-gray-900 font-medium">{m.name}</td>
-                      <td className="px-6 py-3 whitespace-nowrap text-gray-900">{m.current_stock}</td>
-                      <td className="px-6 py-3 whitespace-nowrap text-gray-500">{m.reorder_level}</td>
-                      <td className="px-6 py-3 whitespace-nowrap">
-                        <span
-                          className={
-                            m.stock_status === 'out_of_stock'
-                              ? 'inline-flex rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700'
-                              : m.stock_status === 'low_stock'
-                                ? 'inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700'
-                                : 'inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700'
-                          }
-                        >
-                          {m.stock_status === 'out_of_stock'
-                            ? 'Out of stock'
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50/80">
+                <tr>
+                  <th className="px-8 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">SKU</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Item Name</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">In Stock</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Reorder Level</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {materials.map((m) => (
+                  <tr key={m.id || m.sku} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-8 py-4 whitespace-nowrap text-xs font-mono text-slate-500">{m.sku}</td>
+                    <td className="px-8 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{m.name}</td>
+                    <td className="px-8 py-4 whitespace-nowrap text-sm text-slate-700 font-medium">{m.current_stock}</td>
+                    <td className="px-8 py-4 whitespace-nowrap text-sm text-slate-500">{m.reorder_level}</td>
+                    <td className="px-8 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${m.stock_status === 'out_of_stock'
+                            ? 'bg-red-50 text-red-700 border-red-100'
                             : m.stock_status === 'low_stock'
-                              ? 'Low stock'
-                              : 'In stock'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {!loading && materials.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-6 py-8 text-center text-sm text-gray-500"
+                              ? 'bg-amber-50 text-amber-700 border-amber-100'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                          }`}
                       >
-                        No materials found in inventory report.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        {m.stock_status === 'out_of_stock'
+                          ? 'Out of stock'
+                          : m.stock_status === 'low_stock'
+                            ? 'Low stock'
+                            : 'In stock'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {!loading && materials.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-12 text-center text-sm text-slate-500">
+                      No inventory items found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Recent stock movements and purchase orders summary */}
-        <div className="grid gap-6 lg:grid-cols-2 items-start">
-          {/* Recent stock movements */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Recent stock movements</h2>
+        {/* Bottom Grid: Alerts, Movements, POs */}
+        <div className="grid gap-6 lg:grid-cols-3 items-start">
+
+          {/* Stock Alerts */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm h-full">
+            <h3 className="text-lg font-bold text-slate-900 mb-1">Stock Alerts</h3>
+            <p className="text-sm text-slate-500 mb-6">Items requiring immediate attention</p>
+            <StockAlerts />
+          </div>
+
+          {/* Recent Movements */}
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm h-full overflow-hidden">
+            <div className="px-6 py-6 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Recent Movements</h3>
             </div>
-            <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white shadow-sm">
-              <table className="min-w-full divide-y divide-gray-100 text-sm">
-                <thead className="bg-gray-50/50">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-100">
+                <thead className="bg-slate-50/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Material</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Qty</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Item</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Qty</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {movements.map((mv) => (
-                    <tr key={mv.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-3 whitespace-nowrap text-xs text-gray-500">
-                        {mv.movement_date ? new Date(mv.movement_date).toLocaleDateString() : ''}
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {movements.slice(0, 8).map((mv) => (
+                    <tr key={mv.id} className="hover:bg-slate-50/50">
+                      <td className="px-6 py-3 whitespace-nowrap text-xs text-slate-500">
+                        {mv.movement_date ? new Date(mv.movement_date).toLocaleDateString() : '-'}
                       </td>
-                      <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">{mv.material_name || mv.material_id}</td>
                       <td className="px-6 py-3 whitespace-nowrap">
-                        <span
-                          className={
-                            mv.type === 'out'
-                              ? 'inline-flex rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700'
-                              : 'inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700'
-                          }
-                        >
-                          {mv.type === 'out' ? 'Out' : 'In'}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-slate-900">{mv.material_name || mv.material_id}</span>
+                          <span className={`text-[10px] uppercase font-bold tracking-wider ${mv.type === 'out' ? 'text-red-600' : 'text-emerald-600'}`}>
+                            {mv.type === 'out' ? 'Outgoing' : 'Incoming'}
+                          </span>
+                        </div>
                       </td>
-                      <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-900">{mv.quantity}</td>
+                      <td className={`px-6 py-3 whitespace-nowrap text-sm font-bold text-right ${mv.type === 'out' ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {mv.type === 'out' ? '-' : '+'}{mv.quantity}
+                      </td>
                     </tr>
                   ))}
                   {!loading && movements.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">
-                        No recent stock movements.
-                      </td>
+                      <td colSpan={3} className="px-6 py-8 text-center text-sm text-slate-500">No movements recorded.</td>
                     </tr>
                   )}
                 </tbody>
@@ -247,47 +254,49 @@ export default function InventoryReportsPage() {
             </div>
           </div>
 
-          {/* Purchase orders summary */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Latest purchase orders</h2>
+          {/* Latest POs */}
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm h-full overflow-hidden">
+            <div className="px-6 py-6 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Latest Orders</h3>
             </div>
-            <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white shadow-sm">
-              <table className="min-w-full divide-y divide-gray-100 text-sm">
-                <thead className="bg-gray-50/50">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-100">
+                <thead className="bg-slate-50/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">PO #</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Supplier</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Total</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">PO #</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Supplier</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {purchaseOrders.map((po) => (
-                    <tr key={po.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-3 whitespace-nowrap text-xs font-mono text-gray-500">#{po.id}</td>
-                      <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">{po.supplier_name || po.supplier_id}</td>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {purchaseOrders.slice(0, 8).map((po) => (
+                    <tr key={po.id} className="hover:bg-slate-50/50">
                       <td className="px-6 py-3 whitespace-nowrap">
-                        <span className="inline-flex rounded-full bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-700">
-                          {po.status}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-mono font-medium text-slate-900">#{po.id}</span>
+                          <span className={`text-[10px] uppercase font-bold tracking-wider ${po.status === 'received' ? 'text-emerald-600' :
+                              po.status === 'ordered' ? 'text-blue-600' : 'text-slate-500'
+                            }`}>
+                            {po.status}
+                          </span>
+                        </div>
                       </td>
-                      <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {po.total_amount != null ? `RF ${Number(po.total_amount).toFixed(2)}` : '—'}
+                      <td className="px-6 py-3 whitespace-nowrap text-sm text-slate-600">{po.supplier_name || po.supplier_id}</td>
+                      <td className="px-6 py-3 whitespace-nowrap text-sm font-medium text-slate-900 text-right">
+                        {po.total_amount != null ? `RF ${Number(po.total_amount).toLocaleString()}` : '-'}
                       </td>
                     </tr>
                   ))}
                   {!loading && purchaseOrders.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">
-                        No purchase orders found.
-                      </td>
+                      <td colSpan={3} className="px-6 py-8 text-center text-sm text-slate-500">No purchase orders.</td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
           </div>
+
         </div>
       </div>
     </DashboardLayout>

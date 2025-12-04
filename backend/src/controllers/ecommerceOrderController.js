@@ -9,6 +9,9 @@ export const createOrder = async (req, res) => {
 
     const { customerDetails, items, total, paymentMethod, mtnPhoneNumber } = req.body;
 
+    let paymentTransactionId = null;
+    let isPaid = false;
+
     // Process MTN payment if payment method is MTN
     if (paymentMethod === 'mtn') {
       if (!mtnPhoneNumber) {
@@ -38,6 +41,9 @@ export const createOrder = async (req, res) => {
             errorMessage = 'Invalid phone number. Please check your MTN number and try again.';
           } else if (errorMessage.toLowerCase().includes('cancelled') || errorMessage.toLowerCase().includes('rejected')) {
             errorMessage = 'Payment was cancelled or rejected. Please try again.';
+          } else if (paymentResult.statusCode === 400) {
+            // Generic 400 error often means insufficient funds or business logic failure
+            errorMessage = 'Payment failed. Please check your mobile money balance (Insufficient funds) or verify your phone number.';
           }
           
           console.log('✗ [PAYMENT] Payment failed:', errorMessage);
@@ -46,6 +52,8 @@ export const createOrder = async (req, res) => {
         }
 
         console.log('✓ [PAYMENT] Payment successful:', paymentResult.transaction_id);
+        paymentTransactionId = paymentResult.transaction_id;
+        isPaid = true;
       } catch (paymentError) {
         console.error('✗ [PAYMENT] Payment processing error:', paymentError);
         connection.release();
@@ -73,15 +81,30 @@ export const createOrder = async (req, res) => {
     } else {
       const [result] = await connection.execute(
         'INSERT INTO customers (name, email, phone, address, source) VALUES (?, ?, ?, ?, ?)',
-        [customerDetails.fullName, customerDetails.email, customerDetails.phoneNumber, customerDetails.address, 'web']
+        [
+          customerDetails.fullName || null, 
+          customerDetails.email, 
+          customerDetails.phoneNumber || null, 
+          customerDetails.address || null, 
+          'web'
+        ]
       );
       customerId = result.insertId;
     }
 
     // 2. Create Order
     const [orderResult] = await connection.execute(
-      'INSERT INTO ecommerce_orders (customer_id, total_amount, shipping_address, shipping_city, shipping_zip, payment_method) VALUES (?, ?, ?, ?, ?, ?)',
-      [customerId, total, customerDetails.address, customerDetails.city, customerDetails.zipCode, paymentMethod || 'cod']
+      'INSERT INTO ecommerce_orders (customer_id, total_amount, shipping_address, shipping_city, shipping_zip, payment_method, payment_status, transaction_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        customerId, 
+        total, 
+        customerDetails.address || null, 
+        customerDetails.city || null, 
+        customerDetails.zipCode || null, 
+        paymentMethod || 'cod',
+        isPaid ? 'paid' : 'pending',
+        paymentTransactionId
+      ]
     );
     const orderId = orderResult.insertId;
 

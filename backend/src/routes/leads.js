@@ -15,10 +15,10 @@ router.get('/leads/test', (req, res) => {
 // Get all leads
 router.get('/leads', async (req, res) => {
   try {
-    const [leads] = await pool.execute('SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id ORDER BY l.id DESC');
+    const [leads] = await pool.execute('SELECT l.*, c.name as customer_name, c.company, c.email as customer_email, c.phone as customer_phone FROM leads l LEFT JOIN customers c ON l.customer_id = c.id ORDER BY l.created_at DESC, l.id DESC');
     res.json(leads);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch leads' });
+    console.error('Fetch leads error:', error);
   }
 });
 

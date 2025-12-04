@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fetchMaterial, createMaterial, updateMaterial, deleteMaterial } from '../../api/apiClient'
+import { toast } from 'react-toastify'
 
 export default function MaterialDetailPage() {
     const { sku } = useParams()
@@ -60,13 +61,22 @@ export default function MaterialDetailPage() {
                 reorder_level: reorderLevel === '' ? null : Number(reorderLevel),
             }
             if (isNew) {
-                const created = await createMaterial(payload)
-                navigate(`/inventory/materials/${created.id}`)
+                await createMaterial(payload)
+                toast.success('Material created successfully')
+                // Clear form to allow creating another one
+                setName('')
+                setUnit('')
+                setCategory('')
+                setReorderLevel('')
+                // Stay on the same page (inventory/materials/new)
+                navigate('/inventory/materials/new')
             } else {
                 await updateMaterial(sku!, payload)
+                toast.success('Material updated successfully')
             }
         } catch (err: any) {
             setError(err.message || 'Failed to save material')
+            toast.error(err.message || 'Failed to save material')
         } finally {
             setSaving(false)
         }

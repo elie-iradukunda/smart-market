@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { fetchLeads, createLead, fetchMaterials, createCustomer } from '../../api/apiClient'
+import { toast } from 'react-toastify'
 
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
@@ -27,15 +28,25 @@ export default function LeadsPage() {
     Array.from({ length: 3 }).map(() => ({ material_id: '', quantity: '1' }))
   )
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const leadsPerPage = 8
+
+
   useEffect(() => {
     let isMounted = true
     setLoading(true)
     setError(null)
 
-    fetchLeads()
+    fetchLeads(currentPage, leadsPerPage)
       .then((data) => {
         if (!isMounted) return
-        setLeads(data || [])
+        const leadsList = Array.isArray(data) ? data : (data.leads || [])
+        setLeads(leadsList)
+        if (data.pagination) {
+          setTotalPages(data.pagination.totalPages)
+        }
       })
       .catch((err) => {
         if (!isMounted) return
@@ -49,7 +60,7 @@ export default function LeadsPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [currentPage])
 
   useEffect(() => {
     let mounted = true
@@ -128,6 +139,7 @@ export default function LeadsPage() {
       // Step 1: create or register the customer in backend so we have a customer_id
       const customerPayload: any = {
         name: newLead.name || newLead.company || 'Lead customer',
+        company: newLead.company || null,
         phone: newLead.phone || null,
         email: newLead.email || null,
         address: newLead.address || null,
@@ -144,13 +156,20 @@ export default function LeadsPage() {
         items,
       })
 
-      // refresh list
-      const refreshed = await fetchLeads()
-      setLeads(refreshed || [])
+      // refresh list (go to page 1)
+      setCurrentPage(1)
+      const refreshed = await fetchLeads(1, leadsPerPage)
+      const leadsList = Array.isArray(refreshed) ? refreshed : (refreshed.leads || [])
+      setLeads(leadsList)
+      if (refreshed.pagination) {
+        setTotalPages(refreshed.pagination.totalPages)
+      }
       setNewLead({ name: '', company: '', phone: '', email: '', address: '', channel: 'Walk-in' })
       setLeadItems(Array.from({ length: 3 }).map(() => ({ material_id: '', quantity: '1' })))
+      toast.success('Lead created successfully')
     } catch (err: any) {
       setError(err.message || 'Failed to create lead')
+      toast.error(err.message || 'Failed to create lead')
     } finally {
       setCreating(false)
     }
@@ -378,7 +397,13 @@ export default function LeadsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-500">
-                        {lead.created_at ? new Date(lead.created_at).toLocaleDateString() : 'Just now'}
+                        {lead.created_at ? new Date(lead.created_at).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 'Just now'}
                       </td>
                     </tr>
                   ))}
@@ -391,6 +416,58 @@ export default function LeadsPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-b-3xl -mt-6 pt-6">
+            <div className="flex flex-1 justify-between sm:hidden">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing page <span className="font-medium">{currentPage}</span> of <span className="font-medium">{totalPages}</span>
+                </p>
+              </div>
+              <div>
+                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Previous</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  {/* Page numbers could go here, but for now just prev/next is fine or simple counter */}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Next</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </nav>
+              </div>
             </div>
           </div>
 

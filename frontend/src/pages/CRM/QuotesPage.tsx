@@ -128,7 +128,8 @@ export default function QuotesPage() {
     fetchLeads()
       .then((data) => {
         if (!isMounted) return
-        setAvailableLeads(Array.isArray(data) ? data : [])
+        const leadsData = Array.isArray(data) ? data : (data?.leads || [])
+        setAvailableLeads(leadsData)
       })
       .catch(() => {
         // ignore lead load error in this view
