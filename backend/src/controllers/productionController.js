@@ -83,7 +83,7 @@ export const getWorkOrders = async (req, res) => {
     
     // If user is a technician, only show work orders assigned to them
     if (roleName === 'technician') {
-      alsoquery += ' WHERE wo.assigned_to = ?';
+      query += ' WHERE wo.assigned_to = ?';
       params.push(userId);
     }
     

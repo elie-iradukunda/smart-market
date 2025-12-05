@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { fetchWorkOrders, fetchMaterials } from '@/api/apiClient'
 import TechnicianDashboardLayout from '@/components/layout/TechnicianDashboardLayout'
-import JobPipelineOverview from '../modules/dashboards/components/JobPipelineOverview'
-import StockAlerts from '../modules/dashboards/components/StockAlerts'
+// import JobPipelineOverview from '../modules/dashboards/components/JobPipelineOverview'
+// import StockAlerts from '../modules/dashboards/components/StockAlerts'
 import { ArrowRight } from 'lucide-react'
 
 export default function TechnicianDashboard() {
@@ -136,16 +136,7 @@ export default function TechnicianDashboard() {
 
             {/* Main widgets area - Responsive grid */}
             <div className="grid gap-6 lg:grid-cols-3 items-start">
-              <div className="lg:col-span-2">
-                <div className="rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300">
-                  <JobPipelineOverview />
-                </div>
-              </div>
-              <div>
-                <div className="rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300">
-                  <StockAlerts />
-                </div>
-              </div>
+
             </div>
           </div>
         </div>

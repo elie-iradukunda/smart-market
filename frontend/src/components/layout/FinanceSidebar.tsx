@@ -8,7 +8,6 @@ import {
     BookOpen,
     PieChart,
     Receipt,
-    Settings,
     ChevronDown,
     ChevronRight,
     Package,
@@ -46,12 +45,6 @@ const sidebarItems: SidebarItem[] = [
             { label: 'Sales History', path: '/pos/sales-history', icon: Wallet, permission: 'payment.view' },
         ]
     },
-    {
-        label: 'Settings',
-        path: '/finance/settings',
-        icon: Settings,
-        permission: null,
-    }
 ]
 
 const FinanceSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen: boolean) => void }) => {
