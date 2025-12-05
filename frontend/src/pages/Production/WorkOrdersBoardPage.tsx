@@ -139,8 +139,8 @@ export default function WorkOrdersBoardPage() {
                                 <button
                                     type="button"
                                     className={`inline-flex items-center rounded-full px-4 py-1.5 text-xs font-semibold border transition ${myTasksOnly
-                                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                                            : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                        : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
                                         }`}
                                     onClick={() => setMyTasksOnly((prev) => !prev)}
                                 >
@@ -217,7 +217,7 @@ export default function WorkOrdersBoardPage() {
                                         {filteredWorkOrders.map((wo, index) => (
                                             <tr
                                                 key={wo.id || index}
-                                                onClick={() => navigate(`/production/work-orders/${wo.id}`)}
+                                                onClick={() => navigate(`/orders/${wo.order_id || wo.order_number}`)}
                                                 // Row styling with elevation and hover effect
                                                 className="bg-white rounded-xl shadow-md hover:shadow-lg hover:ring-2 hover:ring-blue-500/50 transition duration-200 cursor-pointer"
                                             >

@@ -6,7 +6,6 @@ import {
     Users,
     FileText,
     ShoppingCart,
-    FolderOpen,
     ChevronDown,
     ChevronRight,
     LogOut,
@@ -43,12 +42,6 @@ const sidebarItems: SidebarItem[] = [
         path: '/orders',
         icon: ShoppingCart,
         permission: 'order.view',
-    },
-    {
-        label: 'Files',
-        path: '/files',
-        icon: FolderOpen,
-        permission: 'file.view',
     },
 ]
 

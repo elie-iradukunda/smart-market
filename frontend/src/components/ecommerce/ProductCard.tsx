@@ -13,7 +13,8 @@ interface ProductCardProps {
 const getImageUrl = (path: string) => {
     if (!path) return ''
     if (path.startsWith('http')) return path
-    return `http://localhost:3000${path}`
+    const cleanPath = path.startsWith('/') ? path : `/${path}`
+    return `http://localhost:3000${cleanPath}`
 }
 
 // Category color mapping for better visual distinction
@@ -89,7 +90,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         </div>
                     </div>
                 )}
-                
+
                 {/* Category Badge - Enhanced Design */}
                 <div className="absolute top-3 left-3 z-10">
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border} border text-xs font-semibold rounded-full shadow-md backdrop-blur-sm`}>

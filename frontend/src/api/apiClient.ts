@@ -171,13 +171,13 @@ export async function fetchDashboardStats() {
 }
 
 // CRM: leads list (used by LeadsPage)
-export async function fetchLeads() {
+export async function fetchLeads(page = 1, limit = 50) {
   const token = getAuthToken()
   if (!token) {
     throw new Error('Not authenticated')
   }
 
-  const res = await fetch(`${API_BASE}/leads`, {
+  const res = await fetch(`${API_BASE}/leads?page=${page}&limit=${limit}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -188,17 +188,27 @@ export async function fetchLeads() {
     throw new Error(data.error || 'Failed to fetch leads')
   }
 
-  const leads = await res.json()
+  const response = await res.json()
 
-  // Map backend shape to UI shape expected by CRM LeadsPage
-  return leads.map((lead: any) => ({
+  // Handle both old array format (if backend rollback) and new object format
+  const leadsData = Array.isArray(response) ? response : (response.data || [])
+  const pagination = response.pagination || null
+
+  const mappedLeads = leadsData.map((lead: any) => ({
     id: `L-${lead.id}`,
     rawId: lead.id,
-    name: lead.customer_name || `Lead ${lead.id}`,
+    customer_name: lead.customer_name || 'Unknown',
+    name: lead.customer_name || 'Unknown',
+    company: lead.company || null,
     channel: lead.channel,
     status: lead.status || 'New',
     owner: lead.owner_name || 'Unassigned',
+    created_at: lead.created_at,
+    customer_email: lead.customer_email,
+    customer_phone: lead.customer_phone,
   }))
+
+  return { leads: mappedLeads, pagination }
 }
 
 // Alias for backward compatibility

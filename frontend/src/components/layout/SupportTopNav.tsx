@@ -6,7 +6,7 @@ import { Menu } from 'lucide-react'
 
 const SUPPORT_LINKS = [
     { path: '/dashboard/support', label: 'Overview' },
-    { path: '/communications', label: 'Inbox' },
+    { path: '/communications/inbox', label: 'Inbox' },
     { path: '/crm/customers', label: 'Customers' },
 ]
 

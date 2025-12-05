@@ -27,7 +27,7 @@ export default function MarketingDashboard() {
         if (!isMounted) return
 
         const campaignList = Array.isArray(campaigns) ? campaigns : []
-        const leadsList = Array.isArray(leads) ? leads : []
+        const leadsList = Array.isArray(leads) ? leads : (leads?.leads || [])
 
         // Active campaigns: if a status field exists, count only non-completed ones, otherwise total
         const active = campaignList.filter(c => {

@@ -2,9 +2,34 @@ import pool from '../config/database.js';
 
 export const getLeads = async (req, res) => {
   try {
-    const [leads] = await pool.execute('SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id ORDER BY l.id DESC');
-    res.json(leads);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+
+    // Get total count
+    const [countResult] = await pool.execute('SELECT COUNT(*) as total FROM leads');
+    const total = countResult[0].total;
+
+    // Get paginated leads
+    // Note: We use string interpolation for LIMIT/OFFSET because prepared statements for them can be tricky in some drivers,
+    // but mysql2 usually handles numbers correctly. However, to be absolutely safe against 'LIMIT '50'' syntax error,
+    // we pass them as numbers.
+    const [leads] = await pool.execute(
+      'SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id ORDER BY l.id DESC LIMIT ? OFFSET ?',
+      [limit, offset]
+    );
+
+    res.json({
+      data: leads,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
+    console.error('Error fetching leads:', error);
     res.status(500).json({ error: 'Failed to fetch leads' });
   }
 };

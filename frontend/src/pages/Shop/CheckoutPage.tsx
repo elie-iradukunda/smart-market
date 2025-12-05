@@ -285,24 +285,37 @@ export default function CheckoutPage() {
 
                             {/* Items */}
                             <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
-                                {cart.map((item) => (
-                                    <div key={item.id} className="flex gap-3">
-                                        <img
-                                            src={item.image}
-                                            alt={item.name}
-                                            className="w-16 h-16 object-cover rounded-lg"
-                                        />
-                                        <div className="flex-1">
-                                            <p className="font-medium text-gray-900 text-sm line-clamp-1">
-                                                {item.name}
-                                            </p>
-                                            <p className="text-gray-600 text-sm">Qty: {item.quantity}</p>
-                                            <p className="font-semibold text-gray-900">
-                                                {(item.price * item.quantity).toLocaleString('en-RW')} RF
-                                            </p>
+                                {cart.map((item) => {
+                                    const getImageUrl = (path: string) => {
+                                        if (!path) return '';
+                                        if (path.startsWith('http')) return path;
+                                        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+                                        return `http://localhost:3000${cleanPath}`;
+                                    };
+
+                                    return (
+                                        <div key={item.id} className="flex gap-3">
+                                            <img
+                                                src={getImageUrl(item.image || '')}
+                                                alt={item.name}
+                                                className="w-16 h-16 object-cover rounded-lg"
+                                                onError={(e) => {
+                                                    const target = e.target as HTMLImageElement;
+                                                    target.src = 'https://via.placeholder.com/64?text=No+Image';
+                                                }}
+                                            />
+                                            <div className="flex-1">
+                                                <p className="font-medium text-gray-900 text-sm line-clamp-1">
+                                                    {item.name}
+                                                </p>
+                                                <p className="text-gray-600 text-sm">Qty: {item.quantity}</p>
+                                                <p className="font-semibold text-gray-900">
+                                                    {(item.price * item.quantity).toLocaleString('en-RW')} RF
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Totals */}

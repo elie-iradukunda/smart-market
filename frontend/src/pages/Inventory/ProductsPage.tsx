@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { fetchProducts, createProduct, deleteProduct, uploadProductImage } from '@/api/apiClient'
-import { Plus, Trash2, Package, Upload, X, Image as ImageIcon } from 'lucide-react'
+import { fetchProducts, createProduct, updateProduct, uploadProductImage } from '@/api/apiClient'
+import { Plus, Edit, Package, Upload, X, Image as ImageIcon } from 'lucide-react'
 
 // Helper to get full image URL
 const getImageUrl = (path: string) => {
@@ -26,10 +26,10 @@ const getCategoryColor = (category: string) => {
 // Product Row Component
 interface ProductRowProps {
     product: any
-    onDelete: (id: number) => void
+    onEdit: (product: any) => void
 }
 
-const ProductRow: React.FC<ProductRowProps> = ({ product, onDelete }) => {
+const ProductRow: React.FC<ProductRowProps> = ({ product, onEdit }) => {
     const [imageError, setImageError] = useState(false)
     const categoryColors = getCategoryColor(product.category || 'Other')
     const hasImage = product.image && !imageError
@@ -41,8 +41,8 @@ const ProductRow: React.FC<ProductRowProps> = ({ product, onDelete }) => {
                 <div className="flex items-center">
                     <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
                         {hasImage && imageUrl ? (
-                            <img 
-                                src={imageUrl} 
+                            <img
+                                src={imageUrl}
                                 alt={product.name}
                                 className="h-12 w-12 rounded-lg object-cover"
                                 onError={() => setImageError(true)}
@@ -72,8 +72,8 @@ const ProductRow: React.FC<ProductRowProps> = ({ product, onDelete }) => {
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">RF {Number(product.price).toFixed(2)}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.stock_quantity}</td>
             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button onClick={() => onDelete(product.id)} className="text-red-600 hover:text-red-900 ml-4">
-                    <Trash2 size={18} />
+                <button onClick={() => onEdit(product)} className="text-blue-600 hover:text-blue-900 ml-4">
+                    <Edit size={18} />
                 </button>
             </td>
         </tr>
@@ -85,6 +85,7 @@ export default function ProductsPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [showAddModal, setShowAddModal] = useState(false)
+    const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
 
     const [imagePreview, setImagePreview] = useState<string>('')
 
@@ -140,7 +141,25 @@ export default function ProductsPage() {
         setNewProduct({ ...newProduct, image: '' })
     }
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleEdit = (product: any) => {
+        setSelectedProductId(product.id)
+        setNewProduct({
+            name: product.name,
+            description: product.description || '',
+            price: product.price,
+            category: product.category || '',
+            stock_quantity: product.stock_quantity,
+            image: product.image || ''
+        })
+        if (product.image) {
+            setImagePreview(getImageUrl(product.image))
+        } else {
+            setImagePreview('')
+        }
+        setShowAddModal(true)
+    }
+
+    const handleCreateOrUpdate = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
             const productData = {
@@ -149,24 +168,27 @@ export default function ProductsPage() {
                 stock_quantity: Number(newProduct.stock_quantity)
             }
 
-            await createProduct(productData)
+            if (selectedProductId) {
+                await updateProduct(selectedProductId, productData)
+            } else {
+                await createProduct(productData)
+            }
+
             setShowAddModal(false)
             setNewProduct({ name: '', description: '', price: '', category: '', stock_quantity: '', image: '' })
             setImagePreview('')
+            setSelectedProductId(null)
             loadProducts()
         } catch (err: any) {
             alert(err.message)
         }
     }
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this product?')) return
-        try {
-            await deleteProduct(id)
-            loadProducts()
-        } catch (err: any) {
-            alert(err.message)
-        }
+    const handleCloseModal = () => {
+        setShowAddModal(false)
+        setNewProduct({ name: '', description: '', price: '', category: '', stock_quantity: '', image: '' })
+        setImagePreview('')
+        setSelectedProductId(null)
     }
 
     return (
@@ -178,7 +200,12 @@ export default function ProductsPage() {
                         <p className="text-sm text-gray-500">Manage your e-commerce product catalog</p>
                     </div>
                     <button
-                        onClick={() => setShowAddModal(true)}
+                        onClick={() => {
+                            setSelectedProductId(null)
+                            setNewProduct({ name: '', description: '', price: '', category: '', stock_quantity: '', image: '' })
+                            setImagePreview('')
+                            setShowAddModal(true)
+                        }}
                         className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
                     >
                         <Plus size={18} />
@@ -211,19 +238,19 @@ export default function ProductsPage() {
                                 <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">No products found</td></tr>
                             ) : (
                                 products.map((product) => (
-                                    <ProductRow key={product.id} product={product} onDelete={handleDelete} />
+                                    <ProductRow key={product.id} product={product} onEdit={handleEdit} />
                                 ))
                             )}
                         </tbody>
                     </table>
                 </div>
 
-                {/* Add Product Modal */}
+                {/* Add/Edit Product Modal */}
                 {showAddModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                         <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-                            <h2 className="text-xl font-bold text-gray-900 mb-4">Add New Product</h2>
-                            <form onSubmit={handleCreate} className="space-y-4">
+                            <h2 className="text-xl font-bold text-gray-900 mb-4">{selectedProductId ? 'Edit Product' : 'Add New Product'}</h2>
+                            <form onSubmit={handleCreateOrUpdate} className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Name</label>
                                     <input
@@ -323,10 +350,7 @@ export default function ProductsPage() {
                                 <div className="flex justify-end gap-3 mt-6">
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            setShowAddModal(false)
-                                            removeImage()
-                                        }}
+                                        onClick={handleCloseModal}
                                         className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                                     >
                                         Cancel
@@ -335,7 +359,7 @@ export default function ProductsPage() {
                                         type="submit"
                                         className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
                                     >
-                                        Create Product
+                                        {selectedProductId ? 'Update Product' : 'Create Product'}
                                     </button>
                                 </div>
                             </form>

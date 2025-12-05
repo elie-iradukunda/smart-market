@@ -37,7 +37,7 @@ import ProductsPage from '../pages/Inventory/ProductsPage';
 import OperationsReportsPage from '../pages/Reports/OperationsReportsPage';
 import ProductionReportsPage from '../pages/Reports/ProductionReportsPage';
 
-import PosTerminalPage from '../pages/POS/PosTerminalPage';
+import POSTerminalPage from '../pages/POS/POSTerminalPage';
 import PosSalesHistoryPage from '../pages/POS/PosSalesHistoryPage';
 
 import InvoicesPage from '../pages/Finance/InvoicesPage';
@@ -65,6 +65,7 @@ import RoleDetailPage from '../pages/Admin/RoleDetailPage';
 import AuditLogsPage from '../pages/Admin/AuditLogsPage';
 import SystemSettingsPage from '../pages/Admin/SystemSettingsPage';
 import ChangePasswordPage from '../pages/Account/ChangePasswordPage';
+import FilesPage from '../pages/FilesPage';
 
 export const routes = [
   { path: '/', element: <AdminDashboard /> },
@@ -81,6 +82,7 @@ export const routes = [
   { path: '/dashboard/sales', element: <SalesDashboard /> },
   { path: '/dashboard/pos', element: <PosDashboard /> },
   { path: '/dashboard/support', element: <SupportDashboard /> },
+  { path: '/files', element: <FilesPage /> },
 
   { path: '/crm/leads', element: <LeadsPage /> },
   { path: '/crm/leads/:id', element: <LeadDetailPage /> },
@@ -109,7 +111,7 @@ export const routes = [
   { path: '/reports/operations', element: <OperationsReportsPage /> },
   { path: '/reports/production', element: <ProductionReportsPage /> },
 
-  { path: '/pos/terminal', element: <PosTerminalPage /> },
+  { path: '/pos/terminal', element: <POSTerminalPage /> },
   { path: '/pos/sales-history', element: <PosSalesHistoryPage /> },
 
   { path: '/finance/invoices', element: <InvoicesPage /> },

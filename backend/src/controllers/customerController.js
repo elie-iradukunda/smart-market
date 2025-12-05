@@ -2,7 +2,7 @@ import pool from '../config/database.js';
 
 export const createCustomer = async (req, res) => {
   try {
-    const { name, phone, email, address, source } = req.body;
+    const { name, company, phone, email, address, source } = req.body;
     
     // Check for duplicate email or phone
     const [existing] = await pool.execute(
@@ -14,8 +14,8 @@ export const createCustomer = async (req, res) => {
     }
     
     const [result] = await pool.execute(
-      'INSERT INTO customers (name, phone, email, address, source) VALUES (?, ?, ?, ?, ?)',
-      [name, phone, email, address, source]
+      'INSERT INTO customers (name, company, phone, email, address, source) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, company, phone, email, address, source]
     );
     res.status(200).json({ id: result.insertId, message: 'Customer created' });
   } catch (error) {

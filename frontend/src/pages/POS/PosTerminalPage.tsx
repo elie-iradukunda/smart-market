@@ -193,8 +193,8 @@ export default function POSTerminalPage() {
       })
 
       const statusMessage = paymentResult.status === 'paid'
-        ? `Sale of $${total.toFixed(2)} completed via ${method}! Invoice fully paid.`
-        : `Partial payment of $${total.toFixed(2)} recorded. Remaining balance: $${paymentResult.remainingBalance.toFixed(2)}`
+        ? `Sale of RF ${total.toFixed(2)} completed via ${method}! Invoice fully paid.`
+        : `Partial payment of RF ${total.toFixed(2)} recorded. Remaining balance: RF ${paymentResult.remainingBalance.toFixed(2)}`
 
       setSuccessMessage(statusMessage)
       setShowInvoiceModal(true)
@@ -213,6 +213,7 @@ export default function POSTerminalPage() {
     }
 
     setSendingInvoice(true)
+    setError(null)
     try {
       // Import email service
       const response = await fetch('http://localhost:3000/api/email', {
@@ -242,23 +243,23 @@ export default function POSTerminalPage() {
                   <tr>
                     <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
                     <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">${item.qty}</td>
-                    <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">$${item.price.toFixed(2)}</td>
-                    <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">$${(item.qty * item.price).toFixed(2)}</td>
+                    <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">RF ${item.price.toFixed(2)}</td>
+                    <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">RF ${(item.qty * item.price).toFixed(2)}</td>
                   </tr>
                 `).join('')}
               </tbody>
               <tfoot>
                 <tr>
                   <td colspan="3" style="padding: 8px; text-align: right; border: 1px solid #ddd;"><strong>Subtotal:</strong></td>
-                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">$${lastSale.subtotal.toFixed(2)}</td>
+                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">RF ${lastSale.subtotal.toFixed(2)}</td>
                 </tr>
                 <tr>
                   <td colspan="3" style="padding: 8px; text-align: right; border: 1px solid #ddd;"><strong>VAT (18%):</strong></td>
-                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">$${lastSale.tax.toFixed(2)}</td>
+                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">RF ${lastSale.tax.toFixed(2)}</td>
                 </tr>
                 <tr style="background: #f3f4f6;">
                   <td colspan="3" style="padding: 8px; text-align: right; border: 1px solid #ddd;"><strong>Total:</strong></td>
-                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd;"><strong>$${lastSale.total.toFixed(2)}</strong></td>
+                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd;"><strong>RF ${lastSale.total.toFixed(2)}</strong></td>
                 </tr>
               </tfoot>
             </table>
@@ -273,12 +274,20 @@ export default function POSTerminalPage() {
       if (response.ok) {
         setSuccessMessage('Invoice sent successfully to ' + selectedCustomer.email)
       } else {
-        throw new Error('Failed to send email')
+        // Email failed but invoice was created - show warning instead of error
+        setSuccessMessage('Invoice created successfully! (Email service not configured - please send invoice manually)')
       }
     } catch (err) {
-      setError('Failed to send invoice: ' + err.message)
+      // Email failed but invoice was created - show warning instead of error
+      setSuccessMessage('Invoice created successfully! (Email service not configured - please send invoice manually)')
+      console.warn('Email sending failed:', err.message)
     } finally {
       setSendingInvoice(false)
+      // Close modal and clear cart after sending (or attempting to send) email
+      setTimeout(() => {
+        setShowInvoiceModal(false)
+        handleClearCart()
+      }, 1500) // Give user time to see the success message
     }
   }
 
@@ -426,9 +435,9 @@ export default function POSTerminalPage() {
                           {p.name || p.sku}
                         </span>
                         <span className="mt-1 text-xs text-gray-500">{p.category || 'Product'}</span>
-                        <span className="mt-2 text-lg font-bold text-indigo-600">
-                          ${Number(p.price || 0).toFixed(2)}
-                        </span>
+                        <p className="mt-2 text-lg font-bold text-indigo-600">
+                          RF {Number(p.price || 0).toFixed(2)}
+                        </p>
                       </button>
                     ))}
                   </div>
@@ -469,7 +478,7 @@ export default function POSTerminalPage() {
                       <div key={item.id} className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
-                          <p className="text-xs text-gray-500">${item.price} each</p>
+                          <p className="text-xs text-gray-500">RF {item.price} each</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
@@ -494,7 +503,7 @@ export default function POSTerminalPage() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-semibold text-gray-900">
-                            ${((item.qty || 1) * (item.price || 0)).toFixed(2)}
+                            RF {((item.qty || 1) * (item.price || 0)).toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -506,15 +515,15 @@ export default function POSTerminalPage() {
                 <div className="space-y-2 border-t border-gray-200 pt-4 mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
+                    <span className="font-medium text-gray-900">RF {subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">VAT (18%)</span>
-                    <span className="font-medium text-gray-900">${tax.toFixed(2)}</span>
+                    <span className="font-medium text-gray-900">RF {tax.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2">
                     <span className="text-gray-900">Total</span>
-                    <span className="text-indigo-600">${total.toFixed(2)}</span>
+                    <span className="text-indigo-600">RF {total.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -710,9 +719,9 @@ export default function POSTerminalPage() {
                     <tr key={idx}>
                       <td className="px-3 py-2 text-gray-900">{item.name}</td>
                       <td className="px-3 py-2 text-center text-gray-600">{item.qty}</td>
-                      <td className="px-3 py-2 text-right text-gray-600">${item.price.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-right text-gray-600">RF {item.price.toFixed(2)}</td>
                       <td className="px-3 py-2 text-right font-medium text-gray-900">
-                        ${(item.qty * item.price).toFixed(2)}
+                        RF {(item.qty * item.price).toFixed(2)}
                       </td>
                     </tr>
                   ))}
@@ -720,16 +729,16 @@ export default function POSTerminalPage() {
                 <tfoot className="border-t-2 border-gray-300">
                   <tr>
                     <td colSpan="3" className="px-3 py-2 text-right font-medium text-gray-700">Subtotal:</td>
-                    <td className="px-3 py-2 text-right font-medium text-gray-900">${lastSale.subtotal.toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-medium text-gray-900">RF {lastSale.subtotal.toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td colSpan="3" className="px-3 py-2 text-right font-medium text-gray-700">VAT (18%):</td>
-                    <td className="px-3 py-2 text-right font-medium text-gray-900">${lastSale.tax.toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-medium text-gray-900">RF {lastSale.tax.toFixed(2)}</td>
                   </tr>
                   <tr className="bg-gray-50">
                     <td colSpan="3" className="px-3 py-2 text-right font-bold text-gray-900">Total:</td>
                     <td className="px-3 py-2 text-right font-bold text-indigo-600 text-lg">
-                      ${lastSale.total.toFixed(2)}
+                      RF {lastSale.total.toFixed(2)}
                     </td>
                   </tr>
                 </tfoot>
@@ -745,7 +754,7 @@ export default function POSTerminalPage() {
                   <p className={`font-semibold ${lastSale.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'}`}>{lastSale.paymentStatus === 'paid' ? 'PAID' : 'PARTIAL'}</p>
                   {lastSale.remainingBalance > 0 && (
                     <p className="text-xs text-red-600 mt-1">
-                      Balance: ${lastSale.remainingBalance.toFixed(2)}
+                      Balance: RF {lastSale.remainingBalance.toFixed(2)}
                     </p>
                   )}
                 </div>

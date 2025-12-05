@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Lock } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Lock, ArrowLeft } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { getAuthUser } from '@/utils/apiClient'
 import { changeUserPassword } from '@/api/apiClient'
@@ -54,6 +54,15 @@ export default function ChangePasswordPage() {
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8 space-y-6">
       <div className="max-w-lg mx-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mb-6">
+          <Link
+            to="/dashboard/owner"
+            className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Owner Dashboard
+          </Link>
+        </div>
         <h1 className="text-xl font-semibold text-gray-900 mb-1">Change password</h1>
         <p className="text-sm text-gray-600 mb-4">Update your password for this account.</p>
 
