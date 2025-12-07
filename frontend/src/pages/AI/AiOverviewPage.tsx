@@ -6,10 +6,7 @@ import { Zap, TrendingUp, DollarSign, Package, Users, Activity, Loader, AlertTri
 // --- IMPORTANT: DO NOT REMOVE / EXTERNAL API IMPORTS ---
 // These are assumed to be implemented in your project and are necessary for the component to function.
 import { fetchDemandPredictions, fetchReorderSuggestions, fetchPricingPredictions, fetchCustomerInsights, fetchChurnPredictions, fetchSegmentPredictions } from '../../api/apiClient'
-import MarketingTopNav from '@/components/layout/MarketingTopNav'
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
-import OwnerSideNav from '@/components/layout/OwnerSideNav'
-import { getAuthUser } from '@/utils/apiClient'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 import DemandForecastChart from '../../modules/ai/components/DemandForecastChart'
 import PriceRecommendationWidget from '../../modules/ai/components/PriceRecommendationWidget'
@@ -74,9 +71,6 @@ export default function AiOverviewPage() {
     const [segmentData, setSegmentData] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
-
-    const user = getAuthUser()
-    const isOwner = user?.role_id === 1
 
     useEffect(() => {
         let isMounted = true
@@ -205,16 +199,10 @@ export default function AiOverviewPage() {
     // --- END API LOGIC PRESERVED ---
 
     return (
-        // Blue/Purple light gradient background
-        <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-0 pb-10 font-sans">
-            {isOwner ? <OwnerTopNav /> : <MarketingTopNav />}
-
-            {/* Owner shell: sidebar + main content wrapper. OwnerSideNav self-hides for non-owner roles. */}
-            <div className="px-3 sm:px-4 md:px-6 lg:px-8 pt-8">
-              <div className="flex gap-6">
-                <OwnerSideNav />
-
-                <main className="flex-1 space-y-8 max-w-7xl mx-auto">
+        <DashboardLayout>
+            {/* Blue/Purple light gradient background */}
+            <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-3 sm:px-4 md:px-6 lg:px-8 py-8 font-sans">
+                <div className="max-w-7xl mx-auto space-y-8">
 
                 {/* HEADER CARD - Strong Blue Theme */}
                 <div className="rounded-3xl border border-blue-200 bg-white/95 backdrop-blur-xl p-8 shadow-2xl shadow-blue-300/50">
@@ -333,9 +321,8 @@ export default function AiOverviewPage() {
 
                 </div>
 
-                </main>
-              </div>
+                </div>
             </div>
-        </div>
+        </DashboardLayout>
     )
 }

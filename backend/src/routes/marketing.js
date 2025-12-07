@@ -6,7 +6,8 @@ import {
   broadcastToSegment,
   getCampaigns,
   createCampaign,
-  getCampaign
+  getCampaign,
+  getCampaignPerformance
 } from '../controllers/marketingController.js';
 
 const router = express.Router();
@@ -21,6 +22,8 @@ router.post('/broadcast/segment', broadcastToSegment);
 // Campaign tracking
 router.get('/campaigns', getCampaigns);
 router.post('/campaigns', createCampaign);
+// More specific route must come before the general :id route
+router.get('/campaigns/:id/performance', getCampaignPerformance);
 router.get('/campaigns/:id', getCampaign);
 
 export default router;

@@ -6,12 +6,12 @@ const getEmailTemplate = (type, message) => {
   const templates = {
     default: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2c3e50;">📧 Smart Market Notification</h2>
+        <h2 style="color: #2c3e50;">📧 Top Design Notification</h2>
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
           ${message}
         </div>
         <p style="color: #7f8c8d; font-size: 12px; margin-top: 20px;">
-          This is an automated message from Smart Market System
+          This is an automated message from Top Design System
         </p>
       </div>
     `,
@@ -19,14 +19,14 @@ const getEmailTemplate = (type, message) => {
     business: `
       <div style="font-family: 'Segoe UI', sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 28px;">🏢 Smart Market</h1>
+          <h1 style="color: white; margin: 0; font-size: 28px;">🏢 Top Design</h1>
           <p style="color: #e8f4fd; margin: 5px 0 0 0;">Business Management Platform</p>
         </div>
         <div style="padding: 40px 30px; background: #f9fafb;">
           ${message}
         </div>
         <div style="background: #374151; padding: 20px; text-align: center;">
-          <p style="color: #9ca3af; margin: 0; font-size: 12px;">Powered by Smart Market System</p>
+          <p style="color: #9ca3af; margin: 0; font-size: 12px;">Powered by Top Design System</p>
         </div>
       </div>
     `,
@@ -34,7 +34,7 @@ const getEmailTemplate = (type, message) => {
     modern: `
       <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb;">
         <div style="background: #1f2937; padding: 25px; border-bottom: 4px solid #3b82f6;">
-          <h2 style="color: #ffffff; margin: 0; font-weight: 600;">⚡ Smart Market</h2>
+          <h2 style="color: #ffffff; margin: 0; font-weight: 600;">⚡ Top Design</h2>
         </div>
         <div style="padding: 35px 25px;">
           <div style="background: #f3f4f6; padding: 25px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
@@ -42,7 +42,7 @@ const getEmailTemplate = (type, message) => {
           </div>
         </div>
         <div style="background: #f9fafb; padding: 15px 25px; border-top: 1px solid #e5e7eb;">
-          <p style="color: #6b7280; margin: 0; font-size: 11px;">© Smart Market - Professional Business Solutions</p>
+          <p style="color: #6b7280; margin: 0; font-size: 11px;">© Top Design - Professional Business Solutions</p>
         </div>
       </div>
     `,
@@ -50,13 +50,13 @@ const getEmailTemplate = (type, message) => {
     minimal: `
       <div style="font-family: 'Helvetica Neue', sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
         <div style="border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 30px;">
-          <h3 style="margin: 0; color: #000; font-weight: 300;">Smart Market</h3>
+          <h3 style="margin: 0; color: #000; font-weight: 300;">Top Design</h3>
         </div>
         <div style="line-height: 1.6; color: #333;">
           ${message}
         </div>
         <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
-          <p style="color: #999; font-size: 11px; margin: 0;">Smart Market System</p>
+          <p style="color: #999; font-size: 11px; margin: 0;">Top Design System</p>
         </div>
       </div>
     `
@@ -67,17 +67,30 @@ const getEmailTemplate = (type, message) => {
 
 // Free Email Service using Gmail SMTP
 export const sendFreeEmail = async (to, subject, message, template = 'default') => {
+  const GMAIL_USER = process.env.GMAIL_USER || '';
+  const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || '';
+  
+  // Check if email credentials are configured
+  if (!GMAIL_USER || !GMAIL_APP_PASSWORD || GMAIL_USER === 'your-email@gmail.com' || GMAIL_APP_PASSWORD === 'your-app-password') {
+    console.warn('⚠️ GMAIL_USER or GMAIL_APP_PASSWORD not configured. Email not sent to:', to);
+    console.warn('Please set GMAIL_USER and GMAIL_APP_PASSWORD in your .env file');
+    return { 
+      success: false, 
+      error: 'Email service not configured. Please set GMAIL_USER and GMAIL_APP_PASSWORD environment variables.' 
+    };
+  }
+
   try {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.GMAIL_USER || 'your-email@gmail.com',
-        pass: process.env.GMAIL_APP_PASSWORD || 'your-app-password'
+        user: GMAIL_USER,
+        pass: GMAIL_APP_PASSWORD
       }
     });
 
     const mailOptions = {
-      from: process.env.GMAIL_USER || 'Smart Market <your-email@gmail.com>',
+      from: `TOP Design Ltd <${GMAIL_USER}>`,
       to: to,
       subject: subject,
       html: getEmailTemplate(template, message)
@@ -89,6 +102,12 @@ export const sendFreeEmail = async (to, subject, message, template = 'default') 
     
   } catch (error) {
     console.error('❌ Email sending failed:', error);
+    console.error('Error details:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode
+    });
     return { success: false, error: error.message };
   }
 };
@@ -103,7 +122,7 @@ export const sendFreeSMS = async (phone, message) => {
       },
       body: JSON.stringify({
         phone: phone,
-        message: `📱 Smart Market: ${message}`,
+        message: `📱 Top Design: ${message}`,
         key: 'textbelt' // Free tier key
       })
     });
@@ -165,7 +184,7 @@ export const sendWebhookNotification = async (webhookUrl, data) => {
       },
       body: JSON.stringify({
         timestamp: new Date().toISOString(),
-        source: 'Smart Market System',
+        source: 'Top Design System',
         ...data
       })
     });
@@ -199,7 +218,7 @@ export const sendSlackNotification = async (message, channel = '#general') => {
       },
       body: JSON.stringify({
         channel: channel,
-        username: 'Smart Market Bot',
+        username: 'Top Design Bot',
         icon_emoji: ':robot_face:',
         text: message,
         attachments: [
@@ -208,7 +227,7 @@ export const sendSlackNotification = async (message, channel = '#general') => {
             fields: [
               {
                 title: 'System',
-                value: 'Smart Market Backend',
+                value: 'Top Design Backend',
                 short: true
               },
               {
@@ -236,7 +255,7 @@ export const sendSlackNotification = async (message, channel = '#general') => {
 };
 
 // Free Discord Notifications (using Discord Webhooks)
-export const sendDiscordNotification = async (message, title = 'Smart Market Alert') => {
+export const sendDiscordNotification = async (message, title = 'Top Design Alert') => {
   try {
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
     
@@ -250,7 +269,7 @@ export const sendDiscordNotification = async (message, title = 'Smart Market Ale
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        username: 'Smart Market Bot',
+        username: 'Top Design Bot',
         avatar_url: 'https://cdn-icons-png.flaticon.com/512/2040/2040946.png',
         embeds: [
           {
@@ -259,7 +278,7 @@ export const sendDiscordNotification = async (message, title = 'Smart Market Ale
             color: 3447003, // Blue color
             timestamp: new Date().toISOString(),
             footer: {
-              text: 'Smart Market System'
+              text: 'Top Design System'
             }
           }
         ]
@@ -396,7 +415,7 @@ export const sendBusinessAlert = async (alertType, data) => {
       break;
       
     default:
-      subject = '📢 Smart Market Notification';
+      subject = '📢 Top Design Notification';
       message = `<p>${JSON.stringify(data, null, 2)}</p>`;
   }
   

@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import socketService from './services/socketService.js';
 import pool from './config/database.js';
 
@@ -53,7 +55,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files (uploaded images)
-app.use('/uploads', express.static('public/uploads'));
+app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
 
 // Direct campaign route (before other routes)
 app.get('/api/campaigns/:id', async (req, res) => {
@@ -63,11 +65,11 @@ app.get('/api/campaigns/:id', async (req, res) => {
       'SELECT * FROM campaigns WHERE id = ?',
       [id]
     );
-    
+
     if (campaign.length === 0) {
       return res.status(404).json({ error: 'Campaign not found' });
     }
-    
+
     res.json(campaign[0]);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch campaign' });
@@ -82,17 +84,28 @@ app.get('/api/work-orders/:id', async (req, res) => {
       'SELECT * FROM work_orders WHERE id = ?',
       [id]
     );
-    
+
     if (workOrder.length === 0) {
       return res.status(404).json({ error: 'Work order not found' });
     }
-    
+
     res.json(workOrder[0]);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch work order' });
   }
 });
 
+
+// Direct public contact form route (no authentication required)
+app.post('/api/communication/contact', async (req, res) => {
+  try {
+    const { sendContactForm } = await import('./controllers/communicationController.js');
+    return sendContactForm(req, res);
+  } catch (error) {
+    console.error('Contact form route error:', error);
+    res.status(500).json({ error: 'Failed to process contact form' });
+  }
+});
 
 // Direct public ads routes (no authentication required)
 app.get('/api/ads/public', async (req, res) => {
@@ -143,11 +156,11 @@ app.get('/api/roles/:id', async (req, res) => {
       'SELECT * FROM roles WHERE id = ?',
       [id]
     );
-    
+
     if (role.length === 0) {
       return res.status(404).json({ error: 'Role not found' });
     }
-    
+
     res.json(role[0]);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch role' });
@@ -206,7 +219,7 @@ app.get('/api/permissions', async (req, res) => {
 
 app.get('/api/permissions/:id', async (req, res) => {
   try {
-    const { id} = req.params;
+    const { id } = req.params;
     const [permission] = await pool.execute('SELECT * FROM permissions WHERE id = ?', [id]);
     if (permission.length === 0) {
       return res.status(404).json({ error: 'Permission not found' });
@@ -316,10 +329,10 @@ app.put('/api/roles/:role_id/permissions', async (req, res) => {
   try {
     const { role_id } = req.params;
     const { permission_ids } = req.body;
-    
+
     // Delete existing permissions for this role
     await pool.execute('DELETE FROM role_permissions WHERE role_id = ?', [role_id]);
-    
+
     // Add new permissions
     for (const permission_id of permission_ids) {
       await pool.execute(
@@ -327,7 +340,7 @@ app.put('/api/roles/:role_id/permissions', async (req, res) => {
         [role_id, permission_id]
       );
     }
-    
+
     res.json({ message: 'Role permissions updated' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update role permissions' });
@@ -400,7 +413,7 @@ app.use('/api', productionRoutes);
 app.use('/api', financeRoutes);
 app.use('/api', marketingRoutes);
 app.use('/api', adsRoutes);
-app.use('/api', communicationRoutes);
+app.use('/api/communication', communicationRoutes);
 app.use('/api', aiRoutes);
 app.use('/api', reportRoutes);
 
@@ -425,7 +438,7 @@ const server = createServer(app);
 socketService.init(server);
 
 server.listen(PORT, () => {
-  console.log(`Smart Market Backend running on port ${PORT}`);
+  console.log(`Top Design Backend running on port ${PORT}`);
   console.log(`Socket.IO server initialized`);
 });
 

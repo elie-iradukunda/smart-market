@@ -4,7 +4,7 @@ import emailService from '../services/emailService.js';
 export const createQuote = async (req, res) => {
   try {
     const { customer_id, items } = req.body;
-    
+
     // Check if customer exists
     const [customer] = await pool.execute('SELECT id FROM customers WHERE id = ?', [customer_id]);
     if (customer.length === 0) {
@@ -51,7 +51,7 @@ export const createQuote = async (req, res) => {
 
     // Send quote to customer email
     const [customerData] = await pool.execute('SELECT email, name FROM customers WHERE id = ?', [customer_id]);
-    
+
     if (customerData.length > 0 && customerData[0].email) {
       try {
         await emailService.sendQuote(customerData[0].email, {
@@ -65,7 +65,7 @@ export const createQuote = async (req, res) => {
         console.error('Failed to send quote email:', emailError);
       }
     }
-    
+
     res.status(200).json({ quote_id, message: 'Quote created successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Quote creation failed' });
@@ -75,20 +75,20 @@ export const createQuote = async (req, res) => {
 export const approveQuote = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Check if quote exists
     const [quote] = await pool.execute('SELECT * FROM quotes WHERE id = ?', [id]);
     if (quote.length === 0) {
       return res.status(404).json({ error: 'Quote not found' });
     }
-    
+
     // Check if quote is already approved
     if (quote[0].status === 'approved') {
       return res.status(400).json({ error: 'Quote is already approved' });
     }
-    
+
     await pool.execute('UPDATE quotes SET status = "approved" WHERE id = ?', [id]);
-    
+
     // Create order from this approved quote
     const [orderResult] = await pool.execute(
       'INSERT INTO orders (quote_id, customer_id, status, balance) VALUES (?, ?, "design", ?)',
@@ -140,7 +140,7 @@ export const approveQuote = async (req, res) => {
     const [customerData] = await pool.execute('SELECT email, name FROM customers WHERE id = ?', [quote[0].customer_id]);
     let customerEmailSent = false;
     let adminEmailSent = false;
-    
+
     if (customerData.length > 0 && customerData[0].email) {
       try {
         await emailService.sendQuoteApproval(customerData[0].email, {
@@ -154,8 +154,8 @@ export const approveQuote = async (req, res) => {
         console.error('Failed to send quote approval email:', emailError);
       }
     }
-    
-    // Notify Smart Market admin about new order
+
+    // Notify Top Design admin about new order
     try {
       await emailService.sendOrderNotification(process.env.ADMIN_EMAIL, {
         quote_id: id,
@@ -167,9 +167,9 @@ export const approveQuote = async (req, res) => {
     } catch (emailError) {
       console.error('Failed to send admin notification:', emailError);
     }
-    
+
     // Send a single response after all operations are complete
-    res.json({ 
+    res.json({
       message: 'Quote approved, order created and materials reserved from stock',
       notifications: {
         customerEmail: customerEmailSent ? 'sent' : 'failed',
@@ -205,13 +205,13 @@ export const getQuote = async (req, res) => {
       JOIN customers c ON q.customer_id = c.id 
       WHERE q.id = ?
     `, [id]);
-    
+
     if (quote.length === 0) {
       return res.status(404).json({ error: 'Quote not found' });
     }
-    
+
     const [items] = await pool.execute('SELECT * FROM quote_items WHERE quote_id = ?', [id]);
-    
+
     res.json({ ...quote[0], items });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch quote' });
@@ -222,29 +222,29 @@ export const updateQuote = async (req, res) => {
   try {
     const { id } = req.params;
     const { customer_id, items } = req.body;
-    
+
     // Check if quote exists
     const [existingQuote] = await pool.execute('SELECT id FROM quotes WHERE id = ?', [id]);
     if (existingQuote.length === 0) {
       return res.status(404).json({ error: 'Quote not found' });
     }
-    
+
     // Check if customer exists
     const [customer] = await pool.execute('SELECT id FROM customers WHERE id = ?', [customer_id]);
     if (customer.length === 0) {
       return res.status(404).json({ error: 'Customer not found' });
     }
-    
+
     const total_amount = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
-    
+
     await pool.execute(
       'UPDATE quotes SET customer_id = ?, total_amount = ? WHERE id = ?',
       [customer_id, total_amount, id]
     );
-    
+
     // Delete existing items and add new ones
     await pool.execute('DELETE FROM quote_items WHERE quote_id = ?', [id]);
-    
+
     for (const item of items) {
       const materialId = item.material_id || item.materialId || null;
       await pool.execute(
@@ -252,7 +252,7 @@ export const updateQuote = async (req, res) => {
         [id, materialId, item.description, item.unit_price, item.quantity, item.unit_price * item.quantity]
       );
     }
-    
+
     res.json({ message: 'Quote updated successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Quote update failed' });

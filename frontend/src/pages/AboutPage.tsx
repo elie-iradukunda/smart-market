@@ -4,35 +4,35 @@ import Card from '@/components/ui/Card'
 const values = [
   {
     icon: Target,
-    title: 'Mission-Driven',
+    title: 'Quality First',
     description:
-      'We empower design businesses to streamline operations, increase efficiency, and scale with confidence through intelligent technology.',
+      'We are committed to delivering exceptional design quality in every project. From banners to garments, we ensure premium materials and craftsmanship.',
   },
   {
     icon: Users,
     title: 'Customer-Centric',
     description:
-      'Your success is our success. We build features based on real customer feedback and continuously improve based on your needs.',
+      'Your vision is our mission. We work closely with our clients to understand their needs and deliver designs that exceed expectations.',
   },
   {
     icon: Award,
-    title: 'Innovation First',
+    title: 'Creative Excellence',
     description:
-      'We leverage cutting-edge AI and machine learning to provide predictive insights and automation that gives you a competitive edge.',
+      'Our team of skilled designers brings creativity and innovation to every project, ensuring your brand stands out with unique and impactful designs.',
   },
   {
     icon: TrendingUp,
-    title: 'Growth Focused',
+    title: 'Reliable Service',
     description:
-      'Our platform scales with you—from startup to enterprise. Start small and grow without the complexity of switching systems.',
+      'We pride ourselves on timely delivery, competitive pricing, and exceptional customer service. Your satisfaction is our top priority.',
   },
 ]
 
 const stats = [
-  { label: 'Active Users', value: '10,000+' },
-  { label: 'Businesses', value: '2,500+' },
-  { label: 'Orders Processed', value: '5M+' },
-  { label: 'Uptime', value: '99.9%' },
+  { label: 'Projects Completed', value: '5,000+' },
+  { label: 'Happy Clients', value: '2,500+' },
+  { label: 'Years of Experience', value: '10+' },
+  { label: 'Service Categories', value: '8+' },
 ]
 
 export default function AboutPage() {
@@ -43,10 +43,10 @@ export default function AboutPage() {
         <div className="container-professional">
           <div className="mx-auto max-w-2xl text-center">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
-              About TOP Design
+              About TOP Design Ltd
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600 sm:text-xl">
-              We're building the future of business management for design companies worldwide.
+              Rwanda's premier design company specializing in banners, printing, garment branding, signage, and graphic design services.
             </p>
           </div>
         </div>
@@ -59,15 +59,20 @@ export default function AboutPage() {
             <div className="prose prose-lg prose-gray mx-auto">
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
               <p className="text-lg text-gray-600 leading-relaxed mb-6">
-                TOP Design was born from a simple observation: design businesses were struggling with
-                fragmented systems that didn't talk to each other. From managing orders in spreadsheets
-                to tracking inventory manually, businesses were spending more time on administration than
-                on what they do best—creating amazing designs.
+                TOP Design Ltd was founded with a passion for bringing creative visions to life. We started as a small
+                design studio in Rwanda, dedicated to providing high-quality design and printing services to local businesses.
+                Over the years, we've grown into a trusted partner for companies across Rwanda, helping them establish
+                their brand identity through exceptional design work.
               </p>
               <p className="text-lg text-gray-600 leading-relaxed mb-6">
-                We set out to change that by creating an intelligent, all-in-one platform that unifies
-                every aspect of your business. Today, TOP Design helps thousands of businesses streamline
-                operations, reduce costs, and scale efficiently.
+                Today, TOP Design Ltd offers a comprehensive range of design services including banner printing,
+                garment branding, vinyl printing, digital printing, graphic design, custom signage, business cards,
+                and embroidery. We combine traditional craftsmanship with modern technology to deliver outstanding results
+                that help our clients stand out in the marketplace.
+              </p>
+              <p className="text-lg text-gray-600 leading-relaxed mb-6">
+                Our commitment to quality, creativity, and customer satisfaction has made us one of Rwanda's leading
+                design companies. We take pride in every project we complete and every relationship we build with our clients.
               </p>
             </div>
           </div>
@@ -127,20 +132,42 @@ export default function AboutPage() {
         <div className="container-professional">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Built by Experts, For Experts
+              Our Services
             </h2>
             <p className="mt-4 text-lg text-gray-600">
-              Our team combines decades of experience in business software, design, and AI to deliver
-              solutions that actually work.
+              We offer a wide range of design and printing services to meet all your business needs.
             </p>
           </div>
-          <div className="mx-auto max-w-3xl">
-            <div className="bg-white rounded-xl p-8 shadow-professional border border-gray-200">
-              <p className="text-lg text-gray-700 leading-relaxed">
-                We're a passionate team of engineers, designers, and business strategists dedicated to
-                making business management simple, intelligent, and powerful. Every feature we build is
-                tested with real businesses and refined based on actual usage patterns.
-              </p>
+          <div className="mx-auto max-w-4xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl p-6 shadow-professional border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Printing Services</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  High-quality banner printing, digital printing, business cards, and large format printing
+                  using premium materials and state-of-the-art equipment.
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-6 shadow-professional border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Garment Branding</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Custom t-shirts, hoodies, and apparel printing with vinyl, heat transfer, screen printing,
+                  and professional embroidery services.
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-6 shadow-professional border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Graphic Design</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Professional logo design, brand identity, marketing materials, and creative design solutions
+                  tailored to your business needs.
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-6 shadow-professional border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Signage & Vinyl</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Custom signage solutions, vinyl graphics for vehicles and windows, indoor and outdoor displays,
+                  and professional installation services.
+                </p>
+              </div>
             </div>
           </div>
         </div>

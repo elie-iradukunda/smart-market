@@ -56,7 +56,7 @@ export const getDemandPredictions = async (req, res) => {
       predictions: demandData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Smart Market'
+      powered_by: 'Top Design'
     });
   } catch (error) {
     console.error('Demand predictions error:', error);
@@ -76,7 +76,7 @@ export const getReorderSuggestions = async (req, res) => {
       inventory_analysis: inventoryData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Smart Market'
+      powered_by: 'Top Design'
     });
   } catch (error) {
     console.error('Reorder suggestions error:', error);
@@ -96,7 +96,7 @@ export const getCustomerInsights = async (req, res) => {
       customer_segments: segmentationData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Smart Market'
+      powered_by: 'Top Design'
     });
   } catch (error) {
     console.error('Customer insights error:', error);
@@ -116,7 +116,7 @@ export const getChurnPredictions = async (req, res) => {
       churn_analysis: churnData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Smart Market'
+      powered_by: 'Top Design'
     });
   } catch (error) {
     console.error('Churn predictions error:', error);
@@ -148,7 +148,7 @@ export const getPricingRecommendations = async (req, res) => {
       market_summary: marketData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Smart Market'
+      powered_by: 'Top Design'
     });
   } catch (error) {
     console.error('Pricing recommendations error:', error);
@@ -169,7 +169,7 @@ export const getProductionOptimization = async (req, res) => {
       resource_utilization: resourceData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Smart Market'
+      powered_by: 'Top Design'
     });
   } catch (error) {
     console.error('Production optimization error:', error);
@@ -190,7 +190,7 @@ export const getMarketingInsights = async (req, res) => {
       customer_acquisition: customerData,
       ai_recommendations: recommendations,
       generated_at: new Date().toISOString(),
-      powered_by: 'Smart Market'
+      powered_by: 'Top Design'
     });
   } catch (error) {
     console.error('Marketing insights error:', error);
@@ -201,7 +201,7 @@ export const getMarketingInsights = async (req, res) => {
 // Generate all AI insights using simplified service
 export const runAllPredictions = async (req, res) => {
   try {
-    console.log('Generating AI insights with Smart Market internal AI...');
+    console.log('Generating AI insights with Top Design internal AI...');
     
     // Generate all predictions using simplified service + Google AI Studio
     const [demandData, inventoryData, customerData, churnData] = await Promise.all([
@@ -219,14 +219,14 @@ export const runAllPredictions = async (req, res) => {
     
     if (res) {
       res.json({ 
-        message: 'AI predictions generated successfully using Smart Market',
+        message: 'AI predictions generated successfully using Top Design',
         data_points: {
           demand_forecasts: demandData.length,
           inventory_items: inventoryData.length,
           customer_segments: customerData.length,
           churn_predictions: churnData.length
         },
-        powered_by: 'Smart Market',
+        powered_by: 'Top Design',
         generated_at: new Date().toISOString()
       });
     }

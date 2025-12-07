@@ -51,6 +51,64 @@ export default function ProductDetailsPage() {
         }
     }, [id])
 
+    // Update meta tags for social sharing when product loads
+    useEffect(() => {
+        if (product) {
+            const imageUrl = getImageUrl(product.image || '')
+            const productUrl = `${window.location.origin}/products/${product.id}`
+            
+            // Update or create Open Graph meta tags
+            const updateMetaTag = (property: string, content: string) => {
+                let element = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement
+                if (!element) {
+                    element = document.createElement('meta')
+                    element.setAttribute('property', property)
+                    document.head.appendChild(element)
+                }
+                element.setAttribute('content', content)
+            }
+
+            const updateNameMetaTag = (name: string, content: string) => {
+                let element = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement
+                if (!element) {
+                    element = document.createElement('meta')
+                    element.setAttribute('name', name)
+                    document.head.appendChild(element)
+                }
+                element.setAttribute('content', content)
+            }
+
+            // Open Graph tags (required for Facebook sharing)
+            updateMetaTag('og:title', product.name)
+            updateMetaTag('og:description', product.description || 'Check out this amazing product!')
+            updateMetaTag('og:image', imageUrl || '')
+            updateMetaTag('og:image:secure_url', imageUrl || '') // HTTPS version
+            updateMetaTag('og:image:type', 'image/jpeg') // or image/png based on your images
+            updateMetaTag('og:image:width', '1200') // Recommended: 1200x630
+            updateMetaTag('og:image:height', '630')
+            updateMetaTag('og:url', productUrl)
+            updateMetaTag('og:type', 'product')
+            updateMetaTag('og:site_name', 'TOP Design Ltd')
+            
+            // Additional meta tags for better sharing
+            updateNameMetaTag('description', product.description || 'Check out this amazing product!')
+
+            // Twitter Card tags
+            updateNameMetaTag('twitter:card', 'summary_large_image')
+            updateNameMetaTag('twitter:title', product.name)
+            updateNameMetaTag('twitter:description', product.description || 'Check out this amazing product!')
+            updateNameMetaTag('twitter:image', imageUrl || '')
+
+            // Update page title
+            document.title = `${product.name} - TOP Design`
+
+            // Cleanup function
+            return () => {
+                document.title = 'TOP Design - Intelligent Business Management System'
+            }
+        }
+    }, [product])
+
     const loadProduct = async () => {
         try {
             setLoading(true)

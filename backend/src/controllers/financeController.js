@@ -6,7 +6,7 @@ import socketService from '../services/socketService.js';
 export const createInvoice = async (req, res) => {
   try {
     const { order_id, amount } = req.body;
-    
+
     // Check if order exists
     const [order] = await pool.execute('SELECT id FROM orders WHERE id = ?', [order_id]);
     if (order.length === 0) {
@@ -18,12 +18,12 @@ export const createInvoice = async (req, res) => {
     if (existing.length > 0) {
       return res.status(400).json({ error: 'An invoice already exists for this order' });
     }
-    
+
     const [result] = await pool.execute(
       'INSERT INTO invoices (order_id, amount) VALUES (?, ?)',
       [order_id, amount]
     );
-    
+
     // Get customer email to send invoice
     const [customer] = await pool.execute(`
       SELECT c.email, c.name 
@@ -31,7 +31,7 @@ export const createInvoice = async (req, res) => {
       JOIN orders o ON c.id = o.customer_id 
       WHERE o.id = ?
     `, [order_id]);
-    
+
     if (customer.length > 0 && customer[0].email) {
       try {
         await emailService.sendInvoice(customer[0].email, {
@@ -44,7 +44,7 @@ export const createInvoice = async (req, res) => {
         console.error('Failed to send invoice email:', emailError);
       }
     }
-    
+
     res.status(201).json({ id: result.insertId, message: 'Invoice created' });
   } catch (error) {
     res.status(500).json({ error: 'Invoice creation failed' });
@@ -54,8 +54,8 @@ export const createInvoice = async (req, res) => {
 export const processLanariPayment = async (req, res) => {
   try {
     const { invoice_id, customer_phone, amount } = req.body;
-    
-    
+
+
     // Get invoice and customer details
     const [invoice] = await pool.execute(`
       SELECT i.*, c.name as customer_name, o.id as order_id
@@ -64,7 +64,7 @@ export const processLanariPayment = async (req, res) => {
       JOIN customers c ON o.customer_id = c.id
       WHERE i.id = ?
     `, [invoice_id]);
-    
+
     if (invoice.length === 0) {
       return res.status(404).json({ error: 'Invoice not found' });
     }
@@ -78,20 +78,20 @@ export const processLanariPayment = async (req, res) => {
     const remainingBalance = parseFloat(invoice[0].amount) - totalPaidSoFar;
 
     if (parseFloat(amount) > remainingBalance) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: `Payment amount exceeds remaining balance. You can only pay up to ${remainingBalance}`,
-        remainingBalance 
+        remainingBalance
       });
     }
-    
+
     // Create payment record first
     const [result] = await pool.execute(
       'INSERT INTO payments (invoice_id, method, amount, user_id, reference, status, gateway, gateway_transaction_id, gateway_response, customer_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [invoice_id, 'lanari', amount, req.user.id, 'pending', 'pending', 'lanari', 'pending', '{}', customer_phone]
     );
-    
+
     const paymentId = result.insertId;
-    
+
     // Emit payment created event
     socketService.emitPaymentCreated({
       payment_id: paymentId,
@@ -100,24 +100,24 @@ export const processLanariPayment = async (req, res) => {
       status: 'pending',
       customer_phone: customer_phone
     });
-    
+
     // Process payment through Lanari
     const paymentResult = await lanariPaymentService.processPayment({
       amount: Math.round(amount),
       customer_phone: customer_phone,
       currency: 'RWF',
-      description: `Smart Market Invoice #${invoice_id} - ${invoice[0].customer_name}`
+      description: `Top Design Invoice #${invoice_id} - ${invoice[0].customer_name}`
     });
-    
+
     // Update payment record with API response
     const paymentStatus = paymentResult.success ? (paymentResult.transaction_id && paymentResult.transaction_id !== 'pending' ? 'completed' : 'pending') : 'failed';
     const transactionId = paymentResult.transaction_id || 'failed';
-    
+
     await pool.execute(
       'UPDATE payments SET reference = ?, status = ?, gateway_transaction_id = ?, gateway_response = ? WHERE id = ?',
       [transactionId, paymentStatus, transactionId, JSON.stringify(paymentResult.raw_response || {}), paymentId]
     );
-    
+
     // Emit payment status update
     if (paymentStatus === 'completed') {
       socketService.emitPaymentCompleted({
@@ -144,18 +144,18 @@ export const processLanariPayment = async (req, res) => {
         transaction_id: transactionId
       });
     }
-    
+
     if (!paymentResult.success) {
-      return res.status(400).json({ 
-        error: 'Payment processing failed', 
+      return res.status(400).json({
+        error: 'Payment processing failed',
         details: paymentResult.error,
         payment_id: paymentId,
         transaction_ref: transactionId,
         api_response: paymentResult.raw_response
       });
     }
-    
-    res.json({ 
+
+    res.json({
       success: true,
       payment_id: paymentId,
       transaction_id: paymentResult.transaction_id,
@@ -173,38 +173,38 @@ export const processLanariPayment = async (req, res) => {
 export const checkPaymentStatus = async (req, res) => {
   try {
     const { payment_id } = req.params;
-    
+
     // Get payment record
     const [payment] = await pool.execute(
       'SELECT * FROM payments WHERE id = ? AND gateway = "lanari"',
       [payment_id]
     );
-    
+
     if (payment.length === 0) {
       return res.status(404).json({ error: 'Payment not found' });
     }
-    
+
     // Check status with Lanari
     const statusResult = await lanariPaymentService.checkPaymentStatus(payment[0].gateway_transaction_id);
-    
+
     if (statusResult.success && statusResult.data.status === 'completed') {
       // Update payment status
       await pool.execute(
         'UPDATE payments SET status = "completed", gateway_response = ? WHERE id = ?',
         [JSON.stringify(statusResult.data), payment_id]
       );
-      
+
       // Update invoice status
       const [payments] = await pool.execute(
         'SELECT SUM(amount) as total_paid FROM payments WHERE invoice_id = ? AND status = "completed"',
         [payment[0].invoice_id]
       );
-      
+
       const [invoice] = await pool.execute('SELECT amount FROM invoices WHERE id = ?', [payment[0].invoice_id]);
       const status = payments[0].total_paid >= invoice[0].amount ? 'paid' : 'partial';
-      
+
       await pool.execute('UPDATE invoices SET status = ? WHERE id = ?', [status, payment[0].invoice_id]);
-      
+
       // Emit payment completed event
       socketService.emitPaymentCompleted({
         payment_id: payment_id,
@@ -238,7 +238,7 @@ export const checkPaymentStatus = async (req, res) => {
         console.error('Failed to send Lanari payment confirmation email:', emailError);
       }
     }
-    
+
     res.json({
       payment_status: payment[0].status,
       gateway_status: statusResult.data?.status || 'unknown',
@@ -253,7 +253,7 @@ export const checkPaymentStatus = async (req, res) => {
 export const recordPayment = async (req, res) => {
   try {
     const { invoice_id, method, amount, reference } = req.body;
-    
+
     // Check if invoice exists
     const [invoice] = await pool.execute('SELECT amount FROM invoices WHERE id = ?', [invoice_id]);
     if (invoice.length === 0) {
@@ -272,12 +272,12 @@ export const recordPayment = async (req, res) => {
 
     // Check for overpayment
     if (parseFloat(amount) > remainingBalance) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: `Payment amount exceeds remaining balance. You can only pay up to ${remainingBalance}`,
-        remainingBalance 
+        remainingBalance
       });
     }
-    
+
     const [result] = await pool.execute(
       'INSERT INTO payments (invoice_id, method, amount, user_id, reference, status) VALUES (?, ?, ?, ?, ?, ?)',
       [invoice_id, method || 'cash', amount, req.user.id, reference || null, 'completed']
@@ -287,9 +287,9 @@ export const recordPayment = async (req, res) => {
     const newTotalPaid = totalPaidSoFar + parseFloat(amount);
     const newRemainingBalance = invoiceAmount - newTotalPaid;
     const status = newTotalPaid >= invoiceAmount ? 'paid' : 'partial';
-    
+
     await pool.execute('UPDATE invoices SET status = ? WHERE id = ?', [status, invoice_id]);
-    
+
     // Get customer email to send payment confirmation
     const [customer] = await pool.execute(`
       SELECT c.email, c.name, i.id as invoice_id
@@ -298,7 +298,7 @@ export const recordPayment = async (req, res) => {
       JOIN invoices i ON o.id = i.order_id
       WHERE i.id = ?
     `, [invoice_id]);
-    
+
     if (customer.length > 0 && customer[0].email) {
       try {
         await emailService.sendPaymentConfirmation(customer[0].email, {
@@ -313,8 +313,8 @@ export const recordPayment = async (req, res) => {
         console.error('Failed to send payment confirmation email:', emailError);
       }
     }
-    
-    res.json({ 
+
+    res.json({
       message: status === 'paid' ? 'Payment recorded - Invoice fully paid' : 'Payment recorded - Partial payment',
       status: status,
       totalPaid: newTotalPaid,
@@ -330,7 +330,7 @@ export const recordPayment = async (req, res) => {
 export const createPOSSale = async (req, res) => {
   try {
     const { customer_id, items, total } = req.body;
-    
+
     // Check if customer exists (optional for POS)
     if (customer_id) {
       const [customer] = await pool.execute('SELECT id FROM customers WHERE id = ?', [customer_id]);
@@ -338,7 +338,7 @@ export const createPOSSale = async (req, res) => {
         return res.status(404).json({ error: 'Customer not found' });
       }
     }
-    
+
     const [result] = await pool.execute(
       'INSERT INTO pos_sales (customer_id, cashier_id, total) VALUES (?, ?, ?)',
       [customer_id || null, req.user.id, total]
@@ -357,7 +357,7 @@ export const createPOSSale = async (req, res) => {
 
       // Get product cost for COGS calculation (assuming 60% of price if no cost field)
       // In a real system, you'd fetch the actual cost_price from products table
-      const costPerUnit = item.price * 0.6; 
+      const costPerUnit = item.price * 0.6;
       totalCOGS += costPerUnit * item.quantity;
 
       // Decrement product stock based on quantity sold
@@ -388,7 +388,7 @@ export const createPOSSale = async (req, res) => {
         SELECT id, account_code FROM chart_of_accounts 
         WHERE account_code IN ('1000', '4000', '5000', '1300')
       `);
-      
+
       const accountMap = {};
       accounts.forEach(acc => {
         accountMap[acc.account_code] = acc.id;
@@ -454,14 +454,14 @@ export const createPOSSale = async (req, res) => {
 export const createJournalEntry = async (req, res) => {
   try {
     const { date, description, lines } = req.body;
-    
+
     const [result] = await pool.execute(
       'INSERT INTO journal_entries (date, description) VALUES (?, ?)',
       [date, description]
     );
 
     const journal_id = result.insertId;
-    
+
     for (const line of lines) {
       await pool.execute(
         'INSERT INTO journal_lines (journal_id, account_id, debit, credit) VALUES (?, ?, ?, ?)',
@@ -483,12 +483,12 @@ export const autoCreateInvoice = async (order_id, amount) => {
     if (existing.length > 0) {
       return { success: false, message: 'Invoice already exists' };
     }
-    
+
     const [result] = await pool.execute(
       'INSERT INTO invoices (order_id, amount, status) VALUES (?, ?, ?)',
       [order_id, amount, 'pending']
     );
-    
+
     // Get customer email for notification
     const [customer] = await pool.execute(`
       SELECT c.email, c.name 
@@ -496,7 +496,7 @@ export const autoCreateInvoice = async (order_id, amount) => {
       JOIN orders o ON c.id = o.customer_id 
       WHERE o.id = ?
     `, [order_id]);
-    
+
     if (customer.length > 0 && customer[0].email) {
       try {
         await emailService.sendInvoice(customer[0].email, {
@@ -508,7 +508,7 @@ export const autoCreateInvoice = async (order_id, amount) => {
         console.error('Auto-invoice email failed:', emailError);
       }
     }
-    
+
     return { success: true, invoice_id: result.insertId };
   } catch (error) {
     console.error('Auto-invoice creation failed:', error);
@@ -542,18 +542,18 @@ export const getInvoice = async (req, res) => {
       JOIN customers c ON o.customer_id = c.id
       WHERE i.id = ?
     `, [id]);
-    
+
     if (invoice.length === 0) {
       return res.status(404).json({ error: 'Invoice not found' });
     }
-    
+
     const [payments] = await pool.execute('SELECT * FROM payments WHERE invoice_id = ?', [id]);
-    
+
     const totalPaid = payments.reduce((sum, p) => sum + (p.status === 'completed' ? parseFloat(p.amount) : 0), 0);
     const remainingBalance = parseFloat(invoice[0].amount) - totalPaid;
 
-    res.json({ 
-      ...invoice[0], 
+    res.json({
+      ...invoice[0],
       payments,
       total_paid: totalPaid,
       remaining_balance: remainingBalance > 0 ? remainingBalance : 0
@@ -567,17 +567,17 @@ export const updateInvoice = async (req, res) => {
   try {
     const { id } = req.params;
     const { amount, status } = req.body;
-    
+
     const [existing] = await pool.execute('SELECT id FROM invoices WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ error: 'Invoice not found' });
     }
-    
+
     await pool.execute(
       'UPDATE invoices SET amount = ?, status = ? WHERE id = ?',
       [amount, status, id]
     );
-    
+
     res.json({ message: 'Invoice updated' });
   } catch (error) {
     res.status(500).json({ error: 'Invoice update failed' });
@@ -617,7 +617,7 @@ export const getPOSSales = async (req, res) => {
         LEFT JOIN products p ON pi.item_id = p.id
         WHERE pi.pos_id = ?
       `, [sale.id]);
-      
+
       return {
         ...sale,
         items: items
@@ -652,7 +652,7 @@ export const getJournalEntries = async (req, res) => {
       JOIN chart_of_accounts coa ON jl.account_id = coa.id
       ORDER BY je.date DESC, je.id DESC, jl.id ASC
     `);
-    
+
     res.json(journalLines);
   } catch (error) {
     console.error('Journal entries error:', error);
@@ -663,45 +663,45 @@ export const getJournalEntries = async (req, res) => {
 export const postJournalEntry = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Check if journal entry exists and is not already posted
     const [entry] = await pool.execute(
       'SELECT status FROM journal_entries WHERE id = ?',
       [id]
     );
-    
+
     if (entry.length === 0) {
       return res.status(404).json({ error: 'Journal entry not found' });
     }
-    
+
     if (entry[0].status === 'posted') {
       return res.status(400).json({ error: 'Journal entry is already posted' });
     }
-    
+
     // Verify that debits equal credits
     const [lines] = await pool.execute(
       'SELECT SUM(debit) as total_debit, SUM(credit) as total_credit FROM journal_lines WHERE journal_id = ?',
       [id]
     );
-    
+
     const totalDebit = parseFloat(lines[0].total_debit) || 0;
     const totalCredit = parseFloat(lines[0].total_credit) || 0;
-    
+
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Cannot post unbalanced entry. Debits must equal credits.',
         totalDebit,
         totalCredit
       });
     }
-    
+
     // Update status to posted
     await pool.execute(
       'UPDATE journal_entries SET status = ? WHERE id = ?',
       ['posted', id]
     );
-    
-    res.json({ 
+
+    res.json({
       message: 'Journal entry posted successfully',
       id: id,
       status: 'posted'

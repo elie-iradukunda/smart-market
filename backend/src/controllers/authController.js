@@ -9,7 +9,7 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     const [users] = await pool.execute('SELECT * FROM users WHERE email = ? AND status = "active"', [email]);
-    
+
     if (users.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -102,10 +102,10 @@ export const createUser = async (req, res) => {
     });
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY' || error.errno === 1062) {
-      const field = error.sqlMessage.includes('email') 
-        ? 'email' 
-        : error.sqlMessage.includes('phone') 
-          ? 'phone' 
+      const field = error.sqlMessage.includes('email')
+        ? 'email'
+        : error.sqlMessage.includes('phone')
+          ? 'phone'
           : 'unique field';
 
       return res.status(409).json({
@@ -157,7 +157,7 @@ export const updateUser = async (req, res) => {
     if (existing.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     // Only run duplicate-check if email or phone has been provided
     if (email || phone) {
       const [duplicate] = await pool.execute(
@@ -200,28 +200,28 @@ export const changePassword = async (req, res) => {
   try {
     const id = req.params.id || req.params['{id}'];
     const { currentPassword, newPassword } = req.body;
-    
+
     const [user] = await pool.execute('SELECT password_hash, email, name FROM users WHERE id = ?', [id]);
     if (user.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const isValidPassword = await bcrypt.compare(currentPassword, user[0].password_hash);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }
-    
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await pool.execute('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, id]);
-    
+
     // Send password change confirmation email
-    const subject = '🔐 Smart Market Password Changed';
+    const subject = '🔐 Top Design Password Changed';
     const content = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2c3e50;">🔐 Smart Market Password Changed</h2>
+        <h2 style="color: #2c3e50;">🔐 Top Design Password Changed</h2>
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
           <h3>Hello ${user[0].name || 'User'},</h3>
-          <p>Your Smart Market password has been successfully changed.</p>
+          <p>Your Top Design password has been successfully changed.</p>
           <div style="background: #d4edda; padding: 15px; border-radius: 5px; border-left: 4px solid #28a745;">
             <strong>✅ Password Updated Successfully</strong><br>
             Date: ${new Date().toLocaleString()}<br>
@@ -230,17 +230,17 @@ export const changePassword = async (req, res) => {
           <p><strong>Security Notice:</strong> If you did not make this change, please contact support immediately.</p>
         </div>
         <p style="color: #7f8c8d; font-size: 12px; margin-top: 20px;">
-          This is an automated message from Smart Market System
+          This is an automated message from Top Design System
         </p>
       </div>
     `;
-    
+
     try {
       await emailService.sendEmail(user[0].email, subject, content);
     } catch (emailError) {
       console.error('Failed to send password change confirmation email:', emailError);
     }
-    
+
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Password change failed' });
@@ -272,13 +272,13 @@ export const forgotPassword = async (req, res) => {
     const frontendBase = config.getBaseUrl(req);
     const resetLink = `${frontendBase}/reset-password?token=${encodeURIComponent(token)}`;
 
-    const subject = '🔐 Reset your Smart Market password';
+    const subject = '🔐 Reset your Top Design password';
     const content = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2c3e50;">🔐 Smart Market Password Reset</h2>
+        <h2 style="color: #2c3e50;">🔐 Top Design Password Reset</h2>
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
           <h3>Hello ${user.name || 'User'},</h3>
-          <p>We received a request to reset the password for your Smart Market account.</p>
+          <p>We received a request to reset the password for your Top Design account.</p>
           <div style="text-align: center; margin: 25px 0;">
             <a href="${resetLink}" style="background: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
           </div>
@@ -286,7 +286,7 @@ export const forgotPassword = async (req, res) => {
           <p>If you did not request a password reset, you can safely ignore this email.</p>
         </div>
         <p style="color: #7f8c8d; font-size: 12px; margin-top: 20px;">
-          This is an automated message from Smart Market System
+          This is an automated message from Top Design System
         </p>
       </div>
     `;
@@ -327,16 +327,16 @@ export const resetPassword = async (req, res) => {
 
     // Get user info for confirmation email
     const [users] = await pool.execute('SELECT email, name FROM users WHERE id = ?', [payload.userId]);
-    
+
     if (users.length > 0) {
       const user = users[0];
-      const subject = '✅ Smart Market Password Changed';
+      const subject = '✅ Top Design Password Changed';
       const content = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2c3e50;">✅ Smart Market Password Updated</h2>
+          <h2 style="color: #2c3e50;">✅ Top Design Password Updated</h2>
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
             <h3>Hello ${user.name || 'User'},</h3>
-            <p>Your Smart Market password has been successfully changed.</p>
+            <p>Your Top Design password has been successfully changed.</p>
             <div style="background: #d4edda; padding: 15px; border-radius: 5px; border-left: 4px solid #28a745;">
               <strong>✅ Password Updated Successfully</strong><br>
               Date: ${new Date().toLocaleString()}
@@ -344,11 +344,11 @@ export const resetPassword = async (req, res) => {
             <p>If you did not make this change, please contact support immediately.</p>
           </div>
           <p style="color: #7f8c8d; font-size: 12px; margin-top: 20px;">
-            This is an automated message from Smart Market System
+            This is an automated message from Top Design System
           </p>
         </div>
       `;
-      
+
       try {
         await emailService.sendEmail(user.email, subject, content);
       } catch (emailError) {

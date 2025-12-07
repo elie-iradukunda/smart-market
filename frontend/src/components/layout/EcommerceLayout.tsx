@@ -32,9 +32,9 @@ export default function EcommerceLayout({ children }: EcommerceLayoutProps) {
                         <div>
                             <h4 className="font-semibold mb-4">Customer Service</h4>
                             <ul className="space-y-2 text-gray-400">
-                                <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">Support</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+                                <li><a href="/contact" className="hover:text-white transition-colors">Contact Us</a></li>
+                                <li><a href="/about" className="hover:text-white transition-colors">About Us</a></li>
+                                <li><a href="/order-tracking" className="hover:text-white transition-colors">Track Order</a></li>
                             </ul>
                         </div>
                         <div>

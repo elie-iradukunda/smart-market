@@ -63,7 +63,7 @@ export const broadcastToAllCustomers = async (req, res) => {
       sent: sent,
       failed: failed,
       total_customers: customers.length,
-      poweredBy: 'Smart Market'
+      poweredBy: 'Top Design'
     });
     
   } catch (error) {
@@ -143,7 +143,7 @@ export const broadcastToSegment = async (req, res) => {
       sent: sent,
       failed: failed,
       total_customers: customers.length,
-      poweredBy: 'Smart Market'
+      poweredBy: 'Top Design'
     });
     
   } catch (error) {
@@ -217,5 +217,47 @@ export const getCampaign = async (req, res) => {
     res.json(campaign[0]);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch campaign' });
+  }
+};
+
+// Get campaign performance data
+export const getCampaignPerformance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`[Campaign Performance] Fetching performance for campaign ID: ${id}`);
+    
+    // Verify campaign exists
+    const [campaign] = await pool.execute(
+      'SELECT id FROM campaigns WHERE id = ?',
+      [id]
+    );
+    
+    if (campaign.length === 0) {
+      console.log(`[Campaign Performance] Campaign ${id} not found`);
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+    
+    // Get performance data for this campaign
+    const [performance] = await pool.execute(
+      `SELECT 
+        id,
+        campaign_id,
+        impressions,
+        clicks,
+        conversions,
+        cost_spent,
+        date,
+        created_at
+      FROM ad_performance 
+      WHERE campaign_id = ? 
+      ORDER BY date DESC, created_at DESC`,
+      [id]
+    );
+    
+    console.log(`[Campaign Performance] Found ${performance.length} performance records for campaign ${id}`);
+    res.json(performance);
+  } catch (error) {
+    console.error('[Campaign Performance] Error:', error);
+    res.status(500).json({ error: 'Failed to fetch campaign performance', details: error.message });
   }
 };

@@ -3,6 +3,9 @@ import { useSearchParams } from 'react-router-dom'
 import { Mail, Phone, MapPin, Send, MessageSquare } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
+import { toast } from 'react-toastify'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 
 const contactMethods = [
   {
@@ -50,6 +53,7 @@ const serviceNames: Record<string, string> = {
 export default function ContactPage() {
   const [searchParams] = useSearchParams()
   const serviceParam = searchParams.get('service')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   
   const [formData, setFormData] = useState({
     name: '',
@@ -69,10 +73,45 @@ export default function ContactPage() {
     }
   }, [serviceParam])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log('Contact form:', formData)
+    setIsSubmitting(true)
+    
+    try {
+      const res = await fetch(`${API_BASE}/communication/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+      
+      const data = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send message')
+      }
+      
+      if (data.success) {
+        toast.success(data.message || 'Message sent successfully! We will get back to you soon.')
+        
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          company: '',
+          subject: '',
+          message: '',
+        })
+      } else {
+        throw new Error(data.error || 'Failed to send message')
+      }
+    } catch (error: any) {
+      console.error('Error sending contact form:', error)
+      toast.error(error.message || 'Failed to send message. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -219,9 +258,14 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <Button type="submit" size="lg" className="w-full sm:w-auto group">
-                    Send Message
-                    <Send className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  <Button 
+                    type="submit" 
+                    size="lg" 
+                    className="w-full sm:w-auto group"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                    <Send className={`ml-2 h-5 w-5 transition-transform ${isSubmitting ? '' : 'group-hover:translate-x-1'}`} />
                   </Button>
                 </div>
               </form>

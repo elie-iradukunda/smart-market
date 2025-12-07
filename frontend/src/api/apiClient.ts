@@ -191,7 +191,7 @@ export async function fetchLeads(page = 1, limit = 50) {
   const response = await res.json()
 
   // Handle both old array format (if backend rollback) and new object format
-  const leadsData = Array.isArray(response) ? response : (response.data || [])
+  const leadsData = Array.isArray(response) ? response : (response.leads || response.data || [])
   const pagination = response.pagination || null
 
   const mappedLeads = leadsData.map((lead: any) => ({

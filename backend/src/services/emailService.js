@@ -8,7 +8,7 @@ dotenv.config();
 const GMAIL_USER = process.env.GMAIL_USER || 'smartmarket399@gmail.com';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'tabitakwizerisezerano@gmail.com';
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || '';
-const COMPANY_NAME = process.env.COMPANY_NAME || 'Smart Market';
+const COMPANY_NAME = process.env.COMPANY_NAME || 'Top Design';
 const COMPANY_PHONE = process.env.COMPANY_PHONE || '+250 700 000 000';
 const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || 'Kigali, Rwanda';
 
@@ -60,7 +60,7 @@ class EmailService {
 
   // Invoice Email
   async sendInvoice(customerEmail, invoiceData) {
-    const subject = `Invoice #${invoiceData.id} - Smart Market`;
+    const subject = `Invoice #${invoiceData.id} - Top Design`;
     const content = `
     <!DOCTYPE html>
     <html>
@@ -73,7 +73,7 @@ class EmailService {
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center;">
-          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">SMART MARKET</h1>
+          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">TOP DESIGN</h1>
           <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Professional Printing Services</p>
         </div>
         
@@ -126,7 +126,7 @@ class EmailService {
         <!-- Footer -->
         <div style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
           <h3 style="margin: 0 0 15px 0; color: #333;">Thank you for your business! </h3>
-          <p style="margin: 0 0 10px 0; color: #666;">Smart Market - Your trusted printing partner</p>
+          <p style="margin: 0 0 10px 0; color: #666;">Top Design - Your trusted printing partner</p>
           <div style="margin-top: 20px;">
             <p style="margin: 0; color: #999; font-size: 12px;"> ${GMAIL_USER} |  Contact us for support</p>
           </div>
@@ -1418,7 +1418,7 @@ class EmailService {
 
         <div style="text-align: center; color: #666; font-size: 14px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
           <p>If you have any questions, please contact our support team.</p>
-          <p>&copy; ${new Date().getFullYear()} ${process.env.COMPANY_NAME || 'Smart Market'}. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} ${process.env.COMPANY_NAME || 'Top Design'}. All rights reserved.</p>
         </div>
       </div>
     </body>

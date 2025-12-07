@@ -80,8 +80,8 @@ function App() {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/pricing" element={<Layout><PricingPage /></Layout>} />
             <Route path="/order" element={<Layout><OrderPage /></Layout>} />
-            <Route path="/about" element={<Layout><AboutPage /></Layout>} />
-            <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
+            <Route path="/about" element={<EcommerceLayout><AboutPage /></EcommerceLayout>} />
+            <Route path="/contact" element={<EcommerceLayout><ContactPage /></EcommerceLayout>} />
             <Route path="/privacy" element={<Layout><PrivacyPage /></Layout>} />
             <Route path="/terms" element={<Layout><TermsPage /></Layout>} />
             <Route path="/security" element={<Layout><SecurityPage /></Layout>} />

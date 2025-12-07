@@ -47,7 +47,7 @@ class LanariPaymentService {
       }
 
       const formattedPhone = this.formatPhoneNumber(customer_phone);
-      const cleanDescription = (description || 'Smart Market Payment')
+      const cleanDescription = (description || 'Top Design Payment')
         .replace(/#/g, '')
         .replace(/@/g, '')
         .replace(/[^\w\s-]/g, ' ')

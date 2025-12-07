@@ -12,13 +12,48 @@ router.get('/leads/test', (req, res) => {
   res.json({ message: 'Leads router is working' });
 });
 
-// Get all leads
+// Get all leads with pagination support
 router.get('/leads', async (req, res) => {
   try {
-    const [leads] = await pool.execute('SELECT l.*, c.name as customer_name, c.company, c.email as customer_email, c.phone as customer_phone FROM leads l LEFT JOIN customers c ON l.customer_id = c.id ORDER BY l.created_at DESC, l.id DESC');
-    res.json(leads);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+
+    // Get total count
+    const [countResult] = await pool.execute('SELECT COUNT(*) as total FROM leads');
+    const total = countResult[0].total;
+
+    // Get paginated leads
+    // Order by id DESC as fallback (created_at may not exist in all database versions)
+    const [leads] = await pool.execute(
+      `SELECT l.*, c.name as customer_name, c.email as customer_email, c.phone as customer_phone 
+       FROM leads l 
+       LEFT JOIN customers c ON l.customer_id = c.id 
+       ORDER BY l.id DESC 
+       LIMIT ? OFFSET ?`,
+      [limit, offset]
+    );
+
+    res.json({
+      leads: leads,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     console.error('Fetch leads error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error code:', error.code);
+    console.error('Error SQL:', error.sql);
+    res.status(500).json({
+      error: 'Failed to fetch leads',
+      message: error.message,
+      code: error.code,
+      sql: error.sql || null
+    });
   }
 });
 
@@ -30,20 +65,20 @@ router.get('/leads/:id', async (req, res) => {
       // Return first lead for literal {id}
       const [leads] = await pool.execute('SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id LIMIT 1');
       if (leads.length === 0) return res.status(404).json({ error: 'Lead not found' });
-      
+
       const lead = leads[0];
       const [items] = await pool.execute('SELECT li.*, m.name as material_name FROM lead_items li LEFT JOIN materials m ON li.material_id = m.id WHERE li.lead_id = ?', [lead.id]);
       lead.items = items;
-      
+
       return res.json(lead);
     }
     const [leads] = await pool.execute('SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id WHERE l.id = ?', [id]);
     if (leads.length === 0) return res.status(404).json({ error: 'Lead not found' });
-    
+
     const lead = leads[0];
     const [items] = await pool.execute('SELECT li.*, m.name as material_name FROM lead_items li LEFT JOIN materials m ON li.material_id = m.id WHERE li.lead_id = ?', [lead.id]);
     lead.items = items;
-    
+
     res.json(lead);
   } catch (error) {
     console.error('Fetch lead error:', error);
@@ -59,20 +94,20 @@ router.post('/leads', async (req, res) => {
       'INSERT INTO leads (customer_id, channel, status) VALUES (?, ?, ?)',
       [customer_id || null, channel || null, status || 'new']
     );
-    
+
     const leadId = result.insertId;
-    
+
     if (items && Array.isArray(items) && items.length > 0) {
       for (const item of items) {
         if (item.material_id && item.quantity) {
-             await pool.execute(
+          await pool.execute(
             'INSERT INTO lead_items (lead_id, material_id, quantity) VALUES (?, ?, ?)',
             [leadId, item.material_id, item.quantity]
           );
         }
       }
     }
-    
+
     res.status(201).json({ id: leadId, customer_id, channel, status: status || 'new', items: items || [] });
   } catch (error) {
     console.error('Create lead error:', error);
@@ -85,21 +120,21 @@ router.put('/leads/:id', async (req, res) => {
   try {
     const id = req.params.id;
     const { customer_id, channel, status } = req.body;
-    
+
     // Handle literal {id} - can't update, return error
     if (id === '{id}') {
       return res.status(400).json({ error: 'Cannot update with literal {id}' });
     }
-    
+
     // Check if lead exists
     const [existing] = await pool.execute('SELECT id FROM leads WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ error: 'Lead not found' });
     }
-    
+
     // Normalize channel to lowercase for enum
     const normalizedChannel = channel ? channel.toLowerCase() : null;
-    
+
     await pool.execute(
       'UPDATE leads SET customer_id = ?, channel = ?, status = ? WHERE id = ?',
       [customer_id || null, normalizedChannel, status || 'new', id]

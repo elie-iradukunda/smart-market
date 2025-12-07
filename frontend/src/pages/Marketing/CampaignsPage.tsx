@@ -25,7 +25,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'react-toastify'
 
-export default function CampaignsPage() {
+function CampaignsPage() {
   const [campaigns, setCampaigns] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -89,15 +89,15 @@ export default function CampaignsPage() {
       return
     }
 
-    setConnectedChannels(prev => {
-      const newState = { ...prev, [channel]: !prev[channel] }
-      if (newState[channel]) {
-        toast.success(`Connected to ${channel.charAt(0).toUpperCase() + channel.slice(1)}`)
-      } else {
-        toast.info(`Disconnected from ${channel.charAt(0).toUpperCase() + channel.slice(1)}`)
-      }
-      return newState
-    })
+    const newValue = !connectedChannels[channel]
+    setConnectedChannels(prev => ({ ...prev, [channel]: newValue }))
+    
+    // Show toast after state update
+    if (newValue) {
+      toast.success(`Connected to ${channel.charAt(0).toUpperCase() + channel.slice(1)}`)
+    } else {
+      toast.info(`Disconnected from ${channel.charAt(0).toUpperCase() + channel.slice(1)}`)
+    }
   }
 
   const handlePublish = (e, campaign) => {
@@ -472,3 +472,5 @@ export default function CampaignsPage() {
     </div>
   )
 }
+
+export default CampaignsPage
