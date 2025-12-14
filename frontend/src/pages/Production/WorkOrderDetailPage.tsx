@@ -5,7 +5,7 @@ import { Tag, User, Calendar, CheckCircle, Loader2, AlertTriangle, Save, Clock, 
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { formatCurrency } from '@/utils/formatters'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://topdesign.lanari.rw/api'
 
 const getAuthToken = () => {
   return localStorage.getItem('token')

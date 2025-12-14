@@ -1,7 +1,7 @@
 import { Product } from '@/contexts/CartContext'
 
 // API URL
-const API_URL = 'http://localhost:3000/api/products';
+const API_URL = 'https://topdesign.lanari.rw/api/products';
 
 export const fetchProducts = async (): Promise<Product[]> => {
     try {

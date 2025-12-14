@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import PermissionGate from '@/components/common/PermissionGate'
 import { fetchCustomers } from '@/api/apiClient'
 
 export default function CustomersPage() {
@@ -89,13 +90,15 @@ export default function CustomersPage() {
                         <td className="px-4 py-2 text-sm text-slate-700">{c.email || '-'}</td>
                         <td className="px-4 py-2 text-xs text-slate-500 uppercase tracking-wide">{c.source || '-'}</td>
                         <td className="px-4 py-2">
-                          <button
-                            type="button"
-                            onClick={() => handleView(c.id)}
-                            className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
-                          >
-                            View details
-                          </button>
+                          <PermissionGate permission="customer.view">
+                            <button
+                              type="button"
+                              onClick={() => handleView(c.id)}
+                              className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                            >
+                              View details
+                            </button>
+                          </PermissionGate>
                         </td>
                       </tr>
                     ))}

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { getAuthUser } from '@/utils/apiClient'
+import PermissionGate from '@/components/common/PermissionGate'
 
 import {
   DollarSign,
@@ -480,15 +481,17 @@ export default function InvoicesPage() {
                     <td className="px-4 py-3 text-sm text-right">{formatCurrency(order.total)}</td>
                     <td className="px-4 py-3 text-xs text-gray-600 capitalize">{order.paymentStatus}</td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleCreateInvoiceFromOrder(order)}
-                        disabled={creating}
-                        className="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
-                      >
-                        <FileText className="h-3 w-3 mr-1" />
-                        Create invoice
-                      </button>
+                      <PermissionGate permission="invoice.create">
+                        <button
+                          type="button"
+                          onClick={() => handleCreateInvoiceFromOrder(order)}
+                          disabled={creating}
+                          className="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          Create invoice
+                        </button>
+                      </PermissionGate>
                     </td>
                   </tr>
                 ))}
@@ -532,10 +535,11 @@ export default function InvoicesPage() {
               </div>
 
               {/* Quick create invoice form */}
-              <form
-                onSubmit={handleCreateInvoice}
-                className="flex flex-wrap items-center gap-2 border border-indigo-100 rounded-2xl px-3 py-2 bg-indigo-50/40"
-              >
+              <PermissionGate permission="invoice.create">
+                <form
+                  onSubmit={handleCreateInvoice}
+                  className="flex flex-wrap items-center gap-2 border border-indigo-100 rounded-2xl px-3 py-2 bg-indigo-50/40"
+                >
                 <input
                   type="number"
                   min="1"
@@ -561,6 +565,7 @@ export default function InvoicesPage() {
                   {creating ? 'Saving…' : 'New invoice'}
                 </button>
               </form>
+              </PermissionGate>
             </div>
           </div>
         </div>

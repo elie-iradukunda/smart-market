@@ -27,11 +27,17 @@ export default function RolesPage() {
       .then(([rolesData, perms]) => {
         if (!isMounted) return
         setRoles(rolesData || [])
-        setPermissions(perms || [])
+        // Handle different response formats
+        const permissionsList = Array.isArray(perms) ? perms : (perms?.data || perms?.permissions || [])
+        setPermissions(permissionsList)
+        if (permissionsList.length === 0) {
+          console.warn('No permissions found. The permissions table might be empty.')
+        }
       })
       .catch(err => {
         if (!isMounted) return
-        setError(err.message || 'Failed to load roles')
+        console.error('Error loading roles/permissions:', err)
+        setError(err.message || 'Failed to load roles and permissions')
       })
       .finally(() => {
         if (!isMounted) return
@@ -240,24 +246,43 @@ export default function RolesPage() {
                 </div>
 
                 <div>
-                  <p className="block text-sm font-medium text-gray-700 mb-2">Permissions</p>
-                  <div className="max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
-                    {permissions.map((perm: any) => (
-                      <label key={perm.id} className="flex items-center justify-between rounded-md bg-white px-3 py-1.5 text-xs border border-gray-100 cursor-pointer hover:bg-gray-50">
-                        <span className="font-mono text-[11px] text-gray-700 mr-3">{perm.code}</span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[11px] text-gray-500 hidden sm:inline">{perm.description}</span>
-                          <input
-                            type="checkbox"
-                            checked={selectedPermissionIds.includes(perm.id)}
-                            onChange={() => handleTogglePermission(perm.id)}
-                            disabled={!canManageRoles}
-                            className="h-3.5 w-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                        </div>
-                      </label>
-                    ))}
-                  </div>
+                  <p className="block text-sm font-medium text-gray-700 mb-2">
+                    Permissions {permissions.length > 0 && `(${permissions.length})`}
+                  </p>
+                  {permissions.length === 0 ? (
+                    <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+                      <p className="text-sm text-yellow-800 font-medium mb-2">⚠️ No permissions found</p>
+                      <p className="text-xs text-yellow-700 mb-3">
+                        The permissions table appears to be empty. You need to seed permissions in the database.
+                      </p>
+                      <div className="text-xs text-yellow-800 bg-yellow-100 p-2 rounded border border-yellow-300">
+                        <p className="font-semibold mb-1">To fix this:</p>
+                        <ol className="list-decimal list-inside space-y-1 ml-2">
+                          <li>Run the migration: <code className="bg-yellow-200 px-1 rounded">backend/migrations/002_seed_data.sql</code></li>
+                          <li>Or check if the permissions table exists and has data</li>
+                          <li>Refresh this page after seeding</li>
+                        </ol>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
+                      {permissions.map((perm: any) => (
+                        <label key={perm.id} className="flex items-center justify-between rounded-md bg-white px-3 py-1.5 text-xs border border-gray-100 cursor-pointer hover:bg-gray-50">
+                          <span className="font-mono text-[11px] text-gray-700 mr-3">{perm.code || perm.name}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[11px] text-gray-500 hidden sm:inline">{perm.description || perm.name}</span>
+                            <input
+                              type="checkbox"
+                              checked={selectedPermissionIds.includes(perm.id)}
+                              onChange={() => handleTogglePermission(perm.id)}
+                              disabled={!canManageRoles}
+                              className="h-3.5 w-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {canManageRoles && (

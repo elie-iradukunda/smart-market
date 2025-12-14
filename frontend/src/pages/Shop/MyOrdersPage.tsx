@@ -12,7 +12,7 @@ export default function MyOrdersPage() {
         const fetchOrders = async () => {
             if (user?.email) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/ecommerce/orders/user?email=${user.email}`)
+                    const response = await fetch(`https://topdesign.lanari.rw/api/ecommerce/orders/user?email=${user.email}`)
                     if (response.ok) {
                         const data = await response.json()
                         setOrders(data)

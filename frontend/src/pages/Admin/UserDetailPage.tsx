@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { getUser } from '@/api/apiClient'
 
 export default function UserDetailPage() {
@@ -77,6 +77,22 @@ export default function UserDetailPage() {
             <p className="mt-1 text-sm font-semibold text-gray-900">{user.status}</p>
           </div>
         </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-3">
+        <Link
+          to={`/admin/users/${id}/permissions`}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+        >
+          Manage Permissions
+        </Link>
+        <Link
+          to="/admin/users"
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium"
+        >
+          Back to Users
+        </Link>
       </div>
     </div>
   )

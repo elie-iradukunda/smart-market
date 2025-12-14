@@ -8,7 +8,6 @@ import {
     ShoppingCart, 
     Package, 
     CheckCircle2, 
-    Star,
     Loader2,
     Plus,
     Minus
@@ -19,7 +18,7 @@ import { toast } from 'react-toastify'
 const getImageUrl = (path: string) => {
     if (!path) return ''
     if (path.startsWith('http')) return path
-    return `http://localhost:3000${path}`
+    return `https://topdesign.lanari.rw${path}`
 }
 
 // Category color mapping

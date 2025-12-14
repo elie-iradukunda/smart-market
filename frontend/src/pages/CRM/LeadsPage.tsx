@@ -5,6 +5,7 @@ import { fetchLeads, createLead, fetchMaterials, createCustomer } from '../../ap
 import { toast } from 'react-toastify'
 
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import PermissionGate from '@/components/common/PermissionGate'
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState([])
@@ -274,13 +275,15 @@ export default function LeadsPage() {
                     <option value="Facebook">Facebook</option>
                     <option value="Email">Email</option>
                   </select>
-                  <button
-                    type="submit"
-                    disabled={creating}
-                    className="inline-flex items-center rounded-full bg-cyan-500 px-4 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {creating ? 'Saving...' : 'Add Lead'}
-                  </button>
+                  <PermissionGate permission="lead.create">
+                      <button
+                          type="submit"
+                          disabled={creating}
+                          className="inline-flex items-center rounded-full bg-cyan-500 px-4 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                          {creating ? 'Saving...' : 'Add Lead'}
+                      </button>
+                  </PermissionGate>
                 </form>
 
                 {/* Simple requested materials section for this lead */}

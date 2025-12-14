@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   DollarSign,
   FileText,
   CreditCard,
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle,
   Clock,
@@ -15,11 +14,8 @@ import {
   BookOpen,
   PieChart,
   RefreshCw,
-  Plus,
-  Eye,
   Calendar,
   Users,
-  Building2,
   Wallet
 } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -58,13 +54,6 @@ interface POSSale {
   customer_name?: string
   cashier_name: string
   total: number
-  created_at: string
-}
-
-interface JournalEntry {
-  id: number
-  date: string
-  description: string
   created_at: string
 }
 

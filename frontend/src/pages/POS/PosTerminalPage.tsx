@@ -216,7 +216,7 @@ export default function POSTerminalPage() {
     setError(null)
     try {
       // Import email service
-      const response = await fetch('http://localhost:3000/api/email', {
+      const response = await fetch('https://topdesign.lanari.rw/api/email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

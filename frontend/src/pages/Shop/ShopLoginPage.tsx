@@ -26,7 +26,12 @@ export default function ShopLoginPage() {
         }
 
         try {
-            const response = await fetch('http://localhost:3000/api/auth/login', {
+            // Use localhost for local development, production URL for production
+            const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:3000/api'
+                : 'https://topdesign.lanari.rw/api'
+            
+            const response = await fetch(`${API_BASE}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -46,23 +51,8 @@ export default function ShopLoginPage() {
                     localStorage.setItem('auth_token', data.token)
                     localStorage.setItem('auth_user', JSON.stringify(data.user))
 
-                    // Determine dashboard path based on role
-                    const dashboardPaths: { [key: number]: string } = {
-                        1: '/dashboard/owner',
-                        2: '/dashboard/admin',
-                        3: '/dashboard/accountant',
-                        4: '/dashboard/controller',
-                        5: '/dashboard/reception',
-                        6: '/dashboard/technician',
-                        7: '/dashboard/production',
-                        8: '/dashboard/inventory',
-                        9: '/dashboard/sales',
-                        10: '/dashboard/marketing',
-                        11: '/dashboard/pos',
-                        12: '/dashboard/support',
-                    }
-
-                    const dashboardPath = dashboardPaths[data.user.role_id] || '/dashboard/owner'
+                    // All users go to global dashboard
+                    const dashboardPath = '/dashboard'
                     toast.success('Login successful! Redirecting to your dashboard...')
                     // Use window.location.href for full page reload to properly initialize business app
                     window.location.href = dashboardPath

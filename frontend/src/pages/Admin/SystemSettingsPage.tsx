@@ -1,26 +1,17 @@
 // @ts-nocheck
 import React from 'react'
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { getAuthUser } from '@/utils/apiClient'
-import OwnerSideNav from '@/components/layout/OwnerSideNav'
 
 export default function SystemSettingsPage() {
   const user = getAuthUser()
   const isOwner = user?.role_id === 1
 
-  if (!isOwner) {
-    // Non-super-admins shouldn't see this page navbar-wise; just render body without extra navs
-  }
-
   return (
-    // 1. Apply the light gradient background
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-0 pb-10">
-      {isOwner && <OwnerTopNav />}
-
-      <div className="px-3 sm:px-4 md:px-6 lg:px-8 pt-8">
-        <div className="flex gap-6">
-          <OwnerSideNav />
-
+    <DashboardLayout>
+      {/* 1. Apply the light gradient background */}
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-0 pb-10">
+        <div className="px-3 sm:px-4 md:px-6 lg:px-8 pt-8">
           <main className="flex-1 space-y-8 max-w-7xl mx-auto">
 
             {/* Header Card - Using the new, cleaner card style */}
@@ -82,6 +73,6 @@ export default function SystemSettingsPage() {
           </main>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

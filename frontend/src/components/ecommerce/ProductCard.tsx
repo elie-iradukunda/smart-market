@@ -14,7 +14,7 @@ const getImageUrl = (path: string) => {
     if (!path) return ''
     if (path.startsWith('http')) return path
     const cleanPath = path.startsWith('/') ? path : `/${path}`
-    return `http://localhost:3000${cleanPath}`
+    return `https://topdesign.lanari.rw${cleanPath}`
 }
 
 // Helper to create combined image with text overlay
@@ -500,7 +500,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         {/* Share Dropdown Menu */}
                         {showShareMenu && (
                             <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
-                                {navigator.share && (
+                                {typeof navigator !== 'undefined' && 'share' in navigator && (
                                     <button
                                         onClick={handleNativeShare}
                                         className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors"

@@ -1,9 +1,9 @@
-import axios from 'axios';
+import axios, { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { getAuthToken } from '@/utils/apiClient';
 
 // Create axios instance with base URL and default headers
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: 'https://topdesign.lanari.rw/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -11,22 +11,22 @@ const apiClient = axios.create({
 
 // Add request interceptor to include auth token
 apiClient.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = getAuthToken();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
+  (error: AxiosError) => {
     return Promise.reject(error);
   }
 );
 
 // Add response interceptor to handle errors
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response: AxiosResponse) => response,
+  (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Handle unauthorized access (e.g., redirect to login)
       console.error('Unauthorized access - please log in');

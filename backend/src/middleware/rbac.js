@@ -22,6 +22,11 @@ const rbacMiddleware = async (req, res, next) => {
       return res.status(401).json({ error: 'Unauthenticated' });
     }
 
+    // Owner (role 1) has full access to all features
+    if (user.role_id === 1) {
+      return next();
+    }
+
     // Receptionist (role 5) has full access to front‑desk features
     if (user.role_id === 5) {
       return next();
@@ -103,15 +108,39 @@ const rbacMiddleware = async (req, res, next) => {
       return res.status(403).json({ error: 'Invalid resource path' });
     }
 
-    // Check if the permission exists for this role
-    const [rows] = await pool.execute(
+    // Check if user is super admin (has is_super_admin flag)
+    const [superAdminCheck] = await pool.execute(
+      'SELECT is_super_admin FROM users WHERE id = ?',
+      [user.id]
+    );
+    
+    if (superAdminCheck.length > 0 && superAdminCheck[0].is_super_admin) {
+      return next(); // Super admin has all access
+    }
+
+    // Check role-based permissions
+    const [rolePerms] = await pool.execute(
       `SELECT rp.* FROM role_permissions rp
        JOIN permissions p ON rp.permission_id = p.id
        WHERE rp.role_id = ? AND p.code = ?`,
       [user.role_id, permissionCode]
     );
 
-    if (rows.length === 0) {
+    // Check custom user permissions if role permission not found
+    let hasPermission = rolePerms.length > 0;
+    
+    if (!hasPermission) {
+      const [customPerms] = await pool.execute(
+        `SELECT up.* FROM user_permissions up
+         JOIN permissions p ON up.permission_id = p.id
+         WHERE up.user_id = ? AND p.code = ? 
+         AND (up.expires_at IS NULL OR up.expires_at > NOW())`,
+        [user.id, permissionCode]
+      );
+      hasPermission = customPerms.length > 0;
+    }
+
+    if (!hasPermission) {
       // Log detailed error for debugging
       console.error('RBAC Permission Denied:', {
         userId: user.id,

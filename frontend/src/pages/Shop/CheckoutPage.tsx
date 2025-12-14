@@ -62,7 +62,7 @@ export default function CheckoutPage() {
             }
 
             const token = sessionStorage.getItem('token')
-            const response = await fetch('http://localhost:3000/api/ecommerce/orders', {
+            const response = await fetch('https://topdesign.lanari.rw/api/ecommerce/orders', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -290,7 +290,7 @@ export default function CheckoutPage() {
                                         if (!path) return '';
                                         if (path.startsWith('http')) return path;
                                         const cleanPath = path.startsWith('/') ? path : `/${path}`;
-                                        return `http://localhost:3000${cleanPath}`;
+                                        return `https://topdesign.lanari.rw${cleanPath}`;
                                     };
 
                                     return (

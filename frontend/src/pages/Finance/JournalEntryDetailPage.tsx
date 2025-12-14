@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { fetchJournalEntries } from '../../api/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'

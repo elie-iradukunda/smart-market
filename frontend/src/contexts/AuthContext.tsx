@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const register = async (fullName: string, email: string, phoneNumber: string, password: string): Promise<boolean> => {
         try {
-            const response = await fetch('http://localhost:3000/api/auth/register', {
+            const response = await fetch('https://topdesign.lanari.rw/api/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -67,7 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const login = async (email: string, password: string): Promise<boolean> => {
         try {
-            const response = await fetch('http://localhost:3000/api/auth/login', {
+            // Use localhost for local development, production URL for production
+            const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:3000/api'
+                : 'https://topdesign.lanari.rw/api'
+            
+            const response = await fetch(`${API_BASE}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -81,7 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     ...data.user,
                     fullName: data.user.name,
                     phoneNumber: data.user.phone || '', // Handle potential null phone
-                    token: data.token
+                    token: data.token,
+                    is_super_admin: data.user.is_super_admin || false
                 }
                 setUser(userWithToken)
                 sessionStorage.setItem('token', data.token)

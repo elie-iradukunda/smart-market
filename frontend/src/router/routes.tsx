@@ -10,6 +10,8 @@ import InventoryDashboard from '../pages/InventoryDashboard';
 import SalesDashboard from '../pages/SalesDashboard';
 import PosDashboard from '../pages/PosDashboard';
 import SupportDashboard from '../pages/SupportDashboard';
+import GlobalDashboard from '../pages/GlobalDashboard';
+import ProtectedRoute from '../components/auth/ProtectedRoute';
 
 import LeadsPage from '../pages/CRM/LeadsPage';
 import LeadDetailPage from '../pages/CRM/LeadDetailPage';
@@ -37,7 +39,7 @@ import ProductsPage from '../pages/Inventory/ProductsPage';
 import OperationsReportsPage from '../pages/Reports/OperationsReportsPage';
 import ProductionReportsPage from '../pages/Reports/ProductionReportsPage';
 
-import POSTerminalPage from '../pages/POS/POSTerminalPage';
+import POSTerminalPage from '../pages/POS/PosTerminalPage';
 import PosSalesHistoryPage from '../pages/POS/PosSalesHistoryPage';
 
 import InvoicesPage from '../pages/Finance/InvoicesPage';
@@ -60,16 +62,31 @@ import AiOverviewPage from '../pages/AI/AiOverviewPage';
 
 import UsersPage from '../pages/Admin/UsersPage';
 import UserDetailPage from '../pages/Admin/UserDetailPage';
+import UserPermissionsPage from '../pages/Admin/UserPermissionsPage';
 import RolesPage from '../pages/Admin/RolesPage';
 import RoleDetailPage from '../pages/Admin/RoleDetailPage';
 import AuditLogsPage from '../pages/Admin/AuditLogsPage';
 import SystemSettingsPage from '../pages/Admin/SystemSettingsPage';
+import EmployeeActivityPage from '../pages/Admin/EmployeeActivityPage';
 import ChangePasswordPage from '../pages/Account/ChangePasswordPage';
 import FilesPage from '../pages/FilesPage';
 
-export const routes = [
-  { path: '/', element: <AdminDashboard /> },
+// Helper function to create protected route
+// Permission will be automatically derived from route path in ProtectedRoute component
+const createProtectedRoute = (path: string, element: React.ReactElement) => {
+  return {
+    path,
+    element: <ProtectedRoute>{element}</ProtectedRoute>
+  }
+}
 
+export const routes = [
+  // Dashboard routes - accessible to all authenticated users
+  { path: '/', element: <GlobalDashboard /> },
+  { path: '/dashboard', element: <GlobalDashboard /> },
+  { path: '/dashboard/global', element: <GlobalDashboard /> },
+  
+  // Keep role-specific dashboards for backward compatibility
   { path: '/dashboard/owner', element: <OwnerDashboard /> },
   { path: '/dashboard/admin', element: <AdminDashboard /> },
   { path: '/dashboard/reception', element: <ReceptionDashboard /> },
@@ -82,61 +99,54 @@ export const routes = [
   { path: '/dashboard/sales', element: <SalesDashboard /> },
   { path: '/dashboard/pos', element: <PosDashboard /> },
   { path: '/dashboard/support', element: <SupportDashboard /> },
-  { path: '/files', element: <FilesPage /> },
 
-  { path: '/crm/leads', element: <LeadsPage /> },
-  { path: '/crm/leads/:id', element: <LeadDetailPage /> },
-  { path: '/crm/customers', element: <CustomersPage /> },
-  { path: '/crm/customers/:id', element: <CustomerDetailPage /> },
-  { path: '/crm/quotes', element: <QuotesPage /> },
-
-  { path: '/orders', element: <OrdersPage /> },
-  { path: '/orders/:id', element: <OrderDetailPage /> },
-
-  { path: '/production/work-orders', element: <WorkOrdersBoardPage /> },
-  { path: '/production/work-orders/:id', element: <WorkOrderDetailPage /> },
-  { path: '/production/schedule', element: <ProductionSchedulePage /> },
-  { path: '/production/new-order', element: <NewWorkOrderPage /> },
-
-  { path: '/inventory/materials', element: <MaterialsPage /> },
-  { path: '/inventory/materials/:sku', element: <MaterialDetailPage /> },
-  { path: '/inventory/purchase-orders', element: <PurchaseOrdersPage /> },
-  { path: '/inventory/purchase-orders/:id', element: <PurchaseOrderDetailPage /> },
-  { path: '/inventory/bom-templates', element: <BomTemplatesPage /> },
-  { path: '/inventory/suppliers', element: <SuppliersPage /> },
-  { path: '/inventory/stock-movements', element: <StockMovementsPage /> },
-  { path: '/inventory/reports', element: <InventoryReportsPage /> },
-  { path: '/inventory/products', element: <ProductsPage /> },
-
-  { path: '/reports/operations', element: <OperationsReportsPage /> },
-  { path: '/reports/production', element: <ProductionReportsPage /> },
-
-  { path: '/pos/terminal', element: <POSTerminalPage /> },
-  { path: '/pos/sales-history', element: <PosSalesHistoryPage /> },
-
-  { path: '/finance/invoices', element: <InvoicesPage /> },
-  { path: '/finance/invoices/:id', element: <InvoiceDetailPage /> },
-  { path: '/finance/payments', element: <PaymentsPage /> },
-  { path: '/finance/accounts', element: <AccountsPage /> },
-  { path: '/finance/journals', element: <JournalEntriesPage /> },
-  { path: '/finance/journals/:id', element: <JournalEntryDetailPage /> },
-  { path: '/finance/reports', element: <FinancialReportsPage /> },
-
-  { path: '/marketing/campaigns', element: <CampaignsPage /> },
-  { path: '/marketing/campaigns/:id', element: <CampaignDetailPage /> },
-  { path: '/marketing/ad-performance', element: <AdPerformancePage /> },
-  { path: '/marketing/ads', element: <AdsManagementPage /> },
-
-  { path: '/communications/inbox', element: <InboxPage /> },
-  { path: '/communications/conversations/:id', element: <ConversationDetailPage /> },
-
-  { path: '/ai/overview', element: <AiOverviewPage /> },
-
-  { path: '/admin/users', element: <UsersPage /> },
-  { path: '/admin/users/:id', element: <UserDetailPage /> },
-  { path: '/admin/roles', element: <RolesPage /> },
-  { path: '/admin/roles/:id', element: <RoleDetailPage /> },
-  { path: '/admin/audit-logs', element: <AuditLogsPage /> },
-  { path: '/admin/system-settings', element: <SystemSettingsPage /> },
-  { path: '/account/change-password', element: <ChangePasswordPage /> },
+  // Protected routes with permission checks
+  createProtectedRoute('/files', <FilesPage />),
+  createProtectedRoute('/crm/leads', <LeadsPage />),
+  createProtectedRoute('/crm/leads/:id', <LeadDetailPage />),
+  createProtectedRoute('/crm/customers', <CustomersPage />),
+  createProtectedRoute('/crm/customers/:id', <CustomerDetailPage />),
+  createProtectedRoute('/crm/quotes', <QuotesPage />),
+  createProtectedRoute('/orders', <OrdersPage />),
+  createProtectedRoute('/orders/:id', <OrderDetailPage />),
+  createProtectedRoute('/production/work-orders', <WorkOrdersBoardPage />),
+  createProtectedRoute('/production/work-orders/:id', <WorkOrderDetailPage />),
+  createProtectedRoute('/production/schedule', <ProductionSchedulePage />),
+  createProtectedRoute('/production/new-order', <NewWorkOrderPage />),
+  createProtectedRoute('/inventory/materials', <MaterialsPage />),
+  createProtectedRoute('/inventory/materials/:sku', <MaterialDetailPage />),
+  createProtectedRoute('/inventory/purchase-orders', <PurchaseOrdersPage />),
+  createProtectedRoute('/inventory/purchase-orders/:id', <PurchaseOrderDetailPage />),
+  createProtectedRoute('/inventory/bom-templates', <BomTemplatesPage />),
+  createProtectedRoute('/inventory/suppliers', <SuppliersPage />),
+  createProtectedRoute('/inventory/stock-movements', <StockMovementsPage />),
+  createProtectedRoute('/inventory/reports', <InventoryReportsPage />),
+  createProtectedRoute('/inventory/products', <ProductsPage />),
+  createProtectedRoute('/reports/operations', <OperationsReportsPage />),
+  createProtectedRoute('/reports/production', <ProductionReportsPage />),
+  createProtectedRoute('/pos/terminal', <POSTerminalPage />),
+  createProtectedRoute('/pos/sales-history', <PosSalesHistoryPage />),
+  createProtectedRoute('/finance/invoices', <InvoicesPage />),
+  createProtectedRoute('/finance/invoices/:id', <InvoiceDetailPage />),
+  createProtectedRoute('/finance/payments', <PaymentsPage />),
+  createProtectedRoute('/finance/accounts', <AccountsPage />),
+  createProtectedRoute('/finance/journals', <JournalEntriesPage />),
+  createProtectedRoute('/finance/journals/:id', <JournalEntryDetailPage />),
+  createProtectedRoute('/finance/reports', <FinancialReportsPage />),
+  createProtectedRoute('/marketing/campaigns', <CampaignsPage />),
+  createProtectedRoute('/marketing/campaigns/:id', <CampaignDetailPage />),
+  createProtectedRoute('/marketing/ad-performance', <AdPerformancePage />),
+  createProtectedRoute('/marketing/ads', <AdsManagementPage />),
+  createProtectedRoute('/communications/inbox', <InboxPage />),
+  createProtectedRoute('/communications/conversations/:id', <ConversationDetailPage />),
+  createProtectedRoute('/ai/overview', <AiOverviewPage />),
+  createProtectedRoute('/admin/users', <UsersPage />),
+  createProtectedRoute('/admin/users/:id', <UserDetailPage />),
+  createProtectedRoute('/admin/users/:user_id/permissions', <UserPermissionsPage />),
+  createProtectedRoute('/admin/roles', <RolesPage />),
+  createProtectedRoute('/admin/roles/:id', <RoleDetailPage />),
+  createProtectedRoute('/admin/audit-logs', <AuditLogsPage />),
+  createProtectedRoute('/admin/employee-activity', <EmployeeActivityPage />),
+  createProtectedRoute('/admin/system-settings', <SystemSettingsPage />),
+  { path: '/account/change-password', element: <ChangePasswordPage /> }, // Everyone can change password
 ]

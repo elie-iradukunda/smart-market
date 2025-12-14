@@ -67,7 +67,7 @@ export default function AdsCarousel() {
             return imageUrl
         }
         // Otherwise, it's a local upload - prepend the backend URL
-        return `http://localhost:3000${imageUrl}`
+        return `https://topdesign.lanari.rw${imageUrl}`
     }
 
     if (isLoading) {

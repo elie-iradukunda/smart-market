@@ -3,7 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { getAuthUser } from '@/utils/apiClient';
 
 const getDashboardPath = (roleId: number) => {
-    switch (Number(roleId)) {
+    // All users go to global dashboard
+    return '/dashboard'
+    
+    // Old role-specific dashboards (kept for reference)
+    /* switch (Number(roleId)) {
         case 1: return '/dashboard/owner';
         case 2: return '/dashboard/admin';
         case 3: return '/dashboard/accountant';
@@ -17,7 +21,7 @@ const getDashboardPath = (roleId: number) => {
         case 11: return '/dashboard/pos';
         case 12: return '/dashboard/support';
         default: return '/login';
-    }
+    } */
 };
 
 export default function RouteGuard({ children }: { children: React.ReactNode }) {

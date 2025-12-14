@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import { toast } from 'react-toastify'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://topdesign.lanari.rw/api'
 
 const contactMethods = [
   {

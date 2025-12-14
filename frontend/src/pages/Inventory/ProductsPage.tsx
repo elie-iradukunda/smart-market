@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { fetchProducts, createProduct, updateProduct, uploadProductImage } from '@/api/apiClient'
-import { Plus, Edit, Package, Upload, X, Image as ImageIcon } from 'lucide-react'
+import { Plus, Edit, Package, Upload, X } from 'lucide-react'
+import PermissionGate from '@/components/common/PermissionGate'
 
 // Helper to get full image URL
 const getImageUrl = (path: string) => {
     if (!path) return ''
     if (path.startsWith('http')) return path
-    return `http://localhost:3000${path}`
+    return `https://topdesign.lanari.rw${path}`
 }
 
 // Category color mapping for better visual distinction
@@ -72,9 +73,11 @@ const ProductRow: React.FC<ProductRowProps> = ({ product, onEdit }) => {
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">RF {Number(product.price).toFixed(2)}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.stock_quantity}</td>
             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button onClick={() => onEdit(product)} className="text-blue-600 hover:text-blue-900 ml-4">
-                    <Edit size={18} />
-                </button>
+                <PermissionGate permission="product.update">
+                    <button onClick={() => onEdit(product)} className="text-blue-600 hover:text-blue-900 ml-4">
+                        <Edit size={18} />
+                    </button>
+                </PermissionGate>
             </td>
         </tr>
     )
@@ -355,12 +358,14 @@ export default function ProductsPage() {
                                     >
                                         Cancel
                                     </button>
-                                    <button
-                                        type="submit"
-                                        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-                                    >
-                                        {selectedProductId ? 'Update Product' : 'Create Product'}
-                                    </button>
+                                    <PermissionGate permission={selectedProductId ? "product.update" : "product.create"}>
+                                        <button
+                                            type="submit"
+                                            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                                        >
+                                            {selectedProductId ? 'Update Product' : 'Create Product'}
+                                        </button>
+                                    </PermissionGate>
                                 </div>
                             </form>
                         </div>

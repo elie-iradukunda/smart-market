@@ -22,7 +22,7 @@ export default function OrderTrackingPage() {
         setOrder(null)
 
         try {
-            const response = await fetch(`http://localhost:3000/api/ecommerce/orders/${searchId}`)
+            const response = await fetch(`https://topdesign.lanari.rw/api/ecommerce/orders/${searchId}`)
             if (!response.ok) {
                 setNotFound(true)
                 return

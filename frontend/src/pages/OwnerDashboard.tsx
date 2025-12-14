@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
-import { fetchUsers, createWorkOrder, fetchOrders } from '@/api/apiClient'
+import { fetchUsers, createWorkOrder, fetchOrders, fetchPOSSales, fetchFinancialOverview, fetchWorkLogs } from '@/api/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
 // --- Icon Imports (Simulated for visualization) ---
@@ -75,6 +75,15 @@ export default function OwnerDashboard() {
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
   const [workOrder, setWorkOrder] = useState({ orderId: '', stage: 'Design', assignedTo: '' })
+  const [dashboardStats, setDashboardStats] = useState({
+    todaySales: 0,
+    totalRevenue: 0,
+    outstandingInvoices: 0,
+    openWorkOrders: 0,
+    materialsAtRisk: 0,
+    totalCollected: 0
+  })
+  const [loadingStats, setLoadingStats] = useState(true)
 
   const [woSaving, setWoSaving] = useState(false)
   const [woError, setWoError] = useState<string | null>(null)
@@ -82,6 +91,9 @@ export default function OwnerDashboard() {
 
   useEffect(() => {
     let isMounted = true
+    setLoadingStats(true)
+    
+    // Load users
     fetchUsers()
       .then((data) => {
         if (!isMounted) return
@@ -91,14 +103,51 @@ export default function OwnerDashboard() {
         // owner dashboard can still work without users list
       })
 
-    // Load available orders so owner can select instead of typing ID
+    // Load available orders
     fetchOrders()
       .then((data) => {
         if (!isMounted) return
         setOrders(Array.isArray(data) ? data : [])
       })
       .catch(() => {
-        // ignore in case orders fail to load; form just won't show options
+        // ignore in case orders fail to load
+      })
+
+    // Load dashboard statistics
+    Promise.all([
+      fetchPOSSales().catch(() => []),
+      fetchFinancialOverview().catch(() => ({ total_revenue: 0, outstanding_amount: 0 })),
+      fetchWorkLogs().catch(() => [])
+    ])
+      .then(([posSales, financial, workLogs]) => {
+        if (!isMounted) return
+        
+        // Calculate today's sales
+        const today = new Date().toISOString().slice(0, 10)
+        const todaySales = (posSales || []).filter((sale: any) => {
+          const saleDate = new Date(sale.created_at || sale.date).toISOString().slice(0, 10)
+          return saleDate === today
+        }).reduce((sum: number, sale: any) => sum + (Number(sale.total) || 0), 0)
+
+        // Calculate open work orders
+        const openWorkOrders = (workLogs || []).filter((log: any) => {
+          // Count unique work orders that have logs
+          return log.work_order_id
+        }).length
+
+        setDashboardStats({
+          todaySales,
+          totalRevenue: Number(financial.total_revenue) || 0,
+          outstandingInvoices: Number(financial.outstanding_amount) || 0,
+          openWorkOrders,
+          materialsAtRisk: 0, // Will be calculated separately if needed
+          totalCollected: Number(financial.total_revenue) || 0
+        })
+        setLoadingStats(false)
+      })
+      .catch(() => {
+        if (!isMounted) return
+        setLoadingStats(false)
       })
 
     return () => {
@@ -183,17 +232,23 @@ export default function OwnerDashboard() {
             </p>
 
             <dl className="mt-6 grid gap-4 sm:grid-cols-3 text-xs sm:text-sm">
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100 shadow-sm">
-                <dt className="text-[11px] font-medium text-slate-500">Open work orders</dt>
-                <dd className="mt-1 text-xl font-bold text-slate-900">13</dd>
+              <div className="rounded-2xl bg-blue-50 px-4 py-3 border border-blue-100 shadow-sm">
+                <dt className="text-[11px] font-medium text-blue-700">Today&apos;s Sales</dt>
+                <dd className="mt-1 text-xl font-bold text-blue-900">
+                  {loadingStats ? '...' : `RF ${dashboardStats.todaySales.toLocaleString()}`}
+                </dd>
               </div>
               <div className="rounded-2xl bg-emerald-50 px-4 py-3 border border-emerald-100 shadow-sm">
-                <dt className="text-[11px] font-medium text-emerald-700">Invoices unpaid</dt>
-                <dd className="mt-1 text-xl font-bold text-emerald-900">RF 3,200</dd>
+                <dt className="text-[11px] font-medium text-emerald-700">Total Collected</dt>
+                <dd className="mt-1 text-xl font-bold text-emerald-900">
+                  {loadingStats ? '...' : `RF ${dashboardStats.totalCollected.toLocaleString()}`}
+                </dd>
               </div>
               <div className="rounded-2xl bg-amber-50 px-4 py-3 border border-amber-200 shadow-sm">
-                <dt className="text-[11px] font-medium text-amber-700">Materials at risk</dt>
-                <dd className="mt-1 text-xl font-bold text-amber-900">2</dd>
+                <dt className="text-[11px] font-medium text-amber-700">Outstanding</dt>
+                <dd className="mt-1 text-xl font-bold text-amber-900">
+                  {loadingStats ? '...' : `RF ${dashboardStats.outstandingInvoices.toLocaleString()}`}
+                </dd>
               </div>
             </dl>
           </div>
@@ -331,6 +386,7 @@ export default function OwnerDashboard() {
 
           <div className="space-y-6">
             <GroupCard title="Team & Administration" iconName="settings" iconColor="text-gray-600" animationDelay="delay-500">
+              <DashboardLink to="/admin/employee-activity" label="Employee Activity" IconName="users" />
               <DashboardLink to="/communications/inbox" label="Team Inbox" IconName="briefcase" />
               <DashboardLink to="/admin/users" label="Manage Users" IconName="users" />
               <DashboardLink to="/admin/roles" label="Roles & Permissions" IconName="settings" />

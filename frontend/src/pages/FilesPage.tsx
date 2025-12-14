@@ -1,4 +1,3 @@
-import React from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { FolderOpen } from 'lucide-react'
 

@@ -14,9 +14,9 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
 
   const user = getAuthUser()
-  // If this is the owner/admin role (role_id === 1), do not show AdminDashboard; redirect to owner dashboard instead
-  if (user && user.role_id === 1) {
-    navigate('/dashboard/owner')
+  // Redirect all users to global dashboard
+  if (user) {
+    navigate('/dashboard')
     return null
   }
 

@@ -4,6 +4,7 @@ import { fetchUsers, updateUser, deleteUser, fetchRoles, createUser } from '@/ap
 import { Trash2, Plus, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import PermissionGate from '@/components/common/PermissionGate'
 
 export default function UsersPage() {
   const [users, setUsers] = useState([])
@@ -211,13 +212,15 @@ export default function UsersPage() {
                   className="flex-1 sm:max-w-xs rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-800 placeholder-gray-400 
                             focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition duration-150"
                 />
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition"
-                >
-                  <Plus className="w-4 h-4" />
-                  New User
-                </button>
+                <PermissionGate permission="user.create">
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New User
+                  </button>
+                </PermissionGate>
               </div>
             </div>
 
@@ -272,13 +275,15 @@ export default function UsersPage() {
                           </td>
                           <td className="px-6 py-3 text-gray-600">{getRoleNameForUser(user)}</td>
                           <td className="px-6 py-3 text-right text-xs">
-                            <button
-                              type="button"
-                              onClick={() => handleSelectUser(user)}
-                              className="inline-flex items-center rounded-full border border-blue-200 px-3 py-1 text-[11px] font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
-                            >
-                              View / Edit
-                            </button>
+                            <PermissionGate permission="user.view">
+                              <button
+                                type="button"
+                                onClick={() => handleSelectUser(user)}
+                                className="inline-flex items-center rounded-full border border-blue-200 px-3 py-1 text-[11px] font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
+                              >
+                                View / Edit
+                              </button>
+                            </PermissionGate>
                           </td>
                         </tr>
                       ))}
@@ -554,22 +559,26 @@ export default function UsersPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 pt-2">
-                      <button
-                        type="submit"
-                        disabled={saving}
-                        className="inline-flex items-center rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
-                      >
-                        {saving ? 'Saving...' : 'Save changes'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleDeleteUser}
-                        disabled={saving}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-red-200 px-3 py-2 text-[11px] font-semibold text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-60"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete user</span>
-                      </button>
+                      <PermissionGate permission="user.update">
+                        <button
+                          type="submit"
+                          disabled={saving}
+                          className="inline-flex items-center rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+                        >
+                          {saving ? 'Saving...' : 'Save changes'}
+                        </button>
+                      </PermissionGate>
+                      <PermissionGate permission="user.delete">
+                        <button
+                          type="button"
+                          onClick={handleDeleteUser}
+                          disabled={saving}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-red-200 px-3 py-2 text-[11px] font-semibold text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-60"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete user</span>
+                        </button>
+                      </PermissionGate>
                     </div>
                   </form>
                 </div>

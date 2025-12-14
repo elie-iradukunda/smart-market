@@ -25,6 +25,7 @@ import productRoutes from './routes/products.js';
 import productImageUploadRoutes from './routes/productImageUpload.js';
 import ecommerceOrdersRoutes from './routes/ecommerceOrders.js';
 import adsRoutes from './routes/ads.js';
+import userPermissionsRoutes from './routes/userPermissions.js';
 
 import './jobs/scheduler.js';
 
@@ -416,6 +417,7 @@ app.use('/api', adsRoutes);
 app.use('/api/communication', communicationRoutes);
 app.use('/api', aiRoutes);
 app.use('/api', reportRoutes);
+app.use('/api', userPermissionsRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {

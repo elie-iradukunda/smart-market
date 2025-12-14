@@ -4,6 +4,7 @@ import { Plus, Edit2, Trash2, Eye, EyeOff, TrendingUp } from 'lucide-react'
 import { fetchAds, createAd, updateAd, deleteAd, toggleAdStatus, Ad } from '@/api/adsApi'
 import { uploadProductImage } from '@/api/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import PermissionGate from '@/components/common/PermissionGate'
 
 export default function AdsManagementPage() {
     const [ads, setAds] = useState<Ad[]>([])
@@ -147,13 +148,15 @@ export default function AdsManagementPage() {
                                     Create and manage advertisements that will be displayed on the home page with animated sliding effects.
                                 </p>
                             </div>
-                            <button
-                                onClick={() => setShowForm(!showForm)}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-                            >
-                                <Plus className="w-5 h-5" />
-                                Create Ad
-                            </button>
+                            <PermissionGate permission="ad.create">
+                                <button
+                                    onClick={() => setShowForm(!showForm)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                    Create Ad
+                                </button>
+                            </PermissionGate>
                         </div>
                     </div>
 
@@ -323,12 +326,14 @@ export default function AdsManagementPage() {
                                 </div>
 
                                 <div className="flex gap-3 pt-4">
-                                    <button
-                                        type="submit"
-                                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-                                    >
-                                        {editingAd ? 'Update Ad' : 'Create Ad'}
-                                    </button>
+                                    <PermissionGate permission={editingAd ? "ad.update" : "ad.create"}>
+                                        <button
+                                            type="submit"
+                                            className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                                        >
+                                            {editingAd ? 'Update Ad' : 'Create Ad'}
+                                        </button>
+                                    </PermissionGate>
                                     <button
                                         type="button"
                                         onClick={resetForm}
@@ -400,20 +405,24 @@ export default function AdsManagementPage() {
                                                 >
                                                     {ad.is_active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                                                 </button>
-                                                <button
-                                                    onClick={() => handleEdit(ad)}
-                                                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Edit"
-                                                >
-                                                    <Edit2 className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(ad.id)}
-                                                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 className="w-5 h-5" />
-                                                </button>
+                                                <PermissionGate permission="ad.update">
+                                                    <button
+                                                        onClick={() => handleEdit(ad)}
+                                                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit2 className="w-5 h-5" />
+                                                    </button>
+                                                </PermissionGate>
+                                                <PermissionGate permission="ad.delete">
+                                                    <button
+                                                        onClick={() => handleDelete(ad.id)}
+                                                        className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 className="w-5 h-5" />
+                                                    </button>
+                                                </PermissionGate>
                                             </div>
                                         </div>
                                     </div>

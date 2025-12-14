@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -57,7 +57,6 @@ const sidebarItems: SidebarItem[] = [
 
 const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen: boolean) => void }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<string[]>(['Inventory', 'Procurement']);
 
   const toggleExpand = (label: string) => {

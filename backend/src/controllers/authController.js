@@ -8,20 +8,46 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const [users] = await pool.execute('SELECT * FROM users WHERE email = ? AND status = "active"', [email]);
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    // Trim and normalize email and password
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim(); // Trim password but keep case sensitivity
+
+    // Debug logging (can be removed in production)
+    console.log('Login attempt:', { email: normalizedEmail, hasPassword: !!password });
+
+    const [users] = await pool.execute(
+      'SELECT * FROM users WHERE LOWER(TRIM(email)) = ? AND status = "active"', 
+      [normalizedEmail]
+    );
 
     if (users.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      console.log('Login failed: User not found or inactive', { email: normalizedEmail });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const user = users[0];
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    
+    // Check if password hash exists
+    if (!user.password_hash) {
+      console.log('Login failed: No password hash for user', { userId: user.id, email: user.email });
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const isValidPassword = await bcrypt.compare(normalizedPassword, user.password_hash);
 
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      console.log('Login failed: Password mismatch', { userId: user.id, email: user.email });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+
+    console.log('Login successful:', { userId: user.id, email: user.email, roleId: user.role_id });
 
     res.json({
       token,
@@ -29,10 +55,12 @@ export const login = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        role_id: user.role_id
+        role_id: user.role_id,
+        is_super_admin: user.is_super_admin || false
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
   }
 };

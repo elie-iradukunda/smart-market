@@ -16,7 +16,7 @@ const FinanceDashboardLayout: React.FC<FinanceDashboardLayoutProps> = ({ childre
 
     // Only Accountant (role_id === 3) can access finance module
     if (!user || user.role_id !== 3) {
-        navigate('/dashboard/owner');
+        navigate('/dashboard');
         return null;
     }
 

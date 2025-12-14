@@ -1,19 +1,14 @@
 // @ts-nocheck
 import React from 'react'
 import AuditLogTable from '../../modules/admin/components/AuditLogTable'
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
-import OwnerSideNav from '@/components/layout/OwnerSideNav'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 export default function AuditLogsPage() {
   return (
-    // 1. Apply the light gradient background
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-0 py-8">
-      <OwnerTopNav />
-
-      <div className="px-3 sm:px-4 md:px-6 lg:px-8">
-        <div className="flex gap-6">
-          <OwnerSideNav />
-
+    <DashboardLayout>
+      {/* 1. Apply the light gradient background */}
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-0 py-8">
+        <div className="px-3 sm:px-4 md:px-6 lg:px-8">
           <main className="flex-1 space-y-8 max-w-7xl mx-auto">
 
             {/* Header Card - Using the new, cleaner card style */}
@@ -36,6 +31,6 @@ export default function AuditLogsPage() {
           </main>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

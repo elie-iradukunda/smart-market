@@ -3,6 +3,7 @@ export interface ApiUser {
   name: string
   email: string
   role_id: number | null
+  is_super_admin?: boolean
 }
 
 export interface LoginResponse {
@@ -10,7 +11,10 @@ export interface LoginResponse {
   user: ApiUser
 }
 
-const API_BASE = 'http://localhost:3000/api'
+// Use localhost for local development, production URL for production
+const API_BASE = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+    ? 'http://localhost:3000/api'
+    : 'https://topdesign.lanari.rw/api'
 
 export async function loginRequest(email: string, password: string): Promise<LoginResponse> {
   const res = await fetch(`${API_BASE}/auth/login`, {
@@ -278,6 +282,11 @@ export function currentUserHasPermission(code: string): boolean {
     return false
   }
 
+  // Super admin has all permissions
+  if (user.is_super_admin) {
+    return true
+  }
+
   const perms = getPermissionsForRole(user.role_id)
 
   // Owner has all permissions
@@ -301,38 +310,14 @@ export function currentUserHasPermission(code: string): boolean {
 }
 
 // Map backend role_id to the correct dashboard route inside the business app
+// All users now go to the global dashboard
 export function getDashboardPathForRole(roleId: number | null | undefined): string {
-  switch (roleId) {
-    case 1: // Owner
-      return '/dashboard/owner'
-    case 2: // Sys Admin
-      return '/dashboard/admin'
-    case 3: // Accountant
-      return '/dashboard/accountant'
-    case 4: // Controller
-      return '/dashboard/controller'
-    case 5: // Reception
-      return '/dashboard/reception'
-    case 6: // Technician
-      return '/dashboard/technician'
-    case 7: // Production Manager
-      return '/dashboard/production'
-    case 8: // Inventory Manager
-      return '/dashboard/inventory'
-    case 9: // Sales Rep
-      return '/dashboard/sales'
-    case 10: // Marketing Manager
-      return '/dashboard/marketing'
-    case 11: // POS Cashier
-      return '/dashboard/pos'
-    case 12: // Support Agent
-      return '/dashboard/support'
-    case 13: // Customer (e-commerce)
-      return '/' // Redirect to e-commerce homepage
-    default:
-      // Fallback to owner dashboard if role is unknown
-      return '/dashboard/owner'
+  // Use global dashboard for all business users
+  // Customers (role_id 13) go to e-commerce homepage
+  if (roleId === 13) {
+    return '/' // Customer role goes to e-commerce homepage
   }
+  return '/dashboard' // All business users go to global dashboard
 }
 
 // --- CRM & Inventory API Helpers ---

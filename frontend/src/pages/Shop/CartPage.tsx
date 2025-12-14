@@ -8,14 +8,14 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Package } from 'lucide-rea
 const getImageUrl = (path: string) => {
     if (!path) return ''
     if (path.startsWith('http')) return path
-    return `http://localhost:3000${path}`
+    return `https://topdesign.lanari.rw${path}`
 }
 
 // Cart Item Component
 interface CartItemProps {
     item: any
-    onRemove: (id: number) => void
-    onUpdateQuantity: (id: number, quantity: number) => void
+    onRemove: (id: string) => void
+    onUpdateQuantity: (id: string, quantity: number) => void
 }
 
 const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onUpdateQuantity }) => {
