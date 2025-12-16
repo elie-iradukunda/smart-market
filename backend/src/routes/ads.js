@@ -1,6 +1,5 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
-import rbacMiddleware from '../../middleware/rbac.js';
 import {
   getAllAds,
   getAdsForManagement,
@@ -20,8 +19,8 @@ router.get('/ads/public', getAllAds);
 router.post('/ads/public/:id/impression', trackImpression);
 router.post('/ads/public/:id/click', trackClick);
 
-// Protected routes (require authentication and RBAC)
-router.use(authenticateToken, rbacMiddleware);
+// Protected routes (authentication only - permissions checked on frontend)
+router.use(authenticateToken);
 
 router.get('/ads', getAdsForManagement);
 router.get('/ads/:id', getAd);

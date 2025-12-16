@@ -35,7 +35,14 @@ export default function PaymentsPage() {
         setPayments(Array.isArray(data) ? data : [])
       })
       .catch((err) => {
-        setError(err.message || 'Failed to load payments')
+        // Handle permission errors gracefully - don't show as blocking error
+        const errorMsg = err.message || 'Failed to load payments'
+        if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+          setPayments([])
+          setError(null)
+        } else {
+          setError(errorMsg)
+        }
       })
       .finally(() => {
         setLoading(false)
@@ -55,7 +62,15 @@ export default function PaymentsPage() {
       })
       .catch((err) => {
         if (!isMounted) return
-        setError(err.message || 'Failed to load payments')
+        // Handle permission errors gracefully - don't show as blocking error
+        const errorMsg = err.message || 'Failed to load payments'
+        if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+          setPayments([])
+          setInvoices([])
+          setError(null)
+        } else {
+          setError(errorMsg)
+        }
       })
       .finally(() => {
         if (!isMounted) return

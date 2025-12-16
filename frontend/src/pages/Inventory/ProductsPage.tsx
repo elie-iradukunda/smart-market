@@ -112,7 +112,14 @@ export default function ProductsPage() {
             const data = await fetchProducts()
             setProducts(data)
         } catch (err: any) {
-            setError(err.message)
+            // Handle permission errors gracefully - don't show as blocking error
+            const errorMsg = err.message || 'Failed to load products'
+            if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+                setProducts([])
+                setError(null)
+            } else {
+                setError(errorMsg)
+            }
         } finally {
             setLoading(false)
         }

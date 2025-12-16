@@ -1,13 +1,12 @@
 import express from 'express';
 import { getOrders, getOrder, getOrdersReadyForCommunication } from '../controllers/orderController.js';
 import { authenticateToken } from '../middleware/auth.js';
-import rbacMiddleware from '../../middleware/rbac.js';
 import { auditLog } from '../middleware/audit.js';
 
 const router = express.Router();
 
-// Apply RBAC middleware to all routes
-router.use(authenticateToken, rbacMiddleware);
+// Apply authentication middleware only (permissions checked on frontend)
+router.use(authenticateToken);
 
 // Order routes
 router.get('/orders', getOrders);

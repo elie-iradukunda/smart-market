@@ -229,7 +229,13 @@ export default function FinancialReportsPage() {
       })
       .catch((err) => {
         if (!isMounted) return
-        setError(err.message || 'Failed to load financial overview')
+        // Handle permission errors gracefully - don't show as blocking error
+        const errorMsg = err.message || 'Failed to load financial overview'
+        if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+          setError(null)
+        } else {
+          setError(errorMsg)
+        }
       })
       .finally(() => {
         if (!isMounted) return

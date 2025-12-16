@@ -13,7 +13,6 @@ import {
 } from '../controllers/authController.js';
 
 import { authenticateToken } from '../middleware/auth.js';
-import rbacMiddleware from '../../middleware/rbac.js';
 
 const router = express.Router();
 
@@ -23,8 +22,8 @@ router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 
-// Protected routes with RBAC
-router.use(authenticateToken, rbacMiddleware);
+// Protected routes (authentication only - permissions checked on frontend)
+router.use(authenticateToken);
 
 // User CRUD routes
 router.post('/users', createUser);

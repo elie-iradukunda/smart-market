@@ -6,3 +6,6 @@ export default function DashboardMaterialDetailPage() {
   return <MaterialDetailPage />
 }
 
+
+
+

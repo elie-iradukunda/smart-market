@@ -134,7 +134,14 @@ export default function InvoicesPage() {
       })
 
       .catch((err) => {
-        setError(err.message || 'Failed to load invoices from API')
+        // Handle permission errors gracefully - don't show as blocking error
+        const errorMsg = err.message || 'Failed to load invoices from API'
+        if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+          setInvoices([])
+          setError(null)
+        } else {
+          setError(errorMsg)
+        }
       })
       .finally(() => {
         setLoading(false)
@@ -171,7 +178,14 @@ export default function InvoicesPage() {
 
       .catch((err) => {
         if (!isMounted) return
-        setError(err.message || 'Failed to load invoices from API')
+        // Handle permission errors gracefully - don't show as blocking error
+        const errorMsg = err.message || 'Failed to load invoices from API'
+        if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+          setInvoices([])
+          setError(null)
+        } else {
+          setError(errorMsg)
+        }
       })
       .finally(() => {
         if (!isMounted) return
@@ -202,7 +216,14 @@ export default function InvoicesPage() {
 
       .catch((err) => {
         if (!isMounted) return
-        setOrdersError(err.message || 'Failed to load delivered orders')
+        // Handle permission errors gracefully - don't show as blocking error
+        const errorMsg = err.message || 'Failed to load delivered orders'
+        if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+          setOrders([])
+          setOrdersError(null)
+        } else {
+          setOrdersError(errorMsg)
+        }
       })
       .finally(() => {
         if (!isMounted) return

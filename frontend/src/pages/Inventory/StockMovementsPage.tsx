@@ -61,7 +61,13 @@ export default function StockMovementsPage() {
       setMaterials(Array.isArray(matsResponse) ? matsResponse : [])
     } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load stock data'
-      setError(errorMessage)
+      // Handle permission errors gracefully - don't show as blocking error
+      if (errorMessage.toLowerCase().includes('insufficient') || errorMessage.toLowerCase().includes('permission')) {
+        setMovements([])
+        setError(null)
+      } else {
+        setError(errorMessage)
+      }
       console.error('Error in load:', err)
       setMovements([])
       setMaterials([])

@@ -231,3 +231,6 @@ After implementing permissions:
 - If a permission is `null`, the route/action is accessible to all authenticated users
 - Permission checks are done client-side for UI, but backend also enforces permissions
 
+
+
+

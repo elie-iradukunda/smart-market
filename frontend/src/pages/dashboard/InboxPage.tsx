@@ -6,3 +6,6 @@ export default function DashboardInboxPage() {
   return <InboxPage />
 }
 
+
+
+

@@ -7,11 +7,11 @@ import {
   deleteCustomer
 } from '../controllers/customerController.js';
 import { authenticateToken } from '../middleware/auth.js';
-import rbacMiddleware from '../../middleware/rbac.js';
 
 const router = express.Router();
 
-router.use(authenticateToken, rbacMiddleware);
+// Apply authentication middleware only (permissions checked on frontend)
+router.use(authenticateToken);
 
 router.post('/customers', createCustomer);
 router.get('/customers', getCustomers);

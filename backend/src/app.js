@@ -10,6 +10,7 @@ import socketService from './services/socketService.js';
 import pool from './config/database.js';
 
 import authRoutes from './routes/auth.js';
+import meRoutes from './routes/me.js';
 import orderRoutes from './routes/orders.js';
 import customerRoutes from './routes/customers.js';
 import leadsRoutes from './routes/leads.js';
@@ -405,6 +406,7 @@ app.use('/api/ecommerce/orders', ecommerceOrdersRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/upload', productImageUploadRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api', meRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', customerRoutes);
 app.use('/api', leadsRoutes);

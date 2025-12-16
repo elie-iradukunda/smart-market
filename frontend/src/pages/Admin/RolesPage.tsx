@@ -1,7 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { fetchRoles, fetchPermissions, fetchRolePermissions, updateRole, createRole, updateRolePermissions, deleteRole } from '@/api/apiClient'
-import { currentUserHasPermission } from '@/utils/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
 export default function RolesPage() {
@@ -15,8 +14,6 @@ export default function RolesPage() {
   const [formDescription, setFormDescription] = useState('')
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([])
   const [saving, setSaving] = useState(false)
-
-  const canManageRoles = currentUserHasPermission('role.manage')
 
   useEffect(() => {
     let isMounted = true
@@ -83,7 +80,6 @@ export default function RolesPage() {
 
   const handleCreateRole = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!canManageRoles) return
     setSaving(true)
     setError(null)
     try {
@@ -104,7 +100,7 @@ export default function RolesPage() {
 
   const handleSaveRole = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!canManageRoles || !selectedRoleId) return
+    if (!selectedRoleId) return
     setSaving(true)
     setError(null)
     try {
@@ -120,7 +116,7 @@ export default function RolesPage() {
   }
 
   const handleDeleteRole = async () => {
-    if (!canManageRoles || !selectedRoleId) return
+    if (!selectedRoleId) return
     const role = roles.find((r: any) => r.id === selectedRoleId)
     if (role && role.usersCount > 0) {
       setError('Cannot delete a role that still has users assigned.')
@@ -198,27 +194,19 @@ export default function RolesPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-lg font-semibold text-gray-900">Role details</p>
-                {canManageRoles && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedRoleId(null)
-                      setFormName('')
-                      setFormDescription('')
-                      setSelectedPermissionIds([])
-                    }}
-                    className="text-xs font-medium text-blue-600 hover:text-blue-800"
-                  >
-                    + New role
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedRoleId(null)
+                    setFormName('')
+                    setFormDescription('')
+                    setSelectedPermissionIds([])
+                  }}
+                  className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                >
+                  + New role
+                </button>
               </div>
-
-              {!canManageRoles && (
-                <p className="text-sm text-gray-500 mb-4">
-                  You can view roles, but changes are restricted to system administrators.
-                </p>
-              )}
 
               <form onSubmit={selectedRoleId ? handleSaveRole : handleCreateRole} className="space-y-4">
                 <div>
@@ -229,7 +217,6 @@ export default function RolesPage() {
                     onChange={(e) => setFormName(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g. Controller"
-                    disabled={!canManageRoles}
                     required
                   />
                 </div>
@@ -241,7 +228,6 @@ export default function RolesPage() {
                     onChange={(e) => setFormDescription(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[72px]"
                     placeholder="Short description of what this role can do"
-                    disabled={!canManageRoles}
                   />
                 </div>
 
@@ -275,7 +261,6 @@ export default function RolesPage() {
                               type="checkbox"
                               checked={selectedPermissionIds.includes(perm.id)}
                               onChange={() => handleTogglePermission(perm.id)}
-                              disabled={!canManageRoles}
                               className="h-3.5 w-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                             />
                           </div>
@@ -285,27 +270,25 @@ export default function RolesPage() {
                   )}
                 </div>
 
-                {canManageRoles && (
-                  <div className="pt-2 flex items-center gap-3">
+                <div className="pt-2 flex items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {saving ? 'Saving...' : selectedRoleId ? 'Save changes' : 'Create role'}
+                  </button>
+                  {selectedRoleId && (
                     <button
-                      type="submit"
-                      disabled={saving}
-                      className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                      type="button"
+                      onClick={handleDeleteRole}
+                      disabled={saving || roles.find((r: any) => r.id === selectedRoleId)?.usersCount > 0}
+                      className="inline-flex items-center rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      {saving ? 'Saving...' : selectedRoleId ? 'Save changes' : 'Create role'}
+                      Delete role
                     </button>
-                    {selectedRoleId && (
-                      <button
-                        type="button"
-                        onClick={handleDeleteRole}
-                        disabled={saving || roles.find((r: any) => r.id === selectedRoleId)?.usersCount > 0}
-                        className="inline-flex items-center rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
-                      >
-                        Delete role
-                      </button>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
               </form>
             </div>
           </div>

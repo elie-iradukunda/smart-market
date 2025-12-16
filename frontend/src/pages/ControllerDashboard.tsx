@@ -1,7 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { currentUserHasPermission } from '@/utils/apiClient'
 import { fetchMaterials, fetchPurchaseOrders, fetchStockMovements } from '@/api/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { ArrowRight, Users, Package, DollarSign } from 'lucide-react'
@@ -170,75 +169,68 @@ export default function ControllerDashboard() {
 
             {/* Quick access row - Responsive grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {currentUserHasPermission('customer.view') && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/crm/customers')}
-                  className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-amber-300 transition-all duration-300 flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="p-2 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
-                        <Users className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Customers</p>
+              <button
+                type="button"
+                onClick={() => navigate('/crm/customers')}
+                className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-amber-300 transition-all duration-300 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                      <Users className="w-4 h-4 text-blue-600" />
                     </div>
-                    <p className="text-sm font-bold text-gray-900 group-hover:text-amber-700 transition-colors">View & manage customers</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Customers</p>
                   </div>
-                  <span className="mt-3 text-xs text-amber-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Go to customers <ArrowRight className="w-3 h-3" />
-                  </span>
-                </button>
-              )}
+                  <p className="text-sm font-bold text-gray-900 group-hover:text-amber-700 transition-colors">View & manage customers</p>
+                </div>
+                <span className="mt-3 text-xs text-amber-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Go to customers <ArrowRight className="w-3 h-3" />
+                </span>
+              </button>
 
-              {currentUserHasPermission('order.view') && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/orders')}
-                  className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-amber-300 transition-all duration-300 flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="p-2 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 transition-colors">
-                        <Package className="w-4 h-4 text-indigo-600" />
-                      </div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Orders</p>
+              <button
+                type="button"
+                onClick={() => navigate('/orders')}
+                className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-amber-300 transition-all duration-300 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 transition-colors">
+                      <Package className="w-4 h-4 text-indigo-600" />
                     </div>
-                    <p className="text-sm font-bold text-gray-900 group-hover:text-amber-700 transition-colors">Track & update production orders</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Orders</p>
                   </div>
-                  <span className="mt-3 text-xs text-amber-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Go to orders <ArrowRight className="w-3 h-3" />
-                  </span>
-                </button>
-              )}
+                  <p className="text-sm font-bold text-gray-900 group-hover:text-amber-700 transition-colors">Track & update production orders</p>
+                </div>
+                <span className="mt-3 text-xs text-amber-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Go to orders <ArrowRight className="w-3 h-3" />
+                </span>
+              </button>
 
-              {currentUserHasPermission('material.view') && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/inventory/materials')}
-                  className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-amber-300 transition-all duration-300 flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="p-2 rounded-lg bg-emerald-50 group-hover:bg-emerald-100 transition-colors">
-                        <Package className="w-4 h-4 text-emerald-600" />
-                      </div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Materials & Stock</p>
+              <button
+                type="button"
+                onClick={() => navigate('/inventory/materials')}
+                className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-amber-300 transition-all duration-300 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 rounded-lg bg-emerald-50 group-hover:bg-emerald-100 transition-colors">
+                      <Package className="w-4 h-4 text-emerald-600" />
                     </div>
-                    <p className="text-sm font-bold text-gray-900 group-hover:text-amber-700 transition-colors">Check stock & movements</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Materials & Stock</p>
                   </div>
-                  <span className="mt-3 text-xs text-amber-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Go to inventory <ArrowRight className="w-3 h-3" />
-                  </span>
-                </button>
-              )}
+                  <p className="text-sm font-bold text-gray-900 group-hover:text-amber-700 transition-colors">Check stock & movements</p>
+                </div>
+                <span className="mt-3 text-xs text-amber-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Go to inventory <ArrowRight className="w-3 h-3" />
+                </span>
+              </button>
 
-              {(currentUserHasPermission('invoice.create') || currentUserHasPermission('payment.create')) && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/finance/invoices')}
-                  className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-amber-300 transition-all duration-300 flex flex-col justify-between"
-                >
+              <button
+                type="button"
+                onClick={() => navigate('/finance/invoices')}
+                className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-amber-300 transition-all duration-300 flex flex-col justify-between"
+              >
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <div className="p-2 rounded-lg bg-purple-50 group-hover:bg-purple-100 transition-colors">
@@ -251,8 +243,7 @@ export default function ControllerDashboard() {
                   <span className="mt-3 text-xs text-amber-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
                     Open finance workspace <ArrowRight className="w-3 h-3" />
                   </span>
-                </button>
-              )}
+              </button>
             </div>
           </div>
         </div>

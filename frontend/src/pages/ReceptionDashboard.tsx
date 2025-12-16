@@ -1,15 +1,14 @@
 // @ts-nocheck
 import React from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { currentUserHasPermission } from '@/utils/apiClient'
-import ReceptionDashboardLayout from '@/components/layout/ReceptionDashboardLayout'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { ArrowRight, MessageSquare, ClipboardList, ShoppingCart, CreditCard, Users, FileText } from 'lucide-react'
 
 export default function ReceptionDashboard() {
   const navigate = useNavigate()
 
   return (
-    <ReceptionDashboardLayout>
+    <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50/30">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="space-y-6 lg:space-y-8">
@@ -107,12 +106,11 @@ export default function ReceptionDashboard() {
 
             {/* Quick access row - Responsive grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {currentUserHasPermission('lead.manage') && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/crm/leads')}
-                  className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-emerald-300 transition-all duration-300 flex flex-col justify-between"
-                >
+              <button
+                type="button"
+                onClick={() => navigate('/crm/leads')}
+                className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-emerald-300 transition-all duration-300 flex flex-col justify-between"
+              >
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <div className="p-2 rounded-lg bg-emerald-50 group-hover:bg-emerald-100 transition-colors">
@@ -125,15 +123,13 @@ export default function ReceptionDashboard() {
                   <span className="mt-3 text-xs text-emerald-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
                     Go to leads <ArrowRight className="w-3 h-3" />
                   </span>
-                </button>
-              )}
+              </button>
 
-              {currentUserHasPermission('customer.view') && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/crm/customers')}
-                  className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-emerald-300 transition-all duration-300 flex flex-col justify-between"
-                >
+              <button
+                type="button"
+                onClick={() => navigate('/crm/customers')}
+                className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-emerald-300 transition-all duration-300 flex flex-col justify-between"
+              >
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <div className="p-2 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
@@ -146,36 +142,32 @@ export default function ReceptionDashboard() {
                   <span className="mt-3 text-xs text-emerald-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
                     Go to customers <ArrowRight className="w-3 h-3" />
                   </span>
-                </button>
-              )}
+              </button>
 
-              {currentUserHasPermission('quote.manage') && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/crm/quotes')}
-                  className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-emerald-300 transition-all duration-300 flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="p-2 rounded-lg bg-purple-50 group-hover:bg-purple-100 transition-colors">
-                        <FileText className="w-4 h-4 text-purple-600" />
-                      </div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Quotes</p>
+              <button
+                type="button"
+                onClick={() => navigate('/crm/quotes')}
+                className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-emerald-300 transition-all duration-300 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 rounded-lg bg-purple-50 group-hover:bg-purple-100 transition-colors">
+                      <FileText className="w-4 h-4 text-purple-600" />
                     </div>
-                    <p className="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">Prepare front-desk price quotes</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Quotes</p>
                   </div>
-                  <span className="mt-3 text-xs text-emerald-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Go to quotes <ArrowRight className="w-3 h-3" />
-                  </span>
-                </button>
-              )}
+                  <p className="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">Prepare front-desk price quotes</p>
+                </div>
+                <span className="mt-3 text-xs text-emerald-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Go to quotes <ArrowRight className="w-3 h-3" />
+                </span>
+              </button>
 
-              {currentUserHasPermission('order.view') && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/orders')}
-                  className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-emerald-300 transition-all duration-300 flex flex-col justify-between"
-                >
+              <button
+                type="button"
+                onClick={() => navigate('/orders')}
+                className="group rounded-xl lg:rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-4 text-left shadow-md hover:shadow-xl hover:border-emerald-300 transition-all duration-300 flex flex-col justify-between"
+              >
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <div className="p-2 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 transition-colors">
@@ -188,12 +180,11 @@ export default function ReceptionDashboard() {
                   <span className="mt-3 text-xs text-emerald-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
                     Go to orders <ArrowRight className="w-3 h-3" />
                   </span>
-                </button>
-              )}
+              </button>
             </div>
           </div>
         </div>
       </div>
-    </ReceptionDashboardLayout>
+    </DashboardLayout>
   )
 }

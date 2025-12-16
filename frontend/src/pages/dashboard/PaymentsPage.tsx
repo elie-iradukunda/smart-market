@@ -6,3 +6,6 @@ export default function DashboardPaymentsPage() {
   return <PaymentsPage />
 }
 
+
+
+

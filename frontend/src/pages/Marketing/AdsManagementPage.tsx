@@ -39,7 +39,14 @@ export default function AdsManagementPage() {
             setAds(data)
             setError(null)
         } catch (err: any) {
-            setError(err.message || 'Failed to load ads')
+            // Handle permission errors gracefully - don't show as blocking error
+            const errorMsg = err.message || 'Failed to load ads'
+            if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+                setAds([])
+                setError(null)
+            } else {
+                setError(errorMsg)
+            }
         } finally {
             setIsLoading(false)
         }

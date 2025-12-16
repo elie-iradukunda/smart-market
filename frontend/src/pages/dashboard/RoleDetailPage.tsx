@@ -6,3 +6,6 @@ export default function DashboardRoleDetailPage() {
   return <RoleDetailPage />
 }
 
+
+
+

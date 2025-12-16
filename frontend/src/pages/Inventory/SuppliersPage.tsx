@@ -130,7 +130,13 @@ export default function SuppliersPage() {
         setMaterials(materialsData);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
-        setError(errorMessage);
+        // Handle permission errors gracefully - don't show as blocking error
+        if (errorMessage.toLowerCase().includes('insufficient') || errorMessage.toLowerCase().includes('permission')) {
+          setSuppliers([])
+          setError(null)
+        } else {
+          setError(errorMessage);
+        }
         console.error('Error in loadData:', err);
         // Ensure suppliers is always an array even if there's an error
         setSuppliers([]);

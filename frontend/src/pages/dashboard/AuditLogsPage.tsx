@@ -6,3 +6,6 @@ export default function DashboardAuditLogsPage() {
   return <AuditLogsPage />
 }
 
+
+
+

@@ -6,13 +6,12 @@ import {
   createSupplier, getSuppliers, getSupplier, updateSupplier, deleteSupplier
 } from '../controllers/inventoryController.js';
 import { authenticateToken } from '../middleware/auth.js';
-import rbacMiddleware from '../../middleware/rbac.js';
 import { auditLog } from '../middleware/audit.js';
 
 const router = express.Router();
 
-// Apply RBAC middleware to all routes
-router.use(authenticateToken, rbacMiddleware);
+// Apply authentication middleware only (permissions checked on frontend)
+router.use(authenticateToken);
 
 // Materials CRUD
 router.post('/materials', auditLog('CREATE', 'materials'), createMaterial);

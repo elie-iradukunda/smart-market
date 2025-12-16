@@ -1,6 +1,5 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
-import rbacMiddleware from '../../middleware/rbac.js';
 import {
   sendEmail,
   sendContactForm,
@@ -17,8 +16,8 @@ router.post('/contact', sendContactForm);
 // Add permissions endpoint (no auth required)
 router.post('/add-permissions', addCommunicationPermissions);
 
-// Protected routes
-router.use(authenticateToken, rbacMiddleware);
+// Protected routes (authentication only - permissions checked on frontend)
+router.use(authenticateToken);
 router.post('/email', sendEmail);
 
 export default router;

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, Lock, ArrowRight, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import Button from '@/components/ui/Button'
-import { loginRequest, setAuthToken, setAuthUser, getDashboardPathForRole } from '@/utils/apiClient'
+import { loginRequest, setAuthToken, setAuthUser, getDashboardPathForRole, fetchCurrentUser } from '@/utils/apiClient'
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -19,6 +19,10 @@ export default function LoginPage() {
       const res = await loginRequest(email, password)
       setAuthToken(res.token)
       setAuthUser(res.user)
+
+      // Fetch complete user profile with permissions
+      const userProfile = await fetchCurrentUser()
+      setAuthUser({ ...res.user, permissions: userProfile.permissions })
 
       // Decide which dashboard to open based on the user's role_id
       const dashboardPath = getDashboardPathForRole(res.user.role_id)

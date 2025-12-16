@@ -25,7 +25,14 @@ export default function PurchaseOrdersPage() {
       })
       .catch((err) => {
         if (!isMounted) return
-        setError(err.message || 'Failed to load purchase orders')
+        // Handle permission errors gracefully - don't show as blocking error
+        const errorMsg = err.message || 'Failed to load purchase orders'
+        if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+          setPurchaseOrders([])
+          setError(null)
+        } else {
+          setError(errorMsg)
+        }
       })
       .finally(() => {
         if (!isMounted) return

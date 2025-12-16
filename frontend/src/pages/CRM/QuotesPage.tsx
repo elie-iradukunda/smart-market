@@ -107,7 +107,13 @@ export default function QuotesPage() {
       .catch((err) => {
         if (!isMounted) return
         const errorMessage = typeof err === 'object' && err !== null && err.message ? err.message : 'Failed to load quotes. Check API connectivity.';
-        setError(errorMessage)
+        // Handle permission errors gracefully - don't show as blocking error
+        if (errorMessage.toLowerCase().includes('insufficient') || errorMessage.toLowerCase().includes('permission')) {
+          setQuotes([])
+          setError(null)
+        } else {
+          setError(errorMessage)
+        }
       })
       .finally(() => {
         if (!isMounted) return

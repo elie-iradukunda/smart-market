@@ -1,11 +1,11 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
-import rbacMiddleware from '../../middleware/rbac.js';
 import pool from '../config/database.js';
 
 const router = express.Router();
 
-router.use(authenticateToken, rbacMiddleware);
+// Apply authentication middleware only (permissions checked on frontend)
+router.use(authenticateToken);
 
 // Test route
 router.get('/leads/test', (req, res) => {

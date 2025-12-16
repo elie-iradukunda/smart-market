@@ -40,7 +40,14 @@ export default function WorkOrdersBoardPage() {
             })
             .catch((err) => {
                 if (!isMounted) return
-                setError(err.message || 'Failed to load work orders')
+                // Handle permission errors gracefully - don't show as blocking error
+                const errorMsg = err.message || 'Failed to load work orders'
+                if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+                    setWorkOrders([])
+                    setError(null)
+                } else {
+                    setError(errorMsg)
+                }
             })
             .finally(() => {
                 if (!isMounted) return

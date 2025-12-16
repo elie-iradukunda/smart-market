@@ -23,7 +23,14 @@ export default function UserDetailPage() {
       })
       .catch(err => {
         if (!isMounted) return
-        setError(err.message || 'Failed to load user')
+        // Handle permission errors gracefully - don't show as blocking error
+        const errorMsg = err.message || 'Failed to load user'
+        if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+          setUser(null)
+          setError(null)
+        } else {
+          setError(errorMsg)
+        }
       })
       .finally(() => {
         if (!isMounted) return

@@ -15,44 +15,99 @@ const ROLES = {
 };
 
 const PERMISSIONS = {
+  // User Management
   USER_MANAGE: 'user.manage',
+  USER_VIEW: 'user.view',
+  USER_CREATE: 'user.create',
+
+  // Role Management
   ROLE_MANAGE: 'role.manage',
+
+  // Audit & Settings
   AUDIT_VIEW: 'audit.view',
   SETTINGS_MANAGE: 'settings.manage',
+
+  // Customer Management
   CUSTOMER_MANAGE: 'customer.manage',
   CUSTOMER_VIEW: 'customer.view',
+  CUSTOMER_CREATE: 'customer.create',
+  CUSTOMER_UPDATE: 'customer.update',
+
+  // Lead Management
   LEAD_MANAGE: 'lead.manage',
+  LEAD_VIEW: 'lead.view',
+  LEAD_CREATE: 'lead.create',
+
+  // Quote Management
   QUOTE_MANAGE: 'quote.manage',
   QUOTE_VIEW: 'quote.view',
   QUOTE_APPROVE: 'quote.approve',
+  QUOTE_CREATE: 'quote.create',
+
+  // Order Management
   ORDER_UPDATE: 'order.update',
   ORDER_VIEW: 'order.view',
+  ORDER_CREATE: 'order.create',
+
+  // Work Order Management
   WORKORDER_CREATE: 'workorder.create',
   WORKORDER_UPDATE: 'workorder.update',
   WORKORDER_VIEW: 'workorder.view',
   WORKLOG_CREATE: 'worklog.create',
+
+  // Inventory Management
   INVENTORY_MANAGE: 'inventory.manage',
   MATERIAL_VIEW: 'material.view',
+  MATERIAL_CREATE: 'material.create',
   SUPPLIER_VIEW: 'supplier.view',
+
+  // Purchase Orders
+  PO_CREATE: 'po.create',
+  PO_VIEW: 'po.view',
+  PO_APPROVE: 'po.approve',
+
+  // Stock Management
+  STOCK_MOVE: 'stock.move',
+
+  // Finance
   INVOICE_CREATE: 'invoice.create',
   INVOICE_VIEW: 'invoice.view',
   INVOICE_SEND: 'invoice.send',
   PAYMENT_CREATE: 'payment.create',
   PAYMENT_VIEW: 'payment.view',
   PAYMENT_REFUND: 'payment.refund',
-  POS_CREATE: 'pos.create',
   JOURNAL_CREATE: 'journal.create',
+
+  // POS
+  POS_CREATE: 'pos.create',
+  POS_VIEW: 'pos.view',
+
+  // Marketing
   CAMPAIGN_MANAGE: 'campaign.manage',
   CAMPAIGN_LAUNCH: 'campaign.launch',
+  CAMPAIGN_VIEW: 'campaign.view',
+  CAMPAIGN_CREATE: 'campaign.create',
+  CAMPAIGN_UPDATE: 'campaign.update',
+
+  // Ads
   AD_CREATE: 'ad.create',
   AD_VIEW: 'ad.view',
   AD_EDIT: 'ad.edit',
   AD_DELETE: 'ad.delete',
 
+  // Communications
   CONVERSATION_VIEW: 'conversation.view',
+  CONVERSATION_CREATE: 'conversation.create',
   MESSAGE_SEND: 'message.send',
+  MESSAGE_VIEW: 'message.view',
+  MESSAGE_CREATE: 'message.create',
+
+  // Reports & AI
   REPORT_VIEW: 'report.view',
   AI_VIEW: 'ai.view',
+  AI_CREATE: 'ai.create',
+
+  // Files
   FILE_UPLOAD: 'file.upload',
   FILE_VIEW: 'file.view'
 };

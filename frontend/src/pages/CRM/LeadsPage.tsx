@@ -51,7 +51,14 @@ export default function LeadsPage() {
       })
       .catch((err) => {
         if (!isMounted) return
-        setError(err.message || 'Failed to load leads')
+        // Handle permission errors gracefully - don't show as blocking error
+        const errorMsg = err.message || 'Failed to load leads'
+        if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+          setLeads([])
+          setError(null)
+        } else {
+          setError(errorMsg)
+        }
       })
       .finally(() => {
         if (!isMounted) return

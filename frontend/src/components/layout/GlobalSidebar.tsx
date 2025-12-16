@@ -199,13 +199,13 @@ const GlobalSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                     : 'https://topdesign.lanari.rw/api'
                 
                 console.log('🔒 [SIDEBAR] Fetching permissions for user:', currentUser.id)
-                const res = await fetch(`${API_BASE}/users/${currentUser.id}/permissions`, {
+                const res = await fetch(`${API_BASE}/me`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
                 
                 if (res.ok) {
                     const data = await res.json()
-                    const permissionCodes = (data.permissions || []).map((p: any) => p.code)
+                    const permissionCodes = data.permissions || []
                     console.log('🔒 [SIDEBAR] ✅ Fetched actual permissions from backend:', {
                         userId: currentUser.id,
                         roleId: currentUser.role_id,
@@ -337,12 +337,34 @@ const GlobalSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                 shouldShow = false
               }
             } else {
-              // Child requires permission - STRICT CHECK: user MUST have this permission
-              const hasPermission = userPerms.includes('*') || userPerms.includes(child.permission)
-              shouldShow = hasPermission
+              // Child requires permission - Check if user has this permission OR any related permission
+              // For example, if link requires 'customer.view', also show if user has 'customer.create', 'customer.manage', etc.
+              const hasExactPermission = userPerms.includes('*') || userPerms.includes(child.permission)
               
-              if (hasPermission) {
-                console.log('✅ [FILTER] Allowing:', child.label, 'Permission:', child.permission)
+              // If no exact match, check for related permissions (same resource, different action)
+              let hasRelatedPermission = false
+              if (!hasExactPermission && child.permission) {
+                // Extract resource from permission (e.g., 'customer' from 'customer.view')
+                const permissionParts = child.permission.split('.')
+                if (permissionParts.length === 2) {
+                  const resource = permissionParts[0]
+                  // Check if user has any permission for this resource (customer.create, customer.view, customer.manage, etc.)
+                  hasRelatedPermission = userPerms.some(perm => {
+                    const userPermParts = perm.split('.')
+                    return userPermParts.length === 2 && userPermParts[0] === resource
+                  })
+                }
+              }
+              
+              shouldShow = hasExactPermission || hasRelatedPermission
+              
+              if (shouldShow) {
+                console.log('✅ [FILTER] Allowing:', child.label, {
+                  required: child.permission,
+                  hasExact: hasExactPermission,
+                  hasRelated: hasRelatedPermission,
+                  userPermissions: userPerms.filter(p => p.includes(child.permission.split('.')[0]))
+                })
               } else {
                 console.log('🔒 [FILTER] HIDING (no permission):', child.label, {
                   required: child.permission,
@@ -383,12 +405,33 @@ const GlobalSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
               shouldShow = false
             }
           } else {
-            // Requires permission - STRICT CHECK: user MUST have this permission
-            const hasPermission = userPerms.includes('*') || userPerms.includes(item.permission)
-            shouldShow = hasPermission
+            // Item requires permission - Check if user has this permission OR any related permission
+            const hasExactPermission = userPerms.includes('*') || userPerms.includes(item.permission)
             
-            if (hasPermission) {
-              console.log('✅ [FILTER] Allowing:', item.label, 'Permission:', item.permission)
+            // If no exact match, check for related permissions (same resource, different action)
+            let hasRelatedPermission = false
+            if (!hasExactPermission && item.permission) {
+              // Extract resource from permission (e.g., 'customer' from 'customer.view')
+              const permissionParts = item.permission.split('.')
+              if (permissionParts.length === 2) {
+                const resource = permissionParts[0]
+                // Check if user has any permission for this resource (customer.create, customer.view, customer.manage, etc.)
+                hasRelatedPermission = userPerms.some(perm => {
+                  const userPermParts = perm.split('.')
+                  return userPermParts.length === 2 && userPermParts[0] === resource
+                })
+              }
+            }
+            
+            shouldShow = hasExactPermission || hasRelatedPermission
+            
+            if (shouldShow) {
+              console.log('✅ [FILTER] Allowing:', item.label, {
+                required: item.permission,
+                hasExact: hasExactPermission,
+                hasRelated: hasRelatedPermission,
+                userPermissions: userPerms.filter(p => p.includes(item.permission.split('.')[0]))
+              })
             } else {
               console.log('🔒 [FILTER] HIDING (no permission):', item.label, {
                 required: item.permission,
@@ -503,7 +546,39 @@ const GlobalSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                     ) : filteredItems.length === 0 ? (
                         <div className="px-3 py-2 text-sm text-gray-500">No accessible pages</div>
                     ) : (
-                        filteredItems.map((item) => (
+                        filteredItems.map((item) => {
+                          // Pre-check: Count visible children to hide parent if none
+                          if (item.children) {
+                            const userPerms = userActualPermissions.length > 0 
+                              ? userActualPermissions 
+                              : (user ? getPermissionsForRole(user.role_id) : [])
+                            
+                            const visibleCount = item.children.filter((child) => {
+                              if (!user) return false
+                              if (user.is_super_admin || user.role_id === 1) return true
+                              if (!child.permission) return child.path === '/dashboard' || child.path === '/'
+                              
+                              const hasExact = userPerms.includes('*') || userPerms.includes(child.permission)
+                              if (hasExact) return true
+                              
+                              // Check for related permissions
+                              const parts = child.permission.split('.')
+                              if (parts.length === 2) {
+                                return userPerms.some(p => {
+                                  const pParts = p.split('.')
+                                  return pParts.length === 2 && pParts[0] === parts[0]
+                                })
+                              }
+                              return false
+                            }).length
+                            
+                            // Don't render parent if no children are visible
+                            if (visibleCount === 0) {
+                              return null
+                            }
+                          }
+                          
+                          return (
                         <div key={item.label}>
                             {item.children ? (
                                 <div className="space-y-1">
@@ -536,7 +611,7 @@ const GlobalSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                                             ? userActualPermissions 
                                             : (user ? getPermissionsForRole(user.role_id) : [])
                                            
-                                          // STRICT FILTERING: Deny by default, only show if explicitly allowed
+                                          // FILTERING: Check for exact or related permissions
                                           const allowedChildren = item.children.filter((child) => {
                                             // Deny by default - only show if explicitly allowed
                                             if (!user) {
@@ -559,8 +634,25 @@ const GlobalSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                                               return allowed
                                             }
                                             
-                                            // STRICT CHECK: User MUST have this specific permission
-                                            const hasPermission = userPerms.includes('*') || userPerms.includes(child.permission)
+                                            // Check if user has this permission OR any related permission
+                                            const hasExactPermission = userPerms.includes('*') || userPerms.includes(child.permission)
+                                            
+                                            // If no exact match, check for related permissions (same resource, different action)
+                                            let hasRelatedPermission = false
+                                            if (!hasExactPermission && child.permission) {
+                                              // Extract resource from permission (e.g., 'customer' from 'customer.view')
+                                              const permissionParts = child.permission.split('.')
+                                              if (permissionParts.length === 2) {
+                                                const resource = permissionParts[0]
+                                                // Check if user has any permission for this resource (customer.create, customer.view, customer.manage, etc.)
+                                                hasRelatedPermission = userPerms.some(perm => {
+                                                  const userPermParts = perm.split('.')
+                                                  return userPermParts.length === 2 && userPermParts[0] === resource
+                                                })
+                                              }
+                                            }
+                                            
+                                            const hasPermission = hasExactPermission || hasRelatedPermission
                                             
                                             if (!hasPermission) {
                                               console.log('🔒 [RENDER] HIDING (no permission):', child.label, {
@@ -572,12 +664,19 @@ const GlobalSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                                             } else {
                                               console.log('✅ [RENDER] SHOWING:', child.label, {
                                                 requiredPermission: child.permission,
-                                                userPermissions: userPerms
+                                                hasExact: hasExactPermission,
+                                                hasRelated: hasRelatedPermission,
+                                                userPermissions: userPerms.filter(p => p.includes(child.permission.split('.')[0]))
                                               })
                                             }
                                             
                                             return hasPermission
                                           })
+                                          
+                                          // Don't render parent section if no children are allowed
+                                          if (allowedChildren.length === 0) {
+                                            return null
+                                          }
                                           
                                           return allowedChildren.map((child) => (
                                             <Link
@@ -616,7 +715,8 @@ const GlobalSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                                 </Link>
                             )}
                         </div>
-                        ))
+                          )
+                        })
                     )}
                 </nav>
 

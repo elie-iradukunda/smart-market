@@ -65,7 +65,14 @@ function CampaignsPage() {
         })
         .catch((err) => {
           if (!isMounted) return
-          setError(err.message || 'Failed to load campaigns')
+          // Handle permission errors gracefully - don't show as blocking error
+          const errorMsg = err.message || 'Failed to load campaigns'
+          if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+            setCampaigns([])
+            setError(null)
+          } else {
+            setError(errorMsg)
+          }
         })
         .finally(() => {
           if (!isMounted) return

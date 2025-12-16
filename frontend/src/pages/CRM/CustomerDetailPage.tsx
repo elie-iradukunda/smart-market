@@ -37,7 +37,14 @@ export default function CustomerDetailPage() {
       })
       .catch((err) => {
         if (!isMounted) return
-        setError(err.message || 'Failed to load customer')
+        // Handle permission errors gracefully - don't show as blocking error
+        const errorMsg = err.message || 'Failed to load customer'
+        if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+          setCustomer(null)
+          setError(null)
+        } else {
+          setError(errorMsg)
+        }
       })
       .finally(() => {
         if (!isMounted) return

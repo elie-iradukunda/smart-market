@@ -26,9 +26,16 @@ export default function MaterialsPage() {
       })
       .catch((err) => {
         if (!isMounted) return
-        console.error('Error fetching materials:', err);
-        setError(err.message || 'Failed to load materials')
-        setMaterials([]);
+        // Handle permission errors gracefully - don't show as blocking error
+        const errorMsg = err.message || 'Failed to load materials'
+        if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('permission')) {
+          setMaterials([])
+          setError(null)
+        } else {
+          console.error('Error fetching materials:', err);
+          setError(errorMsg)
+          setMaterials([]);
+        }
       })
       .finally(() => {
         if (!isMounted) return

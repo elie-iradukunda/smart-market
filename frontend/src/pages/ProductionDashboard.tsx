@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchWorkOrders, fetchOrders } from '@/api/apiClient'
-import { currentUserHasPermission } from '@/utils/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import JobPipelineOverview from '../modules/dashboards/components/JobPipelineOverview'
 import StockAlerts from '../modules/dashboards/components/StockAlerts'

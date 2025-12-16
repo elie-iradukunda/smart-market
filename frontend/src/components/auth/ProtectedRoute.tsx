@@ -38,12 +38,48 @@ export default function ProtectedRoute({
     ? requiredPermission 
     : getRequiredPermission(location.pathname)
 
-  // If permission is required, check it
+  // If permission is required, check it (exact or related)
   if (permission) {
-    const hasPermission = currentUserHasPermission(permission)
+    const hasExactPermission = currentUserHasPermission(permission)
+    
+    // If no exact permission, check for related permissions (same resource, different action)
+    // This allows users with customer.create to access customer.view routes, etc.
+    let hasRelatedPermission = false
+    if (!hasExactPermission && user && user.permissions && Array.isArray(user.permissions)) {
+      const permissionParts = permission.split('.')
+      if (permissionParts.length === 2) {
+        const resource = permissionParts[0]
+        // Check if user has any permission for this resource (e.g., customer.create, customer.view, customer.manage)
+        hasRelatedPermission = user.permissions.some(perm => {
+          const userPermParts = perm.split('.')
+          return userPermParts.length === 2 && userPermParts[0] === resource
+        })
+      }
+    }
+    
+    const hasPermission = hasExactPermission || hasRelatedPermission
+    
     if (!hasPermission) {
       // Redirect to dashboard with error message
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔒 [ProtectedRoute] Blocking access:', {
+          path: location.pathname,
+          requiredPermission: permission,
+          userPermissions: user?.permissions || [],
+          hasExact: hasExactPermission,
+          hasRelated: hasRelatedPermission
+        })
+      }
       return <Navigate to={fallbackPath} state={{ error: 'You do not have permission to access this page' }} replace />
+    }
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ [ProtectedRoute] Allowing access:', {
+        path: location.pathname,
+        requiredPermission: permission,
+        hasExact: hasExactPermission,
+        hasRelated: hasRelatedPermission
+      })
     }
   }
 

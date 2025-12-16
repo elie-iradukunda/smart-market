@@ -23,14 +23,52 @@ export default function PermissionGate({
 }: PermissionGateProps) {
   const user = getAuthUser()
 
+  // If no user, don't show content
+  if (!user) {
+    return <>{fallback}</>
+  }
+
   // Super admin and owner have all permissions
-  if (user?.is_super_admin || user?.role_id === 1) {
+  if (user.is_super_admin || user.role_id === 1) {
     return <>{children}</>
   }
 
-  // Check single permission
+  // Check single permission (exact or related)
   if (permission) {
-    const hasPermission = currentUserHasPermission(permission)
+    const hasExactPermission = currentUserHasPermission(permission)
+    
+    // If no exact permission, check for related permissions (same resource, different action)
+    // This allows users with customer.create to see content requiring customer.view, etc.
+    let hasRelatedPermission = false
+    if (!hasExactPermission && user.permissions && Array.isArray(user.permissions)) {
+      const permissionParts = permission.split('.')
+      if (permissionParts.length === 2) {
+        const resource = permissionParts[0]
+        // Check if user has any permission for this resource (e.g., customer.create, customer.view, customer.manage)
+        hasRelatedPermission = user.permissions.some(perm => {
+          const userPermParts = perm.split('.')
+          return userPermParts.length === 2 && userPermParts[0] === resource
+        })
+      }
+    }
+    
+    const hasPermission = hasExactPermission || hasRelatedPermission
+    
+    if (!hasPermission) {
+      // Debug in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`PermissionGate: User ${user.name} (role_id: ${user.role_id}) does NOT have permission: ${permission}`, {
+          hasExact: hasExactPermission,
+          hasRelated: hasRelatedPermission,
+          userPermissions: user.permissions
+        })
+      }
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`PermissionGate: User ${user.name} has permission (exact: ${hasExactPermission}, related: ${hasRelatedPermission}): ${permission}`)
+      }
+    }
+    
     return hasPermission ? <>{children}</> : <>{fallback}</>
   }
 
@@ -42,7 +80,11 @@ export default function PermissionGate({
     return hasRequiredPermissions ? <>{children}</> : <>{fallback}</>
   }
 
-  // No permission required - show content
+  // No permission required - but still check if user is authenticated
+  // Only show if user exists (already checked above)
   return <>{children}</>
 }
+
+
+
 

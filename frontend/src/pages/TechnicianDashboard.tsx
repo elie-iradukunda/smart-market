@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { fetchWorkOrders, fetchMaterials } from '@/api/apiClient'
-import TechnicianDashboardLayout from '@/components/layout/TechnicianDashboardLayout'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 // import JobPipelineOverview from '../modules/dashboards/components/JobPipelineOverview'
 // import StockAlerts from '../modules/dashboards/components/StockAlerts'
 import { ArrowRight } from 'lucide-react'
@@ -34,7 +34,7 @@ export default function TechnicianDashboard() {
   const lowStock = materials.filter((m) => m.current_stock <= (m.reorder_level || 0)).length
 
   return (
-    <TechnicianDashboardLayout>
+    <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-cyan-50/30">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="space-y-6 lg:space-y-8">
@@ -141,6 +141,6 @@ export default function TechnicianDashboard() {
           </div>
         </div>
       </div>
-    </TechnicianDashboardLayout>
+    </DashboardLayout>
   )
 }

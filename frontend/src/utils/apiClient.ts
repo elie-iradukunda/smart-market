@@ -4,6 +4,7 @@ export interface ApiUser {
   email: string
   role_id: number | null
   is_super_admin?: boolean
+  permissions?: string[]
 }
 
 export interface LoginResponse {
@@ -13,8 +14,8 @@ export interface LoginResponse {
 
 // Use localhost for local development, production URL for production
 const API_BASE = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
-    ? 'http://localhost:3000/api'
-    : 'https://topdesign.lanari.rw/api'
+  ? 'http://localhost:3000/api'
+  : 'https://topdesign.lanari.rw/api'
 
 export async function loginRequest(email: string, password: string): Promise<LoginResponse> {
   const res = await fetch(`${API_BASE}/auth/login`, {
@@ -93,6 +94,28 @@ export function clearAuth() {
   localStorage.removeItem('cart')
   sessionStorage.removeItem('token')
   sessionStorage.removeItem('currentUser')
+}
+
+// ============================================================================
+// User Profile APIs
+// ============================================================================
+
+export async function fetchCurrentUser(): Promise<{ id: number; name: string; email: string; role: string; role_id: number; permissions: string[] }> {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch user profile')
+  }
+
+  return res.json()
 }
 
 // Simple permission mapping per role_id for UI visibility (must stay in sync with backend seeds)
@@ -287,23 +310,38 @@ export function currentUserHasPermission(code: string): boolean {
     return true
   }
 
-  const perms = getPermissionsForRole(user.role_id)
-
-  // Owner has all permissions
-  if (perms.includes('*')) {
+  // Owner (role_id 1) has all permissions
+  if (user.role_id === 1) {
     return true
   }
 
-  const hasPermission = perms.includes(code)
+  // Use permissions from backend - if not available, return false (don't use fallback)
+  // This ensures we only grant permissions that are explicitly assigned
+  let userPermissions = user.permissions
 
-  // Debug logging (can be removed in production)
-  if (process.env.NODE_ENV === 'development') {
-    if (!hasPermission && user.role_id === 7) {
-      console.log(`Permission check for Production Manager: ${code} = ${hasPermission}`, {
-        roleId: user.role_id,
-        availablePermissions: perms
-      })
+  // If permissions array is missing or empty, try to fetch from backend
+  // But don't use fallback role-based permissions as they might be too permissive
+  if (!userPermissions || !Array.isArray(userPermissions) || userPermissions.length === 0) {
+    // In development, log a warning
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`User ${user.name} (role_id: ${user.role_id}) has no permissions loaded. Permission check for '${code}' will fail.`)
     }
+    // Return false - don't grant permissions unless explicitly assigned
+    return false
+  }
+
+  const hasPermission = userPermissions.includes(code)
+
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Permission check: ${code} = ${hasPermission}`, {
+      userId: user.id,
+      userName: user.name,
+      roleId: user.role_id,
+      availablePermissions: userPermissions,
+      requestedPermission: code,
+      hasPermission
+    })
   }
 
   return hasPermission

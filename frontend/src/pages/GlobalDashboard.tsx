@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { clearAuth, getAuthUser } from '@/utils/apiClient'
+import { clearAuth, getAuthUser, fetchCurrentUser, setAuthUser } from '@/utils/apiClient'
 import { fetchUsers, fetchOrders, fetchPOSSales, fetchFinancialOverview, fetchWorkLogs } from '@/api/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import PermissionGate from '@/components/common/PermissionGate'
@@ -62,24 +62,10 @@ const Icon = ({ name, className }) => {
 const DashboardLink = ({ to, label, IconName, iconColorClass = 'text-cyan-400', linkColorClass = 'bg-white hover:bg-cyan-50/50', permission = null }) => {
   const requiredPermission = permission !== null ? permission : getRequiredPermission(to)
   
-  // If no permission required, show link directly
-  if (!requiredPermission) {
-    return (
-      <Link
-        to={to}
-        className={`flex items-center space-x-3 p-3 transition duration-300 rounded-xl border border-gray-100 shadow-sm ${linkColorClass} hover:shadow-lg transform hover:scale-[1.02]`}
-      >
-        <div className={`p-1.5 rounded-lg border border-gray-100 ${linkColorClass}`}>
-          <Icon name={IconName} className={`w-5 h-5 ${iconColorClass}`} />
-        </div>
-        <span className="text-sm font-semibold text-gray-800 tracking-wide">{label}</span>
-      </Link>
-    )
-  }
-  
-  // If permission required, wrap with PermissionGate
+  // Always wrap with PermissionGate to ensure proper permission checking
+  // If no permission required (null), PermissionGate will still check if user is authenticated
   return (
-    <PermissionGate permission={requiredPermission}>
+    <PermissionGate permission={requiredPermission} fallback={null}>
       <Link
         to={to}
         className={`flex items-center space-x-3 p-3 transition duration-300 rounded-xl border border-gray-100 shadow-sm ${linkColorClass} hover:shadow-lg transform hover:scale-[1.02]`}
@@ -134,20 +120,45 @@ export default function GlobalDashboard() {
     totalCustomers: 0
   })
   const [loadingStats, setLoadingStats] = useState(true)
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false)
 
   useEffect(() => {
     let isMounted = true
     setLoadingStats(true)
 
-    // Load dashboard statistics
+    // Refresh user permissions from backend to ensure they're up to date
+    const refreshUserPermissions = async () => {
+      try {
+        const userProfile = await fetchCurrentUser()
+        const currentUser = getAuthUser()
+        if (currentUser && userProfile.permissions) {
+          setAuthUser({ ...currentUser, permissions: userProfile.permissions })
+          setPermissionsLoaded(true)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('User permissions loaded:', {
+              userId: currentUser.id,
+              userName: currentUser.name,
+              roleId: currentUser.role_id,
+              permissions: userProfile.permissions
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Failed to refresh user permissions:', error)
+        setPermissionsLoaded(true) // Still set to true to prevent infinite loading
+      }
+    }
+
+    // Load dashboard statistics and refresh permissions
     Promise.all([
+      refreshUserPermissions(),
       fetchPOSSales().catch(() => []),
       fetchFinancialOverview().catch(() => ({ total_revenue: 0, outstanding_amount: 0 })),
       fetchWorkLogs().catch(() => []),
       fetchOrders().catch(() => []),
       fetchUsers().catch(() => [])
     ])
-      .then(([posSales, financial, workLogs, orders, users]) => {
+      .then(([_, posSales, financial, workLogs, orders, users]) => {
         if (!isMounted) return
 
         // Calculate today's sales
@@ -255,7 +266,7 @@ export default function GlobalDashboard() {
         />
       </div>
 
-      {/* Quick Access Sections - All Pages Available to All Users */}
+      {/* Quick Access Sections - Buttons are filtered based on user permissions */}
       <div className="space-y-8">
         {/* Financial Management */}
         <GroupCard title="Financial Management" iconName="banknote" iconColor="text-green-500">
@@ -320,7 +331,7 @@ export default function GlobalDashboard() {
           <DashboardLink to="/ai/overview" label="AI Overview" IconName="zap" />
         </GroupCard>
 
-        {/* Administration - Available to All Users */}
+        {/* Administration - Buttons are filtered based on user permissions */}
         <GroupCard title="Administration & System" iconName="settings" iconColor="text-gray-600">
           <DashboardLink to="/admin/users" label="Manage Users" IconName="users" />
           <DashboardLink to="/admin/roles" label="Roles & Permissions" IconName="settings" />
