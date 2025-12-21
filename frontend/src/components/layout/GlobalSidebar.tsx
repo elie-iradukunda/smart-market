@@ -81,6 +81,8 @@ const sidebarItems: SidebarItem[] = [
         children: [
             { label: 'Raw Materials', path: '/inventory/materials', icon: Box, permission: 'material.view' },
             { label: 'Products', path: '/inventory/products', icon: ShoppingBag, permission: 'material.view' },
+            { label: 'Material Pricing', path: '/inventory/material-pricing', icon: DollarSign, permission: 'material.manage' },
+            { label: 'Material Sales', path: '/inventory/material-sales', icon: ShoppingCart, permission: 'material.sell' },
             { label: 'Purchase Orders', path: '/inventory/purchase-orders', icon: ShoppingCart, permission: 'po.view' },
             { label: 'Suppliers', path: '/inventory/suppliers', icon: Building2, permission: 'supplier.view' },
             { label: 'Stock Movements', path: '/inventory/stock-movements', icon: Truck, permission: 'inventory.manage' },

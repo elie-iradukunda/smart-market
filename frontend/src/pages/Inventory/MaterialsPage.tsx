@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { fetchMaterials } from '../../api/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { getAuthUser, currentUserHasPermission } from '@/utils/apiClient'
-import { Plus, Search, Package } from 'lucide-react'
+import { Plus, Search, Package, DollarSign } from 'lucide-react'
 
 export default function MaterialsPage() {
   const [materials, setMaterials] = useState([])
@@ -129,6 +129,8 @@ export default function MaterialsPage() {
                     <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Category</th>
                     <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs text-right">Stock</th>
                     <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">UoM</th>
+                    <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs text-right">Price/M</th>
+                    <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Sellable</th>
                     <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs text-right">Actions</th>
                   </tr>
                 </thead>
@@ -154,7 +156,26 @@ export default function MaterialsPage() {
                           {m.current_stock}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-500">{m.uom}</td>
+                      <td className="px-6 py-4 text-gray-500">{m.unit || m.uom || 'N/A'}</td>
+                      <td className="px-6 py-4 text-right">
+                        {m.price_per_metre ? (
+                          <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700">
+                            <DollarSign size={14} />
+                            {parseFloat(m.price_per_metre).toLocaleString()}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">Not set</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          m.is_sellable
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {m.is_sellable ? 'Yes' : 'No'}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => navigate(`/inventory/materials/${m.id}`)}

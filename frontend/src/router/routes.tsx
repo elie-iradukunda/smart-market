@@ -29,6 +29,8 @@ import NewWorkOrderPage from '../pages/Production/NewWorkOrderPage';
 
 import MaterialsPage from '../pages/Inventory/MaterialsPage';
 import MaterialDetailPage from '../pages/Inventory/MaterialDetailPage';
+import MaterialPricingPage from '../pages/Inventory/MaterialPricingPage';
+import MaterialSalesPage from '../pages/Inventory/MaterialSalesPage';
 import PurchaseOrdersPage from '../pages/Inventory/PurchaseOrdersPage';
 import PurchaseOrderDetailPage from '../pages/Inventory/PurchaseOrderDetailPage';
 import BomTemplatesPage from '../pages/Inventory/BomTemplatesPage';
@@ -115,6 +117,8 @@ export const routes = [
   createProtectedRoute('/production/new-order', <NewWorkOrderPage />),
   createProtectedRoute('/inventory/materials', <MaterialsPage />),
   createProtectedRoute('/inventory/materials/:sku', <MaterialDetailPage />),
+  createProtectedRoute('/inventory/material-pricing', <MaterialPricingPage />),
+  createProtectedRoute('/inventory/material-sales', <MaterialSalesPage />),
   createProtectedRoute('/inventory/purchase-orders', <PurchaseOrdersPage />),
   createProtectedRoute('/inventory/purchase-orders/:id', <PurchaseOrderDetailPage />),
   createProtectedRoute('/inventory/bom-templates', <BomTemplatesPage />),

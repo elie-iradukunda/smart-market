@@ -2470,3 +2470,157 @@ export async function uploadProductImage(file: File) {
   }
   return data
 }
+
+// ============================================================================
+// Material Sales APIs
+// ============================================================================
+
+// Set material price per metre (Admin only)
+export async function setMaterialPrice(id: number | string, price_per_metre: number, is_sellable?: boolean) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/materials/${id}/price`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ price_per_metre, is_sellable }),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to set material price')
+  }
+  return data
+}
+
+// Get sellable materials
+export async function fetchSellableMaterials() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/materials/sellable`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch sellable materials')
+  }
+
+  const response = await res.json()
+  return response.data || []
+}
+
+// Record material sale
+export async function recordMaterialSale(payload: {
+  material_id: number | string
+  customer_id?: number | string
+  metres_sold: number
+  price_per_metre?: number
+  notes?: string
+}) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/material-sales`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to record material sale')
+  }
+  return data
+}
+
+// Get material sales
+export async function fetchMaterialSales(params?: {
+  material_id?: number | string
+  customer_id?: number | string
+  start_date?: string
+  end_date?: string
+  limit?: number
+  offset?: number
+}) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const queryParams = new URLSearchParams()
+  if (params?.material_id) queryParams.append('material_id', String(params.material_id))
+  if (params?.customer_id) queryParams.append('customer_id', String(params.customer_id))
+  if (params?.start_date) queryParams.append('start_date', params.start_date)
+  if (params?.end_date) queryParams.append('end_date', params.end_date)
+  if (params?.limit) queryParams.append('limit', String(params.limit))
+  if (params?.offset) queryParams.append('offset', String(params.offset))
+
+  const url = `${API_BASE}/material-sales${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch material sales')
+  }
+
+  const response = await res.json()
+  return response
+}
+
+// Get single material sale
+export async function fetchMaterialSale(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/material-sales/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch material sale')
+  }
+
+  const response = await res.json()
+  return response.data || response
+}
+
+// Get material sales statistics
+export async function fetchMaterialSalesStats(start_date?: string, end_date?: string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const queryParams = new URLSearchParams()
+  if (start_date) queryParams.append('start_date', start_date)
+  if (end_date) queryParams.append('end_date', end_date)
+
+  const url = `${API_BASE}/material-sales/stats${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch material sales statistics')
+  }
+
+  return res.json()
+}
