@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Package, Calendar, DollarSign, Eye } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Order } from '@/contexts/CartContext'
+import { API_BASE } from '@/config/api'
 
 export default function MyOrdersPage() {
     const { user } = useAuth()
@@ -12,7 +13,7 @@ export default function MyOrdersPage() {
         const fetchOrders = async () => {
             if (user?.email) {
                 try {
-                    const response = await fetch(`https://topdesign.lanari.rw/api/ecommerce/orders/user?email=${user.email}`)
+                    const response = await fetch(`${API_BASE}/ecommerce/orders/user?email=${user.email}`)
                     if (response.ok) {
                         const data = await response.json()
                         setOrders(data)

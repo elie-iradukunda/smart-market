@@ -1,9 +1,10 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { getAuthToken } from '@/utils/apiClient';
+import { API_BASE } from '@/config/api';
 
 // Create axios instance with base URL and default headers
 const apiClient = axios.create({
-  baseURL: 'https://topdesign.lanari.rw/api',
+  baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json',
   },

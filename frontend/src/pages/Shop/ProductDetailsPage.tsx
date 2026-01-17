@@ -13,13 +13,7 @@ import {
     Minus
 } from 'lucide-react'
 import { toast } from 'react-toastify'
-
-// Helper to get full image URL
-const getImageUrl = (path: string) => {
-    if (!path) return ''
-    if (path.startsWith('http')) return path
-    return `https://topdesign.lanari.rw${path}`
-}
+import { getImageUrl } from '@/utils/imageUrl'
 
 // Category color mapping
 const getCategoryColor = (category: string) => {

@@ -4,17 +4,10 @@ import { Product } from '@/contexts/CartContext'
 import { useCart } from '@/contexts/CartContext'
 import { ShoppingCart, Package, Eye, Share2, Facebook, Twitter, MessageCircle, Linkedin, Copy, Check } from 'lucide-react'
 import { toast } from 'react-toastify'
+import { getImageUrl } from '@/utils/imageUrl'
 
 interface ProductCardProps {
     product: Product
-}
-
-// Helper to get full image URL
-const getImageUrl = (path: string) => {
-    if (!path) return ''
-    if (path.startsWith('http')) return path
-    const cleanPath = path.startsWith('/') ? path : `/${path}`
-    return `https://topdesign.lanari.rw${cleanPath}`
 }
 
 // Helper to create combined image with text overlay

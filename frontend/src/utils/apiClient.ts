@@ -12,10 +12,7 @@ export interface LoginResponse {
   user: ApiUser
 }
 
-// Use localhost for local development, production URL for production
-const API_BASE = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
-  ? 'http://localhost:3000/api'
-  : 'https://topdesign.lanari.rw/api'
+import { API_BASE } from '@/config/api'
 
 export async function loginRequest(email: string, password: string): Promise<LoginResponse> {
   const res = await fetch(`${API_BASE}/auth/login`, {

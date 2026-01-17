@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Mail, Lock, AlertCircle, Eye, EyeOff, Loader2, Sparkles } from 'lucide-react'
 import { toast } from 'react-toastify'
+import { API_BASE } from '@/config/api'
 
 export default function ShopLoginPage() {
     const [email, setEmail] = useState('')
@@ -26,11 +27,6 @@ export default function ShopLoginPage() {
         }
 
         try {
-            // Use localhost for local development, production URL for production
-            const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-                ? 'http://localhost:3000/api'
-                : 'https://topdesign.lanari.rw/api'
-            
             const response = await fetch(`${API_BASE}/auth/login`, {
                 method: 'POST',
                 headers: {

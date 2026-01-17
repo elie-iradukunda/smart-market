@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getAuthToken } from '@/utils/apiClient'
+import { API_BASE } from '@/config/api'
 import {
     LayoutDashboard,
     ShoppingCart,
@@ -195,10 +196,6 @@ const GlobalSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                     setUserActualPermissions([])
                     return
                 }
-                
-                const API_BASE = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
-                    ? 'http://localhost:3000/api'
-                    : 'https://topdesign.lanari.rw/api'
                 
                 console.log('🔒 [SIDEBAR] Fetching permissions for user:', currentUser.id)
                 const res = await fetch(`${API_BASE}/me`, {

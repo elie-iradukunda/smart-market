@@ -3,8 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getAuthToken } from '@/utils/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-
-const API_BASE = 'http://localhost:3000/api'
+import { API_BASE } from '@/config/api'
 
 export default function UserPermissionsPage() {
   const { user_id } = useParams()

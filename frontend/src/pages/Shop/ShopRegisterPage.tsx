@@ -50,18 +50,18 @@ export default function ShopRegisterPage() {
             return
         }
 
-        const success = await register(
+        const result = await register(
             formData.fullName,
             formData.email,
             formData.phoneNumber,
             formData.password
         )
 
-        if (success) {
+        if (result.success) {
             toast.success('Registration successful! Welcome aboard!')
             navigate('/')
         } else {
-            setError('Email already exists. Please use a different email.')
+            setError(result.error || 'Registration failed. Please try again.')
         }
         setLoading(false)
     }

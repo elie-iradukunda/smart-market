@@ -9,8 +9,7 @@ import { CheckCircle, Clock, DollarSign, Package, Truck, User, MessageCircle, Ph
 import { getAuthUser } from '@/utils/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { formatCurrency } from '@/utils/formatters'
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+import { API_BASE } from '@/config/api'
 
 export default function OrderDetailPage() {
   const { id } = useParams()

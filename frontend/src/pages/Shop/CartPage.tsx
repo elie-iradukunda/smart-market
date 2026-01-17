@@ -3,13 +3,7 @@ import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Package } from 'lucide-react'
-
-// Helper to get full image URL
-const getImageUrl = (path: string) => {
-    if (!path) return ''
-    if (path.startsWith('http')) return path
-    return `https://topdesign.lanari.rw${path}`
-}
+import { getImageUrl } from '@/utils/imageUrl'
 
 // Cart Item Component
 interface CartItemProps {

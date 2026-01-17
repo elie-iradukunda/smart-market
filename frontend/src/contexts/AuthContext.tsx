@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { API_BASE } from '@/config/api'
 
 export interface User {
     id: string
@@ -7,10 +8,15 @@ export interface User {
     phoneNumber: string
 }
 
+interface RegisterResult {
+    success: boolean
+    error?: string
+}
+
 interface AuthContextType {
     user: User | null
     login: (email: string, password: string) => Promise<boolean>
-    register: (fullName: string, email: string, phoneNumber: string, password: string) => Promise<boolean>
+    register: (fullName: string, email: string, phoneNumber: string, password: string) => Promise<RegisterResult>
     logout: () => void
     isAuthenticated: boolean
 }
@@ -31,9 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [user])
 
-    const register = async (fullName: string, email: string, phoneNumber: string, password: string): Promise<boolean> => {
+    const register = async (fullName: string, email: string, phoneNumber: string, password: string): Promise<RegisterResult> => {
         try {
-            const response = await fetch('https://topdesign.lanari.rw/api/auth/register', {
+            const response = await fetch(`${API_BASE}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -56,21 +62,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
                 setUser(userWithToken)
                 sessionStorage.setItem('token', data.token)
-                return true
+                return { success: true }
             }
-            return false
+
+            // Extract error message from response
+            let errorMessage = 'Registration failed. Please try again.'
+            try {
+                const errorData = await response.json()
+                errorMessage = errorData.error || errorData.message || errorMessage
+            } catch {
+                // If response is not JSON, use status text
+                errorMessage = response.status === 409 
+                    ? 'Email or phone number already exists. Please use a different one.'
+                    : `Registration failed: ${response.statusText}`
+            }
+
+            return { success: false, error: errorMessage }
         } catch (error) {
             console.error('Registration error:', error)
-            return false
+            return { 
+                success: false, 
+                error: error instanceof Error ? error.message : 'Network error. Please check your connection and try again.' 
+            }
         }
     }
 
     const login = async (email: string, password: string): Promise<boolean> => {
         try {
-            // Use localhost for local development, production URL for production
-            const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-                ? 'http://localhost:3000/api'
-                : 'https://topdesign.lanari.rw/api'
             
             const response = await fetch(`${API_BASE}/auth/login`, {
                 method: 'POST',

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Search, Package, Truck, CheckCircle, Clock, Home } from 'lucide-react'
 import { Order } from '@/contexts/CartContext'
+import { API_BASE } from '@/config/api'
 
 export default function OrderTrackingPage() {
     const [searchParams] = useSearchParams()
@@ -22,7 +23,7 @@ export default function OrderTrackingPage() {
         setOrder(null)
 
         try {
-            const response = await fetch(`https://topdesign.lanari.rw/api/ecommerce/orders/${searchId}`)
+            const response = await fetch(`${API_BASE}/ecommerce/orders/${searchId}`)
             if (!response.ok) {
                 setNotFound(true)
                 return

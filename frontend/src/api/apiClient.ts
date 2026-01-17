@@ -27,7 +27,7 @@ export interface Supplier extends SupplierMaterial {
   updated_at: string;
 }
 
-const API_BASE = 'http://localhost:3000/api'
+import { API_BASE } from '@/config/api'
 
 // ============================================================================
 // BOM Templates API
@@ -1274,8 +1274,11 @@ export async function fetchOrders() {
     customer: o.customer_name,
     total: o.total_amount || o.balance || 0,
     status: o.status,
-    paymentStatus: o.invoice_status || 'unbilled',
+    paymentStatus: o.order_type === 'ecommerce'
+      ? (o.payment_status || 'pending')
+      : (o.invoice_status || 'unbilled'),
     eta: o.eta || o.created_at,
+    orderType: o.order_type || 'business', // Track order type for future use
   }))
 }
 

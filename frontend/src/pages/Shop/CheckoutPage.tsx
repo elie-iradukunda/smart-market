@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { MapPin, CreditCard, CheckCircle, User } from 'lucide-react'
 import { toast } from 'react-toastify'
+import { API_BASE } from '@/config/api'
+import { getImageUrl } from '@/utils/imageUrl'
 
 export default function CheckoutPage() {
     const { cart, getCartTotal, clearCart } = useCart()
@@ -62,7 +64,7 @@ export default function CheckoutPage() {
             }
 
             const token = sessionStorage.getItem('token')
-            const response = await fetch('https://topdesign.lanari.rw/api/ecommerce/orders', {
+            const response = await fetch(`${API_BASE}/ecommerce/orders`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -286,13 +288,6 @@ export default function CheckoutPage() {
                             {/* Items */}
                             <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
                                 {cart.map((item) => {
-                                    const getImageUrl = (path: string) => {
-                                        if (!path) return '';
-                                        if (path.startsWith('http')) return path;
-                                        const cleanPath = path.startsWith('/') ? path : `/${path}`;
-                                        return `https://topdesign.lanari.rw${cleanPath}`;
-                                    };
-
                                     return (
                                         <div key={item.id} className="flex gap-3">
                                             <img

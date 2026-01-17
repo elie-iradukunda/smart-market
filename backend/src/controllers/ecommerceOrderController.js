@@ -30,7 +30,7 @@ export const createOrder = async (req, res) => {
 
         if (!paymentResult.success) {
           let errorMessage = paymentResult.error || 'Payment failed. Please try again.';
-          
+
           if (paymentResult.timeout) {
             errorMessage = 'Payment request timed out. Please ensure your phone is on and try again.';
           } else if (paymentResult.networkError) {
@@ -45,7 +45,7 @@ export const createOrder = async (req, res) => {
             // Generic 400 error often means insufficient funds or business logic failure
             errorMessage = 'Payment failed. Please check your mobile money balance (Insufficient funds) or verify your phone number.';
           }
-          
+
           console.log('✗ [PAYMENT] Payment failed:', errorMessage);
           connection.release();
           return res.status(400).json({ error: errorMessage });
@@ -57,7 +57,7 @@ export const createOrder = async (req, res) => {
       } catch (paymentError) {
         console.error('✗ [PAYMENT] Payment processing error:', paymentError);
         connection.release();
-        return res.status(500).json({ 
+        return res.status(500).json({
           error: 'Payment service is temporarily unavailable. Please try again later.'
         });
       }
@@ -82,10 +82,10 @@ export const createOrder = async (req, res) => {
       const [result] = await connection.execute(
         'INSERT INTO customers (name, email, phone, address, source) VALUES (?, ?, ?, ?, ?)',
         [
-          customerDetails.fullName || null, 
-          customerDetails.email, 
-          customerDetails.phoneNumber || null, 
-          customerDetails.address || null, 
+          customerDetails.fullName || null,
+          customerDetails.email,
+          customerDetails.phoneNumber || null,
+          customerDetails.address || null,
           'web'
         ]
       );
@@ -93,19 +93,60 @@ export const createOrder = async (req, res) => {
     }
 
     // 2. Create Order
-    const [orderResult] = await connection.execute(
-      'INSERT INTO ecommerce_orders (customer_id, total_amount, shipping_address, shipping_city, shipping_zip, payment_method, payment_status, transaction_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [
-        customerId, 
-        total, 
-        customerDetails.address || null, 
-        customerDetails.city || null, 
-        customerDetails.zipCode || null, 
-        paymentMethod || 'cod',
-        isPaid ? 'paid' : 'pending',
-        paymentTransactionId
-      ]
-    );
+    // Try INSERT with transaction_id first, fallback to INSERT without it if column doesn't exist
+    let orderResult;
+    const orderValues = [
+      customerId,
+      total,
+      customerDetails.address || null,
+      customerDetails.city || null,
+      customerDetails.zipCode || null,
+      paymentMethod || 'cod',
+      isPaid ? 'paid' : 'pending'
+    ];
+
+    try {
+      // Try INSERT with transaction_id (if payment was processed)
+      if (paymentTransactionId) {
+        [orderResult] = await connection.execute(
+          'INSERT INTO ecommerce_orders (customer_id, total_amount, shipping_address, shipping_city, shipping_zip, payment_method, payment_status, transaction_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [...orderValues, paymentTransactionId]
+        );
+      } else {
+        // No transaction ID, try INSERT with transaction_id column (might exist)
+        try {
+          [orderResult] = await connection.execute(
+            'INSERT INTO ecommerce_orders (customer_id, total_amount, shipping_address, shipping_city, shipping_zip, payment_method, payment_status, transaction_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [...orderValues, null]
+          );
+        } catch (colError) {
+          // If column doesn't exist, INSERT without it
+          if (colError.code === 'ER_BAD_FIELD_ERROR' || colError.message?.includes("Unknown column 'transaction_id'")) {
+            [orderResult] = await connection.execute(
+              'INSERT INTO ecommerce_orders (customer_id, total_amount, shipping_address, shipping_city, shipping_zip, payment_method, payment_status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+              orderValues
+            );
+          } else {
+            throw colError;
+          }
+        }
+      }
+    } catch (error) {
+      // If error is about missing transaction_id column, retry without it
+      if (error.code === 'ER_BAD_FIELD_ERROR' || error.message?.includes("Unknown column 'transaction_id'")) {
+        console.warn('[ORDER] transaction_id column not found, creating order without it');
+        [orderResult] = await connection.execute(
+          'INSERT INTO ecommerce_orders (customer_id, total_amount, shipping_address, shipping_city, shipping_zip, payment_method, payment_status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          orderValues
+        );
+        if (paymentTransactionId) {
+          console.warn(`[ORDER] Transaction ID ${paymentTransactionId} not saved - transaction_id column doesn't exist. Please run: ALTER TABLE ecommerce_orders ADD COLUMN transaction_id VARCHAR(100) AFTER payment_status;`);
+        }
+      } else {
+        // Re-throw other errors
+        throw error;
+      }
+    }
     const orderId = orderResult.insertId;
 
     // 3. Process Items and Reduce Stock
@@ -167,10 +208,10 @@ export const createOrder = async (req, res) => {
       console.error('Failed to send admin notification email:', err);
     });
 
-    res.status(201).json({ 
-      message: 'Order placed successfully', 
+    res.status(201).json({
+      message: 'Order placed successfully',
       orderId: `ORD-${orderId}`,
-      dbOrderId: orderId 
+      dbOrderId: orderId
     });
 
   } catch (error) {

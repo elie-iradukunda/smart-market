@@ -261,9 +261,11 @@ export const updateQuote = async (req, res) => {
 
 export const getOrders = async (req, res) => {
   try {
-    const [orders] = await pool.execute(`
+    // Fetch business orders (from orders table)
+    const [businessOrders] = await pool.execute(`
       SELECT o.*, c.name as customer_name, q.total_amount,
-             i.id as invoice_id, i.status as invoice_status
+             i.id as invoice_id, i.status as invoice_status,
+             'business' as order_type
       FROM orders o 
       JOIN customers c ON o.customer_id = c.id 
       LEFT JOIN quotes q ON o.quote_id = q.id
@@ -271,8 +273,79 @@ export const getOrders = async (req, res) => {
       ORDER BY o.created_at DESC
     `);
 
-    res.json(orders);
+    // Fetch ecommerce orders (from ecommerce_orders table)
+    let ecommerceOrders = [];
+    try {
+      // Check if transaction_id column exists
+      const [columns] = await pool.execute(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ecommerce_orders' AND COLUMN_NAME = 'transaction_id'"
+      );
+      
+      const hasTransactionId = columns.length > 0;
+      
+      const query = hasTransactionId
+        ? `
+          SELECT 
+            o.id,
+            o.customer_id,
+            o.total_amount,
+            o.status,
+            o.shipping_address,
+            o.shipping_city,
+            o.shipping_zip,
+            o.payment_method,
+            o.payment_status,
+            o.created_at,
+            o.transaction_id,
+            c.name as customer_name,
+            NULL as quote_id,
+            NULL as invoice_id,
+            NULL as invoice_status,
+            'ecommerce' as order_type
+          FROM ecommerce_orders o
+          JOIN customers c ON o.customer_id = c.id
+          ORDER BY o.created_at DESC
+        `
+        : `
+          SELECT 
+            o.id,
+            o.customer_id,
+            o.total_amount,
+            o.status,
+            o.shipping_address,
+            o.shipping_city,
+            o.shipping_zip,
+            o.payment_method,
+            o.payment_status,
+            o.created_at,
+            NULL as transaction_id,
+            c.name as customer_name,
+            NULL as quote_id,
+            NULL as invoice_id,
+            NULL as invoice_status,
+            'ecommerce' as order_type
+          FROM ecommerce_orders o
+          JOIN customers c ON o.customer_id = c.id
+          ORDER BY o.created_at DESC
+        `;
+      
+      const [ecomOrders] = await pool.execute(query);
+      ecommerceOrders = ecomOrders;
+    } catch (ecomError) {
+      // If ecommerce_orders table doesn't exist or has issues, just log and continue
+      console.warn('Could not fetch ecommerce orders:', ecomError.message);
+    }
+
+    // Combine both types of orders and sort by creation date
+    const allOrders = [...businessOrders, ...ecommerceOrders].sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return dateB - dateA; // Most recent first
+    });
+
+    res.json(allOrders);
   } catch (error) {
+    console.error('Error fetching orders:', error);
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 };

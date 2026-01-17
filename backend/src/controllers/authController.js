@@ -21,7 +21,7 @@ export const login = async (req, res) => {
     console.log('Login attempt:', { email: normalizedEmail, hasPassword: !!password });
 
     const [users] = await pool.execute(
-      'SELECT * FROM users WHERE LOWER(TRIM(email)) = ? AND status = "active"', 
+      'SELECT * FROM users WHERE LOWER(TRIM(email)) = ? AND status = "active"',
       [normalizedEmail]
     );
 
@@ -31,7 +31,7 @@ export const login = async (req, res) => {
     }
 
     const user = users[0];
-    
+
     // Check if password hash exists
     if (!user.password_hash) {
       console.log('Login failed: No password hash for user', { userId: user.id, email: user.email });
@@ -73,6 +73,20 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: 'Name, email and password are required' });
     }
 
+    // Check if email already exists
+    const [existingEmail] = await pool.execute('SELECT id FROM users WHERE email = ?', [email]);
+    if (existingEmail.length > 0) {
+      return res.status(409).json({ error: 'Email already exists. Please use a different email.' });
+    }
+
+    // Check if phone already exists (if provided)
+    if (phone) {
+      const [existingPhone] = await pool.execute('SELECT id FROM users WHERE phone = ?', [phone]);
+      if (existingPhone.length > 0) {
+        return res.status(409).json({ error: 'Phone number already exists. Please use a different phone number.' });
+      }
+    }
+
     // Get customer role ID
     const [roles] = await pool.execute('SELECT id FROM roles WHERE name = "customer"');
     let roleId = null;
@@ -100,8 +114,16 @@ export const register = async (req, res) => {
       }
     });
   } catch (error) {
+    // Fallback for database constraint errors (in case checks above didn't catch it)
     if (error.code === 'ER_DUP_ENTRY' || error.errno === 1062) {
-      return res.status(409).json({ error: 'Email or phone already exists' });
+      // Try to determine which field caused the duplicate
+      const errorMessage = error.sqlMessage || '';
+      if (errorMessage.includes('email')) {
+        return res.status(409).json({ error: 'Email already exists. Please use a different email.' });
+      } else if (errorMessage.includes('phone')) {
+        return res.status(409).json({ error: 'Phone number already exists. Please use a different phone number.' });
+      }
+      return res.status(409).json({ error: 'Email or phone number already exists. Please use different values.' });
     }
     console.error('Registration error:', error);
     return res.status(500).json({ error: 'Registration failed' });

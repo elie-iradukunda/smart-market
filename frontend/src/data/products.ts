@@ -1,11 +1,9 @@
 import { Product } from '@/contexts/CartContext'
-
-// API URL
-const API_URL = 'https://topdesign.lanari.rw/api/products';
+import { API_BASE } from '@/config/api'
 
 export const fetchProducts = async (): Promise<Product[]> => {
     try {
-        const response = await fetch(API_URL);
+        const response = await fetch(`${API_BASE}/products`);
         if (!response.ok) {
             throw new Error('Failed to fetch products');
         }

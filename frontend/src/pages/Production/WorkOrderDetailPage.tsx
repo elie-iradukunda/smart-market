@@ -4,8 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Tag, User, Calendar, CheckCircle, Loader2, AlertTriangle, Save, Clock, Package, ArrowLeft, FileText } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { formatCurrency } from '@/utils/formatters'
-
-const API_BASE = import.meta.env.VITE_API_URL || 'https://topdesign.lanari.rw/api'
+import { API_BASE } from '@/config/api'
 
 const getAuthToken = () => {
   return localStorage.getItem('token')

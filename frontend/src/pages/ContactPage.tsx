@@ -4,8 +4,7 @@ import { Mail, Phone, MapPin, Send, MessageSquare } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import { toast } from 'react-toastify'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://topdesign.lanari.rw/api'
+import { API_BASE } from '@/config/api'
 
 const contactMethods = [
   {

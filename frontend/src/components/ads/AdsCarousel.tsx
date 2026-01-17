@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
 import { fetchPublicAds, trackAdImpression, trackAdClick, Ad } from '@/api/adsApi'
+import { getImageUrl } from '@/utils/imageUrl'
 
 export default function AdsCarousel() {
     const [ads, setAds] = useState<Ad[]>([])
@@ -59,15 +60,10 @@ export default function AdsCarousel() {
         }
     }
 
-    // Get proper image URL (handles both local uploads and external URLs)
-    const getImageUrl = (imageUrl: string | undefined) => {
+    // Helper to get image URL (wrapper for optional imageUrl)
+    const getAdImageUrl = (imageUrl: string | undefined) => {
         if (!imageUrl) return null
-        // If it's already a full URL, use it as is
-        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-            return imageUrl
-        }
-        // Otherwise, it's a local upload - prepend the backend URL
-        return `https://topdesign.lanari.rw${imageUrl}`
+        return getImageUrl(imageUrl)
     }
 
     if (isLoading) {
@@ -110,10 +106,10 @@ export default function AdsCarousel() {
                         }}
                     >
                         {/* Background Image with Ken Burns effect */}
-                        {ad.image_url && getImageUrl(ad.image_url) ? (
+                        {ad.image_url && getAdImageUrl(ad.image_url) ? (
                             <div className="absolute inset-0 overflow-hidden">
                                 <img
-                                    src={getImageUrl(ad.image_url)!}
+                                    src={getAdImageUrl(ad.image_url)!}
                                     alt={ad.title}
                                     className="absolute inset-0 w-full h-full object-cover"
                                     style={{

@@ -223,8 +223,8 @@ export default function POSTerminalPage() {
     setSendingInvoice(true)
     setError(null)
     try {
-      // Import email service
-      const response = await fetch('https://topdesign.lanari.rw/api/email', {
+      const { API_BASE } = await import('@/config/api')
+      const response = await fetch(`${API_BASE}/email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -3,10 +3,13 @@ import {
   createMaterial, getMaterials, getMaterial, updateMaterial, deleteMaterial,
   createStockMovement, getStockMovements,
   createPurchaseOrder, getPurchaseOrders, getPurchaseOrder, updatePurchaseOrder,
-  createSupplier, getSuppliers, getSupplier, updateSupplier, deleteSupplier
+  createSupplier, getSuppliers, getSupplier, updateSupplier, deleteSupplier,
+  setMaterialPrice, recordMaterialSale, getMaterialSales, getMaterialSale,
+  getSellableMaterials, getMaterialSalesStats
 } from '../controllers/inventoryController.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { auditLog } from '../middleware/audit.js';
+import { rbacMiddleware } from '../middleware/rbac.js';
 
 const router = express.Router();
 
@@ -16,8 +19,15 @@ router.use(authenticateToken);
 // Materials CRUD
 router.post('/materials', auditLog('CREATE', 'materials'), createMaterial);
 router.get('/materials', getMaterials);
+// IMPORTANT: /materials/sellable must come BEFORE /materials/:id to avoid route conflict
+router.get('/materials/sellable', getSellableMaterials);
 router.get('/materials/:id', getMaterial);
 router.put('/materials/:id', auditLog('UPDATE', 'materials'), updateMaterial);
+router.put('/materials/:id/price', 
+  rbacMiddleware, 
+  auditLog('UPDATE', 'materials'), 
+  setMaterialPrice
+);
 router.delete('/materials/:id', auditLog('DELETE', 'materials'), deleteMaterial);
 
 // Stock Movements
@@ -36,6 +46,23 @@ router.get('/suppliers', getSuppliers);
 router.get('/suppliers/:id', getSupplier);
 router.put('/suppliers/:id', auditLog('UPDATE', 'suppliers'), updateSupplier);
 router.delete('/suppliers/:id', auditLog('DELETE', 'suppliers'), deleteSupplier);
+
+// Material Sales Routes
+// Record material sale (requires material.sell permission)
+router.post('/material-sales', 
+  rbacMiddleware, 
+  auditLog('CREATE', 'material_sales'), 
+  recordMaterialSale
+);
+
+// Get material sales (requires material.view or material.sell permission)
+router.get('/material-sales', rbacMiddleware, getMaterialSales);
+
+// Get single material sale
+router.get('/material-sales/:id', rbacMiddleware, getMaterialSale);
+
+// Get material sales statistics
+router.get('/material-sales/stats', rbacMiddleware, getMaterialSalesStats);
 
 // BOM Templates (Bill of Materials)
 import pool from '../config/database.js';

@@ -3,13 +3,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { fetchProducts, createProduct, updateProduct, uploadProductImage } from '@/api/apiClient'
 import { Plus, Edit, Package, Upload, X } from 'lucide-react'
 import PermissionGate from '@/components/common/PermissionGate'
-
-// Helper to get full image URL
-const getImageUrl = (path: string) => {
-    if (!path) return ''
-    if (path.startsWith('http')) return path
-    return `https://topdesign.lanari.rw${path}`
-}
+import { getImageUrl } from '@/utils/imageUrl'
 
 // Category color mapping for better visual distinction
 const getCategoryColor = (category: string) => {
