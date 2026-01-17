@@ -22,6 +22,3 @@ export const fetchProducts = async (): Promise<Product[]> => {
         return [];
     }
 }
-
-// Keep a fallback empty array or initial state if needed, but fetchProducts will handle it.
-export const products: Product[] = [];
