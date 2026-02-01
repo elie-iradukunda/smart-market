@@ -8,6 +8,7 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+
     const [users] = await pool.execute('SELECT * FROM users WHERE email = ? AND status = "active"', [email]);
 
     if (users.length === 0) {
@@ -29,7 +30,8 @@ export const login = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        role_id: user.role_id
+        role_id: user.role_id,
+        role:user.role
       }
     });
   } catch (error) {
@@ -39,7 +41,7 @@ export const login = async (req, res) => {
 
 export const register = async (req, res) => {
   try {
-    const { name, email, phone, password } = req.body;
+    const { name, email, phone, password,role } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email and password are required' });
@@ -55,8 +57,8 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await pool.execute(
-      'INSERT INTO users (name, email, phone, password_hash, role_id) VALUES (?, ?, ?, ?, ?)',
-      [name, email, phone || null, hashedPassword, roleId]
+      'INSERT INTO users (name, email, phone, password_hash, role_id,role) VALUES (?, ?, ?, ?, ?,?)',
+      [name, email, phone || null, hashedPassword, roleId,role||null]
     );
 
     const token = jwt.sign({ userId: result.insertId }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
@@ -68,7 +70,9 @@ export const register = async (req, res) => {
         id: result.insertId,
         name,
         email,
-        role_id: roleId
+        role_id: roleId,
+
+        role:user.role
       }
     });
   } catch (error) {
