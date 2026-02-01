@@ -28,7 +28,14 @@ const getRoutePattern = (method, path) => {
 const rbacMiddleware = async (req, res, next) => {
   try {
     const { user } = req;
+    const role = user.role.toLowerCase();
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    
+    // Check if user has a valid role that exists in our system
+    if (!ROLE_PERMISSIONS[role]) {
+      console.log(user.role, "user roles", role)
+      return res.status(403).json({ error: 'Invalid role assigned' });
+    }
     
     const routePattern = getRoutePattern(req.method, req.path);
     
@@ -37,7 +44,7 @@ const rbacMiddleware = async (req, res, next) => {
     }
     
     const requiredPermissions = ROUTE_PERMISSIONS[routePattern];
-    const userPermissions = ROLE_PERMISSIONS[user.role] || [];
+    const userPermissions = ROLE_PERMISSIONS[role] || [];
     
     if (!hasPermission(userPermissions, requiredPermissions)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
