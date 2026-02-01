@@ -94,22 +94,13 @@ export function clearAuth() {
 // Simple permission mapping per role_id for UI visibility (must stay in sync with backend seeds)
 export function getPermissionsForRole(roleId: number | null | undefined): string[] {
   switch (roleId) {
-    case 1: // Owner – full access
-      return ['*']
-    case 2: // Sys Admin – system management
+    case 1: // Admin (includes: owner, admin, accountant, controller)
       return [
+        '*', // Full access like owner
         'user.manage',
         'role.manage',
         'audit.view',
         'settings.manage',
-        'report.view',
-        'customer.view',
-        'order.view',
-        'invoice.view',
-        'payment.view',
-      ]
-    case 3: // Accountant – finance
-      return [
         'invoice.create',
         'invoice.view',
         'invoice.send',
@@ -117,92 +108,51 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
         'payment.view',
         'payment.refund',
         'journal.create',
-        'journal.view',
-        'pos.create',
-        'pos.view',
         'report.view',
         'customer.view',
-        'order.view',
-        'supplier.view',
-      ]
-    case 4: // Controller – operations oversight
-      return [
         'order.view',
         'order.update',
         'inventory.manage',
         'material.view',
         'material.create',
         'supplier.view',
-        'report.view',
         'ai.view',
-        'workorder.view',
-        'customer.view',
-      ]
-    case 5: // Reception – front desk
-      return [
-        'customer.create',
-        'customer.view',
-        'customer.manage',
-        'lead.create',
-        'lead.view',
-        'lead.manage',
-        'quote.create',
-        'quote.view',
-        'quote.manage',
-        'quote.approve',
-        'order.view',
-        'order.create',
-        'pos.create',
-        'pos.view',
-        'material.view',
-        'file.upload',
-        'file.view',
-        'invoice.view',
-        'payment.view',
-      ]
-    case 6: // Technician – production work
-      return [
-        'worklog.create',
-        'workorder.view',
-        'workorder.update',
-        'order.view',
-        'order.update',
-        'material.view',
-        'file.view',
-      ]
-    case 7: // Production Manager – production oversight
-      return [
         'workorder.view',
         'workorder.create',
         'workorder.update',
-        'worklog.create',
-        'order.view',
-        'order.update',
-        'material.view',
-        'material.create',
-        'supplier.view',
-        'inventory.manage',
-        'report.view',
+        'pos.create',
+        'file.upload',
         'file.view',
-        'customer.view',
-      ]
-    case 8: // Inventory Manager – stock management
-      return [
-        'inventory.manage',
-        'material.view',
-        'material.create',
-        'material.update',
+        'campaign.view',
+        'campaign.create',
+        'campaign.update',
+        'campaign.manage',
+        'ad.create',
+        'ad.view',
+        'ad.edit',
+        'ad.delete',
+        'conversation.view',
+        'conversation.create',
+        'message.send',
+        'customer.manage',
+        'customer.create',
+        'lead.manage',
+        'lead.view',
+        'lead.create',
+        'quote.manage',
+        'quote.view',
+        'quote.create',
+        'quote.approve',
+        'worklog.create',
         'stock.move',
         'stock.adjust',
         'po.create',
         'po.view',
         'po.approve',
-        'supplier.view',
-        'supplier.create',
-        'report.view',
-        'order.view',
+        'marketing.analytics'
       ]
-    case 9: // Sales Rep – CRM and sales
+    
+    case 2: // Sales (includes: sales_rep, marketing, pos_cashier)
       return [
         'customer.manage',
         'customer.view',
@@ -223,9 +173,6 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
         'file.view',
         'invoice.view',
         'payment.view',
-      ]
-    case 10: // Marketing Manager – campaigns and analytics
-      return [
         'campaign.view',
         'campaign.create',
         'campaign.update',
@@ -235,37 +182,69 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
         'ad.edit',
         'ad.delete',
         'marketing.analytics',
-        'lead.view',
-        'lead.manage',
-        'report.view',
         'ai.view',
-        'customer.view',
-      ]
-    case 11: // POS Cashier – point of sale
-      return [
-        'pos.create',
-        'pos.view',
-        'customer.view',
-        'customer.create',
-        'invoice.create',
-        'invoice.view',
-        'payment.create',
-        'payment.view',
-        'material.view',
-        'lead.create',
-        'quote.create',
-      ]
-    case 12: // Support Agent – customer support
-      return [
         'conversation.view',
         'conversation.create',
         'message.send',
-        'customer.view',
-        'customer.manage',
+        'material.view',
+        'invoice.create',
+        'payment.create'
+      ]
+    
+    case 3: // Staff (includes: production_manager, inventory_manager, technician, reception, support_agent)
+      return [
+        'worklog.create',
+        'workorder.view',
+        'workorder.create',
+        'workorder.update',
         'order.view',
+        'order.update',
+        'order.create',
+        'material.view',
+        'material.create',
         'file.view',
         'file.upload',
+        'inventory.manage',
+        'supplier.view',
+        'supplier.create',
+        'stock.move',
+        'stock.adjust',
+        'po.create',
+        'po.view',
+        'po.approve',
+        'report.view',
+        'customer.view',
+        'customer.create',
+        'customer.manage',
+        'lead.create',
+        'lead.view',
+        'lead.manage',
+        'quote.create',
+        'quote.view',
+        'quote.manage',
+        'quote.approve',
+        'pos.create',
+        'pos.view',
+        'invoice.create',
+        'invoice.view',
+        'invoice.send',
+        'payment.create',
+        'payment.view',
+        'conversation.view',
+        'conversation.create',
+        'message.send'
       ]
+    
+    case 4: // Client (customer) - external user
+      return [
+        'customer.view', // their own profile
+        'order.view', // their own orders
+        'quote.view', // their own quotes
+        'file.view', // their own files
+        'conversation.view', // their conversations
+        'message.send' // send messages
+      ]
+    
     default:
       return []
   }
@@ -301,7 +280,7 @@ export function currentUserHasPermission(code: string): boolean {
 }
 
 // Map backend role_id to the correct dashboard route inside the business app
-export function getDashboardPathForRole(roleId: number | null | undefined): string {
+export function getDashboardPathForRoless(roleId: number | null | undefined): string {
   switch (roleId) {
     case 1: // Owner
       return '/dashboard/owner'
@@ -328,12 +307,29 @@ export function getDashboardPathForRole(roleId: number | null | undefined): stri
     case 12: // Support Agent
       return '/dashboard/support'
     case 13: // Customer (e-commerce)
-      return '/' // Redirect to e-commerce homepage
+      return '/' 
     default:
-      // Fallback to owner dashboard if role is unknown
+      
       return '/dashboard/owner'
   }
 }
+
+// Map backend role_id to the correct dashboard route (4 dashboards total)
+export function getDashboardPathForRole(roleId: number | null | undefined): string {
+  switch (roleId) {
+    case 1: // Admin (includes owner, admin, accountant, controller)
+      return '/dashboard/admin'
+    case 2: // Sales (includes sales_rep, marketing, pos_cashier)
+      return '/dashboard/sales'
+    case 3: // Staff (includes production_manager, inventory_manager, technician, reception, support_agent)
+      return '/dashboard/staff'
+    case 4: // Client (customer)
+      return '/client'
+    default:
+      return '/dashboard/admin'
+  }
+}
+// Get role display name
 
 // --- CRM & Inventory API Helpers ---
 

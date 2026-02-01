@@ -162,9 +162,10 @@ export default function OwnerDashboard() {
       </div>
 
       {/* Hero + AI card row */}
-      <div className="grid gap-6 lg:grid-cols-[2.1fr,1.4fr] items-stretch">
+      <div className="">
         {/* Hero Section */}
-        <div className="rounded-3xl border border-slate-200 bg-white shadow-2xl p-7 lg:p-9 overflow-hidden relative">
+        <div className="rounded-3xl border border-slate-200
+         bg-white shadow-2xl p-7 lg:p-9 overflow-hidden relative">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute -top-24 -right-16 h-56 w-56 rounded-full bg-cyan-400/20 blur-3xl" />
             <div className="absolute -bottom-24 -left-10 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
@@ -172,17 +173,8 @@ export default function OwnerDashboard() {
 
           <div className="relative z-10">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">Business Control</p>
-            <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 leading-tight">
-              Your
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-cyan-500 to-emerald-500">
-                Enterprise Platform
-              </span>
-            </h2>
-            <p className="mt-4 text-sm sm:text-base text-slate-600 max-w-xl">
-              Monitor finance, production and customer pipelines in one clean owner workspace.
-            </p>
-
-            <dl className="mt-6 grid gap-4 sm:grid-cols-3 text-xs sm:text-sm">
+            
+            <dl className="mt-6 grid gap-4 sm:grid-cols-4 text-xs sm:text-sm">
               <div className="rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100 shadow-sm">
                 <dt className="text-[11px] font-medium text-slate-500">Open work orders</dt>
                 <dd className="mt-1 text-xl font-bold text-slate-900">13</dd>
@@ -195,55 +187,33 @@ export default function OwnerDashboard() {
                 <dt className="text-[11px] font-medium text-amber-700">Materials at risk</dt>
                 <dd className="mt-1 text-xl font-bold text-amber-900">2</dd>
               </div>
-            </dl>
-          </div>
-        </div>
-
-        {/* AI / insights card */}
-        <div className="space-y-4">
-          <div className="rounded-3xl border border-slate-200 bg-slate-900 shadow-2xl relative overflow-hidden p-6 flex flex-col justify-between min-h-[220px]">
-            <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_#38bdf8_0,_transparent_60%),_radial-gradient(circle_at_bottom,_#a855f7_0,_transparent_55%)]" />
-            <div className="relative z-10 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">AI & Insights</p>
-              <p className="text-lg font-semibold text-white">Run AI overview & reports</p>
-              <p className="text-xs text-slate-200 max-w-xs">
-                Use AI to surface anomalies in orders, cashflow and production before they become problems.
-              </p>
-            </div>
-            <div className="mt-4 relative z-10 flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <Link
                 to="/ai/overview"
-                className="inline-flex items-center rounded-full bg-gradient-to-r from-purple-500 to-cyan-400 px-4 py-1.5 text-xs font-semibold text-white shadow-lg hover:from-purple-600 hover:to-cyan-500"
-              >
-                <span className="mr-1.5">🚀</span> Launch AI Overview
+                className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-1 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+              >AI Overview
               </Link>
+              
               <Link
                 to="/finance/reports"
-                className="inline-flex items-center rounded-full border border-slate-500/60 bg-slate-800/60 px-3 py-1.5 text-[11px] font-medium text-slate-100 hover:bg-slate-700"
+                className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 
+                px-4 py-1 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
               >
                 View Finance reports
               </Link>
             </div>
+            </dl>
           </div>
         </div>
+
+        
       </div>
 
       {/* Existing groups / cards below, unchanged in logic */}
-      <div className="space-y-8">
-        <GroupCard title="Financial Performance" iconName="banknote" iconColor="text-green-500" animationDelay="delay-100">
-          <DashboardLink to="/finance/reports" label="Finance Reports" IconName="banknote" iconColorClass="text-green-500" />
-          <DashboardLink to="/finance/invoices" label="Invoices" IconName="file-text" />
-          <DashboardLink to="/finance/payments" label="Payments" IconName="file-text" />
-          <DashboardLink to="/pos/sales-history" label="POS Sales History" IconName="shopping-cart" />
-          <DashboardLink to="/finance/journals" label="Journal Entries" IconName="file-text" />
-        </GroupCard>
+      <div className="my-3">
+        
 
-        <GroupCard title="Operations & Production" iconName="factory" iconColor="text-orange-500" animationDelay="delay-200">
-          <DashboardLink to="/orders" label="Customer Orders" IconName="shopping-cart" />
-          <DashboardLink to="/production/work-orders" label="Work Orders" IconName="factory" iconColorClass="text-orange-500" />
-          <DashboardLink to="/inventory/materials" label="Raw Materials" IconName="shopping-cart" />
-          <DashboardLink to="/inventory/purchase-orders" label="Purchase Orders" IconName="file-text" />
-        </GroupCard>
+        
 
         <div className="rounded-2xl border border-blue-100 bg-white/95 backdrop-blur-sm p-6 shadow-xl space-y-4">
           <div className="flex items-center justify-between gap-3 mb-2">
@@ -320,25 +290,7 @@ export default function OwnerDashboard() {
           </form>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <GroupCard title="Sales & Customer Relations" iconName="users" iconColor="text-blue-500" animationDelay="delay-300">
-            <DashboardLink to="/crm/leads" label="Sales Leads" IconName="users" />
-            <DashboardLink to="/crm/quotes" label="Quotes Management" IconName="file-text" />
-            <DashboardLink to="/orders" label="Sales Orders" IconName="shopping-cart" iconColorClass="text-blue-500" />
-            <DashboardLink to="/marketing/campaigns" label="Marketing Campaigns" IconName="megaphone" />
-            <DashboardLink to="/marketing/ad-performance" label="Ad Performance" IconName="megaphone" />
-          </GroupCard>
-
-          <div className="space-y-6">
-            <GroupCard title="Team & Administration" iconName="settings" iconColor="text-gray-600" animationDelay="delay-500">
-              <DashboardLink to="/communications/inbox" label="Team Inbox" IconName="briefcase" />
-              <DashboardLink to="/admin/users" label="Manage Users" IconName="users" />
-              <DashboardLink to="/admin/roles" label="Roles & Permissions" IconName="settings" />
-              <DashboardLink to="/admin/audit-logs" label="Audit Logs" IconName="file-text" />
-              <DashboardLink to="/admin/system-settings" label="System Settings" IconName="settings" />
-            </GroupCard>
-          </div>
-        </div>
+        
       </div>
     </DashboardLayout>
   )

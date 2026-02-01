@@ -24,6 +24,7 @@ export default function LoginPage() {
       const dashboardPath = getDashboardPathForRole(res.user.role_id)
 
       // Use window.location.href for full page reload to properly initialize dashboard
+      alert(dashboardPath)
       window.location.href = dashboardPath
     } catch (err: any) {
       setError(err.message || 'Login failed')
@@ -62,7 +63,7 @@ export default function LoginPage() {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email address
+                Email address 434
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

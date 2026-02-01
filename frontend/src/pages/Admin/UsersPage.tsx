@@ -17,6 +17,7 @@ export default function UsersPage() {
   const [formPhone, setFormPhone] = useState('')
   const [formStatus, setFormStatus] = useState('Active')
   const [formRoleId, setFormRoleId] = useState<number | string>('')
+  const [formAccessTo, setFormAccessTo] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [actionMessage, setActionMessage] = useState<string | null>(null)
 
@@ -27,10 +28,29 @@ export default function UsersPage() {
   const [newUserPhone, setNewUserPhone] = useState('')
   const [newUserPassword, setNewUserPassword] = useState('')
   const [newUserRoleId, setNewUserRoleId] = useState<number | string>('')
+  const [newUserAccessTo, setNewUserAccessTo] = useState<string[]>([])
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
+
+  // Available modules for access control
+  const AVAILABLE_MODULES = [
+    'dashboard',
+    'customers',
+    'leads',
+    'quotes',
+    'orders',
+    'production',
+    'inventory',
+    'finance',
+    'marketing',
+    'communications',
+    'reports',
+    'settings',
+    'users',
+    'roles'
+  ]
 
   useEffect(() => {
     let isMounted = true
@@ -58,6 +78,36 @@ export default function UsersPage() {
     }
   }, [])
 
+  // Parse includes JSON from role
+  const getRoleIncludes = (roleId: number | string) => {
+    if (!roleId) return []
+    const role = roles.find((r: any) => r.id === Number(roleId))
+    if (!role || !role.includes) return []
+    
+    try {
+      const parsed = JSON.parse(role.includes)
+      return Array.isArray(parsed) ? parsed : []
+    } catch (error) {
+      console.error('Failed to parse role includes:', error)
+      return []
+    }
+  }
+
+  // When role changes, update access_to based on role's includes
+  useEffect(() => {
+    if (selectedUser) {
+      const includes = getRoleIncludes(formRoleId)
+      setFormAccessTo(includes)
+    }
+  }, [formRoleId, roles])
+
+  useEffect(() => {
+    if (newUserRoleId) {
+      const includes = getRoleIncludes(newUserRoleId)
+      setNewUserAccessTo(includes)
+    }
+  }, [newUserRoleId, roles])
+
   const handleSelectUser = (user: any) => {
     setSelectedUser(user)
     setActionMessage(null)
@@ -66,6 +116,19 @@ export default function UsersPage() {
     setFormPhone(user.phone || '')
     setFormStatus((user.status || 'active').toString().toLowerCase())
     setFormRoleId(user.role_id ?? user.roleId ?? '')
+    
+    // Parse user's access_to if exists, otherwise get from role
+    if (user.access_to) {
+      try {
+        const parsed = JSON.parse(user.access_to)
+        setFormAccessTo(Array.isArray(parsed) ? parsed : [])
+      } catch (error) {
+        console.error('Failed to parse user access_to:', error)
+        setFormAccessTo(getRoleIncludes(user.role_id ?? user.roleId))
+      }
+    } else {
+      setFormAccessTo(getRoleIncludes(user.role_id ?? user.roleId))
+    }
   }
 
   const handleSaveUser = async (e: React.FormEvent) => {
@@ -81,6 +144,7 @@ export default function UsersPage() {
         phone: formPhone || null,
         status: formStatus,
         role_id: formRoleId || null,
+        access_to: JSON.stringify(formAccessTo)
       })
       const refreshed = await fetchUsers()
       setUsers(refreshed || [])
@@ -110,6 +174,7 @@ export default function UsersPage() {
       setFormPhone('')
       setFormStatus('active')
       setFormRoleId('')
+      setFormAccessTo([])
       setActionMessage('User deleted successfully')
     } catch (err: any) {
       setError(err.message || 'Failed to delete user')
@@ -130,6 +195,7 @@ export default function UsersPage() {
         phone: newUserPhone || undefined,
         password: newUserPassword,
         role_id: newUserRoleId ? Number(newUserRoleId) : undefined,
+        access_to: JSON.stringify(newUserAccessTo)
       })
       const refreshed = await fetchUsers()
       setUsers(refreshed || [])
@@ -139,11 +205,28 @@ export default function UsersPage() {
       setNewUserPhone('')
       setNewUserPassword('')
       setNewUserRoleId('')
+      setNewUserAccessTo([])
       setActionMessage('User created successfully')
     } catch (err: any) {
       setError(err.message || 'Failed to create user')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const toggleModuleAccess = (module: string, isNewUser: boolean = false) => {
+    if (isNewUser) {
+      setNewUserAccessTo(prev => 
+        prev.includes(module) 
+          ? prev.filter(m => m !== module)
+          : [...prev, module]
+      )
+    } else {
+      setFormAccessTo(prev => 
+        prev.includes(module) 
+          ? prev.filter(m => m !== module)
+          : [...prev, module]
+      )
     }
   }
 
@@ -173,6 +256,20 @@ export default function UsersPage() {
     if (!rid) return 'N/A'
     const role = roles.find((r: any) => r.id === rid)
     return role ? role.name : 'N/A'
+  }
+
+  const getUserAccessTo = (user: any) => {
+    if (user.access_to) {
+      try {
+        const parsed = JSON.parse(user.access_to)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.join(', ')
+        }
+      } catch (error) {
+        console.error('Failed to parse user access_to:', error)
+      }
+    }
+    return 'Default from role'
   }
 
   return (
@@ -244,6 +341,7 @@ export default function UsersPage() {
                         <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider">Email</th>
                         <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                         <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider">Role</th>
+                        <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider">Access Modules</th>
                         <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider text-right">Actions</th>
                       </tr>
                     </thead>
@@ -271,6 +369,11 @@ export default function UsersPage() {
                             })()}
                           </td>
                           <td className="px-6 py-3 text-gray-600">{getRoleNameForUser(user)}</td>
+                          <td className="px-6 py-3 text-gray-600">
+                            <div className="text-xs max-w-xs truncate" title={getUserAccessTo(user)}>
+                              {getUserAccessTo(user)}
+                            </div>
+                          </td>
                           <td className="px-6 py-3 text-right text-xs">
                             <button
                               type="button"
@@ -284,7 +387,7 @@ export default function UsersPage() {
                       ))}
                       {currentUsers.length === 0 && !loading && (
                         <tr>
-                          <td colSpan={5} className="px-6 py-6 text-center text-sm text-gray-500">
+                          <td colSpan={6} className="px-6 py-6 text-center text-sm text-gray-500">
                             No users found matching your search criteria.
                           </td>
                         </tr>
@@ -366,6 +469,7 @@ export default function UsersPage() {
                         setNewUserPhone('')
                         setNewUserPassword('')
                         setNewUserRoleId('')
+                        setNewUserAccessTo([])
                       }}
                       className="text-gray-400 hover:text-gray-600"
                     >
@@ -434,6 +538,33 @@ export default function UsersPage() {
                           </option>
                         ))}
                       </select>
+                      {newUserRoleId && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          Selected role includes: {getRoleIncludes(newUserRoleId).join(', ') || 'No modules'}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        Access Modules (inherited from role, can customize)
+                      </label>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                        {AVAILABLE_MODULES.map(module => (
+                          <label key={module} className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={newUserAccessTo.includes(module)}
+                              onChange={() => toggleModuleAccess(module, true)}
+                              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-xs text-gray-700 capitalize">{module}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <p className="mt-2 text-xs text-gray-500">
+                        Selected: {newUserAccessTo.join(', ') || 'None (will use role defaults)'}
+                      </p>
                     </div>
 
                     <div className="flex items-center gap-3 pt-2">
@@ -453,6 +584,7 @@ export default function UsersPage() {
                           setNewUserPhone('')
                           setNewUserPassword('')
                           setNewUserRoleId('')
+                          setNewUserAccessTo([])
                         }}
                         className="inline-flex items-center rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50"
                       >
@@ -492,6 +624,7 @@ export default function UsersPage() {
                         setFormPhone('')
                         setFormStatus('active')
                         setFormRoleId('')
+                        setFormAccessTo([])
                       }}
                       className="text-xs font-medium text-gray-500 hover:text-gray-800"
                     >
@@ -550,7 +683,34 @@ export default function UsersPage() {
                             </option>
                           ))}
                         </select>
+                        {formRoleId && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            Role includes: {getRoleIncludes(formRoleId).join(', ') || 'No modules'}
+                          </p>
+                        )}
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        Access Modules
+                      </label>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                        {AVAILABLE_MODULES.map(module => (
+                          <label key={module} className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={formAccessTo.includes(module)}
+                              onChange={() => toggleModuleAccess(module, false)}
+                              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-xs text-gray-700 capitalize">{module}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <p className="mt-2 text-xs text-gray-500">
+                        Selected: {formAccessTo.join(', ') || 'None (using role defaults)'}
+                      </p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 pt-2">
