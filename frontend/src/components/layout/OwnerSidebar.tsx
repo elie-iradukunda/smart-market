@@ -4,14 +4,17 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
     LayoutDashboard,
     ShoppingCart,
-    DollarSign,
     Users,
     Settings,
     ChevronDown,
     ChevronRight,
     LogOut,
     Crown,
-    BarChart3
+    Factory,
+    FileText,
+    Megaphone,
+    Briefcase,
+    Banknote
 } from 'lucide-react'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
 import { filterSidebarItemsByPermission, SidebarItem } from '@/utils/sidebarUtils'
@@ -24,52 +27,70 @@ const sidebarItems: SidebarItem[] = [
         permission: null,
     },
     {
-        label: 'Operations',
-        path: '/orders',
-        icon: ShoppingCart,
-        permission: 'order.view',
-    },
-    {
         label: 'Finance',
-        path: '/finance/reports',
-        icon: DollarSign,
+        path: '/finance',
+        icon: Banknote,
         permission: 'report.view',
+        children: [
+            { label: 'Reports', path: '/finance/reports', icon: Banknote },
+            { label: 'Invoices', path: '/finance/invoices', icon: FileText },
+            { label: 'Payments', path: '/finance/payments', icon: FileText },
+            { label: 'POS', path: '/pos/sales-history', icon: ShoppingCart },
+            { label: 'Journals', path: '/finance/journals', icon: FileText },
+        ]
     },
     {
-        label: 'Sales & CRM',
-        path: '/crm/leads',
-        icon: BarChart3,
-        permission: 'lead.manage',
+        label: 'Operations',
+        path: '/operations',
+        icon: Factory,
+        permission: 'order.view',
+        children: [
+            { label: 'Orders', path: '/orders', icon: ShoppingCart },
+            { label: 'Production', path: '/production/work-orders', icon: Factory },
+            { label: 'Materials', path: '/inventory/materials', icon: ShoppingCart },
+            { label: 'Purchasing', path: '/inventory/purchase-orders', icon: FileText },
+        ]
     },
     {
-        label: 'Team',
-        path: '/admin/users',
+        label: 'Sales',
+        path: '/crm',
         icon: Users,
-        permission: 'user.manage',
+        permission: 'lead.manage',
+        children: [
+            { label: 'Leads', path: '/crm/leads', icon: Users },
+            { label: 'Quotes', path: '/crm/quotes', icon: FileText },
+            { label: 'Sales', path: '/orders', icon: ShoppingCart },
+            { label: 'Campaigns', path: '/marketing/campaigns', icon: Megaphone },
+            { label: 'Performance', path: '/marketing/ad-performance', icon: Megaphone },
+        ]
     },
     {
-        label: 'Settings',
-        path: '/admin/system-settings',
+        label: 'Administration',
+        path: '/admin',
         icon: Settings,
-        permission: 'settings.manage',
+        permission: 'user.manage',
+        children: [
+            { label: 'Inbox', path: '/communications/inbox', icon: Briefcase },
+            { label: 'Users', path: '/admin/users', icon: Users },
+            { label: 'Permissions', path: '/admin/roles', icon: Settings },
+            { label: 'Audit', path: '/admin/audit-logs', icon: FileText },
+            { label: 'Settings', path: '/admin/system-settings', icon: Settings },
+        ]
     },
 ]
 
 const OwnerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen: boolean) => void }) => {
     const location = useLocation()
     const navigate = useNavigate()
-    const [expandedItems, setExpandedItems] = useState<string[]>([])
+    const [expandedItem, setExpandedItem] = useState<string | null>(null)
     const user = getAuthUser()
 
-    // Only show for Owner role (1)
     if (!user || user.role_id !== 1) {
         return null
     }
 
     const toggleExpand = (label: string) => {
-        setExpandedItems(prev =>
-            prev.includes(label) ? prev.filter(item => item !== label) : [...prev, label]
-        )
+        setExpandedItem(prev => (prev === label ? null : label))
     }
 
     const isActive = (path?: string) => {
@@ -82,25 +103,26 @@ const OwnerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
         navigate('/login')
     }
 
-    // Filter items based on permissions (Owner sees everything, but this ensures consistency)
     const filteredItems = filterSidebarItemsByPermission([...sidebarItems])
 
     return (
         <>
             {/* Mobile Overlay */}
             <div
-                className={`fixed inset-0 z-20 bg-gray-900/50 backdrop-blur-sm transition-opacity lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm transition-opacity lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                 onClick={() => setIsOpen(false)}
             />
 
             {/* Sidebar Container */}
             <aside
-                className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-gradient-to-b from-slate-50 via-white to-gray-50 border-r border-slate-200 shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:shadow-none ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+                className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-white border-r border-slate-200 shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+                    isOpen ? 'translate-x-0' : '-translate-x-full'
+                }`}
             >
                 {/* Logo Section */}
-                <div className="flex h-16 items-center justify-center border-b border-slate-200 px-6 bg-gradient-to-r from-slate-800 to-black">
+                <div className="flex h-16 shrink-0 items-center justify-center border-b border-slate-200 px-6 bg-slate-900">
                     <div className="flex items-center gap-2 font-bold text-xl text-white">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shadow-lg">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
                             <Crown size={20} />
                         </div>
                         <span>
@@ -109,20 +131,7 @@ const OwnerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
                     </div>
                 </div>
 
-                {/* Role Badge */}
-                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-200">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-slate-700 to-black flex items-center justify-center text-white font-bold text-xs shadow-md">
-                            OW
-                        </div>
-                        <div>
-                            <p className="text-xs font-medium text-slate-600">Business</p>
-                            <p className="text-sm font-bold text-slate-900">Owner</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Navigation Items */}
+                {/* Navigation Section */}
                 <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
                     {filteredItems.map((item) => (
                         <div key={item.label}>
@@ -130,33 +139,35 @@ const OwnerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
                                 <div className="space-y-1">
                                     <button
                                         onClick={() => toggleExpand(item.label)}
-                                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${expandedItems.includes(item.label)
-                                            ? 'text-slate-900 bg-slate-100/80 shadow-sm'
-                                            : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
-                                            }`}
+                                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                                            expandedItem === item.label
+                                                ? 'text-slate-900 bg-slate-100'
+                                                : 'text-slate-700 hover:bg-slate-50'
+                                        }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <item.icon size={18} className={expandedItems.includes(item.label) ? 'text-slate-600' : 'text-slate-500'} />
+                                            <item.icon size={18} className="text-slate-500" />
                                             <span>{item.label}</span>
                                         </div>
-                                        {expandedItems.includes(item.label) ? (
-                                            <ChevronDown size={16} className="text-slate-500" />
+                                        {expandedItem === item.label ? (
+                                            <ChevronDown size={16} />
                                         ) : (
-                                            <ChevronRight size={16} className="text-slate-500" />
+                                            <ChevronRight size={16} />
                                         )}
                                     </button>
 
-                                    <div className={`space-y-1 overflow-hidden transition-all duration-300 ${expandedItems.includes(item.label) ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                    <div className={`space-y-1 overflow-hidden transition-all duration-300 ${expandedItem === item.label ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                                         {item.children.map((child) => (
                                             <Link
                                                 key={child.label}
                                                 to={child.path!}
-                                                className={`group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ml-4 ${isActive(child.path)
-                                                    ? 'bg-gradient-to-r from-slate-700 to-black text-white shadow-md shadow-slate-600/30'
-                                                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                                                    }`}
+                                                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all ml-4 ${
+                                                    isActive(child.path)
+                                                        ? 'bg-slate-900 text-white shadow-md'
+                                                        : 'text-slate-600 hover:bg-slate-100'
+                                                }`}
                                             >
-                                                <child.icon size={16} className={`transition-colors ${isActive(child.path) ? 'text-white' : 'text-slate-500 group-hover:text-slate-700'}`} />
+                                                <child.icon size={16} />
                                                 <span>{child.label}</span>
                                             </Link>
                                         ))}
@@ -165,12 +176,13 @@ const OwnerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
                             ) : (
                                 <Link
                                     to={item.path!}
-                                    className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive(item.path)
-                                        ? 'bg-gradient-to-r from-slate-700 to-black text-white shadow-md shadow-slate-600/30'
-                                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                                        }`}
+                                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                                        isActive(item.path)
+                                            ? 'bg-slate-900 text-white shadow-md'
+                                            : 'text-slate-700 hover:bg-slate-100'
+                                    }`}
                                 >
-                                    <item.icon size={18} className={`transition-colors ${isActive(item.path) ? 'text-white' : 'text-slate-500 group-hover:text-slate-700'}`} />
+                                    <item.icon size={18} />
                                     <span>{item.label}</span>
                                 </Link>
                             )}
@@ -178,21 +190,11 @@ const OwnerSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
                     ))}
                 </nav>
 
-                {/* User Profile / Footer Section */}
-                <div className="border-t border-slate-200 p-4 space-y-3 bg-gradient-to-b from-white to-slate-50/50">
-                    <div className="flex items-center gap-3 rounded-xl bg-white p-3 border border-slate-200 shadow-sm">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-black flex items-center justify-center text-white font-bold text-sm shadow-md">
-                            {user?.name?.charAt(0).toUpperCase() || 'O'}
-                        </div>
-                        <div className="flex-1 overflow-hidden">
-                            <p className="truncate text-sm font-semibold text-slate-900">{user?.name || 'Owner'}</p>
-                            <p className="truncate text-xs text-slate-600">Managing Director</p>
-                        </div>
-                    </div>
-
+                {/* Bottom Section */}
+                <div className="shrink-0 border-t border-slate-200 p-4 bg-white">
                     <button
                         onClick={handleLogout}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white p-2.5 text-sm font-medium text-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all shadow-sm hover:shadow-md"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white p-2.5 text-sm font-medium text-slate-700 hover:bg-red-50 hover:text-red-600 transition-all"
                     >
                         <LogOut size={18} />
                         <span>Logout</span>
