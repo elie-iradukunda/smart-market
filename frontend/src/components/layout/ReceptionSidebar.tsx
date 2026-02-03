@@ -44,14 +44,7 @@ const sidebarItems: SidebarItem[] = [
         icon: ShoppingCart,
         permission: 'order.view',
     },
-    {
-        label: 'Communications',
-        icon: MessageSquare,
-        permission: null,
-        children: [
-            { label: 'Inbox', path: '/communications/inbox', icon: Mail, permission: null },
-        ]
-    },
+  
     {
         label: 'Point of Sale',
         icon: CreditCard,
