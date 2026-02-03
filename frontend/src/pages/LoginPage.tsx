@@ -24,7 +24,6 @@ export default function LoginPage() {
       const dashboardPath = getDashboardPathForRole(res.user.role_id)
 
       // Use window.location.href for full page reload to properly initialize dashboard
-      alert(dashboardPath)
       window.location.href = dashboardPath
     } catch (err: any) {
       setError(err.message || 'Login failed')
