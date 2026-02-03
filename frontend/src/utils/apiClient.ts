@@ -319,7 +319,8 @@ export function getDashboardPathForRole(roleId: number | null | undefined): stri
   switch (roleId) {
     case 1: // Admin (includes owner, admin, accountant, controller)
       return '/dashboard/admin'
-    case 2: // Sales (includes sales_rep, marketing, pos_cashier)
+    case 2: // Sales (includes sales_rep, 
+    // marketing, pos_cashier)
       return '/dashboard/sales'
     case 3: 
     // Staff (includes production_manager, inventory_manager,
