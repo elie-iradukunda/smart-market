@@ -61,6 +61,8 @@ import AuditLogsPage from '../pages/Admin/AuditLogsPage';
 import SystemSettingsPage from '../pages/Admin/SystemSettingsPage';
 import ChangePasswordPage from '../pages/Account/ChangePasswordPage';
 import FilesPage from '../pages/FilesPage';
+import InventoryDashboard from '@/pages/InventoryDashboard';
+import ReceptionDashboard from '@/pages/ReceptionDashboard';
 
 export const routes = [
   // Main dashboard routes for 4 consolidated roles
@@ -110,10 +112,12 @@ export const routes = [
   { path: '/dashboard/sales/communications/conversations/:id', element: <ConversationDetailPage /> },
   
   // STAFF nested routes (role_id: 3)
+  { path: '/dashboard/staff/reception', element: <ReceptionDashboard /> },
   { path: '/dashboard/staff/production/work-orders', element: <WorkOrdersBoardPage /> },
   { path: '/dashboard/staff/production/work-orders/:id', element: <WorkOrderDetailPage /> },
   { path: '/dashboard/staff/production/schedule', element: <ProductionSchedulePage /> },
   { path: '/dashboard/staff/production/new-order', element: <NewWorkOrderPage /> },
+  { path: '/dashboard/staff/inventory', element: <InventoryDashboard /> },
   { path: '/dashboard/staff/inventory/materials', element: <MaterialsPage /> },
   { path: '/dashboard/staff/inventory/materials/:sku', element: <MaterialDetailPage /> },
   { path: '/dashboard/staff/inventory/purchase-orders', element: <PurchaseOrdersPage /> },
