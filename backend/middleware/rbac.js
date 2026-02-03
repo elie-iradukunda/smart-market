@@ -47,7 +47,7 @@ const rbacMiddleware = async (req, res, next) => {
     const userPermissions = ROLE_PERMISSIONS[role] || [];
     
     if (!hasPermission(userPermissions, requiredPermissions)) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
+      return res.status(403).json({ error: 'Insufficient permissions', userPermissions, requiredPermissions });
     }
     
     next();
