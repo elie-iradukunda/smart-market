@@ -48,18 +48,10 @@ export default function ShopLoginPage() {
 
                     // Determine dashboard path based on role
                     const dashboardPaths: { [key: number]: string } = {
-                        1: '/dashboard/owner',
-                        2: '/dashboard/admin',
-                        3: '/dashboard/accountant',
-                        4: '/dashboard/controller',
-                        5: '/dashboard/reception',
-                        6: '/dashboard/technician',
-                        7: '/dashboard/production',
-                        8: '/dashboard/inventory',
-                        9: '/dashboard/sales',
-                        10: '/dashboard/marketing',
-                        11: '/dashboard/pos',
-                        12: '/dashboard/support',
+                        1: '/dashboard/admin',
+                        2: '/dashboard/sales',
+                        3: '/dashboard/staff',
+                        4: '/client'
                     }
 
                     const dashboardPath = dashboardPaths[data.user.role_id] || '/dashboard/owner'
