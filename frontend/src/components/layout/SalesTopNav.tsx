@@ -1,76 +1,118 @@
 // @ts-nocheck
-import React from 'react'
-import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, FileText, ListOrdered, Menu } from 'lucide-react'
-import { getAuthUser } from '@/utils/apiClient'
+import React from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { 
+    LayoutDashboard, 
+    Users, 
+    ShoppingCart, 
+    Megaphone, 
+    LogOut,
+    Briefcase,
+    Menu // Added Menu icon
+} from 'lucide-react';
+import { clearAuth, getAuthUser } from '@/utils/apiClient';
 
-const linkBase =
-  'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold transition-colors'
+const NAV_LINKS = [
+    { path: '/dashboard/sales', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/dashboard/sales/crm/leads', label: 'Leads', icon: Users },
+    { path: '/dashboard/sales/orders', label: 'Orders', icon: ShoppingCart },
+    { path: '/dashboard/sales/marketing/campaigns', label: 'Marketing', icon: Megaphone },
+];
 
 interface SalesTopNavProps {
-  onMenuClick?: () => void
+    onMenuClick?: () => void;
 }
 
 export default function SalesTopNav({ onMenuClick }: SalesTopNavProps) {
-  const user = getAuthUser()
-  const isSalesRep = user?.role_id === 9
+    const navigate = useNavigate();
+    const user = getAuthUser();
 
-  if (!isSalesRep) return null
+    const handleLogout = () => {
+        clearAuth();
+        navigate('/login');
+    };
 
-  const links = [
-    { to: '/dashboard/sales', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/crm/leads', label: 'Leads', icon: Users },
-    { to: '/crm/quotes', label: 'Quotes', icon: FileText },
-    { to: '/orders', label: 'Orders', icon: ListOrdered },
-  ]
+    return (
+        <>
+            {/* Top Header */}
+            <header className="bg-black text-white shadow-xl sticky top-0 z-30 h-16 border-b border-white/10">
+                <div className="mx-auto h-full px-4 lg:px-8 flex items-center justify-between">
+                    
+                    {/* Left Section: Brand & Mobile Menu Toggle */}
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        {/* RESTORED: Menu button to trigger the Sidebar on mobile */}
+                        <button
+                            type="button"
+                            className="lg:hidden p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                            onClick={onMenuClick}
+                            aria-label="Toggle menu"
+                        >
+                            <Menu size={22} />
+                        </button>
 
-  return (
-    <header className="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-900 text-white shadow-lg sticky top-0 z-30 backdrop-blur-sm border-b border-blue-800/50">
-      <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6 h-14 sm:h-16 flex items-center justify-between gap-3 sm:gap-6">
-        {/* Left: Mobile Menu + Role Badge */}
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-shrink-0">
-          <button
-            type="button"
-            className="lg:hidden p-2 rounded-lg text-blue-200 hover:text-white hover:bg-white/10 transition-colors"
-            onClick={onMenuClick}
-            aria-label="Toggle menu"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="relative">
-              <div className="absolute inset-0 bg-blue-400/30 rounded-full blur-md"></div>
-              <span className="relative inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-xs sm:text-sm font-bold text-white shadow-lg ring-2 ring-white/20">
-                SL
-              </span>
-            </div>
-            <div className="leading-tight hidden sm:block">
-              <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-blue-200/90 font-medium">Role</p>
-              <p className="text-xs sm:text-sm font-bold text-white">Sales Rep</p>
-            </div>
-          </div>
-        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="bg-blue-600 p-1.5 rounded-lg hidden xs:block">
+                                <Briefcase size={18} className="text-white" />
+                            </div>
+                            <span className="font-black tracking-tighter text-xl">TOPDESIGN</span>
+                        </div>
+                    </div>
 
-        {/* Center: Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-1.5 rounded-full bg-white/10 px-1.5 py-1 backdrop-blur-sm">
-          {links.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `inline-flex items-center gap-1.5 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition-all duration-200 ${
-                  isActive
-                    ? 'bg-white text-blue-900 shadow-md scale-105'
-                    : 'text-white/90 hover:text-white hover:bg-white/15'
-                }`
-              }
-            >
-              <Icon className="h-3.5 w-3.5" />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </nav>
-      </div>
-    </header>
-  )
+                    {/* Desktop Navigation */}
+                    <nav className="hidden lg:flex items-center gap-2">
+                        {NAV_LINKS.map((link) => (
+                            <NavLink
+                                key={link.path}
+                                to={link.path}
+                                className={({ isActive }) => `
+                                    flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all
+                                    ${isActive 
+                                        ? 'bg-white text-black' 
+                                        : 'text-slate-400 hover:text-white hover:bg-white/5'}
+                                `}
+                            >
+                                <link.icon size={16} />
+                                <span>{link.label}</span>
+                            </NavLink>
+                        ))}
+                    </nav>
+
+                    {/* Right Actions */}
+                    <div className="flex items-center gap-4 sm:gap-6">
+                        <div className="hidden md:flex flex-col items-end leading-none">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">Sales Pro</span>
+                            <span className="text-sm font-bold mt-1 text-slate-200">{user?.name || 'User'}</span>
+                        </div>
+                        
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs font-black transition-all shadow-lg shadow-red-900/20"
+                        >
+                            <LogOut size={14} />
+                            <span className="hidden xs:inline">LOGOUT</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            {/* Mobile Bottom Navigation */}
+            <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 px-2 pb-safe z-50">
+                <div className="flex justify-around items-center h-16">
+                    {NAV_LINKS.map((link) => (
+                        <NavLink
+                            key={link.path}
+                            to={link.path}
+                            className={({ isActive }) => `
+                                flex flex-col items-center justify-center flex-1 gap-1 transition-all
+                                ${isActive ? 'text-blue-500' : 'text-slate-400'}
+                            `}
+                        >
+                            <link.icon size={20} />
+                            <span className="text-[10px] font-bold uppercase tracking-tighter">{link.label}</span>
+                        </NavLink>
+                    ))}
+                </div>
+            </nav>
+        </>
+    );
 }
