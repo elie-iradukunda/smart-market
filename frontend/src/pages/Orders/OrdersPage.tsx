@@ -1,7 +1,8 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchOrders } from '../../api/apiClient'
+import { fetchOrders, fetchWorkOrders } from '../../api/apiClient'
+import { getAuthUser } from '@/utils/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { ListOrdered, Users, Tag, Clock, Package, AlertTriangle, ChevronRight, Dices, ChevronLeft } from 'lucide-react'
 
@@ -66,31 +67,57 @@ export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 8
   const navigate = useNavigate()
+  const user = getAuthUser()
 
   useEffect(() => {
     let isMounted = true
     setLoading(true)
     setError(null)
 
-    fetchOrders()
-      .then(data => {
+    const loadData = async () => {
+      try {
+        const isStaff = user?.role_id !== 1 && user?.role_id !== 2 // Admin=1, Owner=2
+        console.log('Role Check:', user?.role_id, 'isStaff:', isStaff);
+
+        const [allOrders, workOrdersResult] = await Promise.all([
+          fetchOrders(),
+          isStaff ? fetchWorkOrders() : Promise.resolve([])
+        ])
+
         if (!isMounted) return
-        const processedData = Array.isArray(data) ? data.map(order => ({
+
+        let relevantOrders = Array.isArray(allOrders) ? allOrders : []
+
+        // If staff, filter orders to only show assigned ones
+        if (isStaff && Array.isArray(workOrdersResult)) {
+          console.log('WorkOrders fetched:', workOrdersResult.length);
+          const myOrderIds = new Set(
+            workOrdersResult
+              .filter(wo => Number(wo.assigned_to) === Number(user.id))
+              .map(wo => Number(wo.order_number || wo.order_id))
+          )
+          console.log('My IDs:', Array.from(myOrderIds));
+          relevantOrders = relevantOrders.filter(o => myOrderIds.has(Number(o.id)))
+        }
+
+        const processedData = relevantOrders.map(order => ({
           ...order,
           // Fallback for demo date
           date: order.date || new Date(Date.now() - Math.random() * 86400000 * 30).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric' }),
-        })) : []
+        }))
+
         setOrders(processedData)
         setCurrentPage(1)
-      })
-      .catch(err => {
+      } catch (err) {
         if (!isMounted) return
         setError(err.message || 'Failed to load orders')
-      })
-      .finally(() => {
+      } finally {
         if (!isMounted) return
         setLoading(false)
-      })
+      }
+    }
+
+    loadData()
 
     return () => {
       isMounted = false
@@ -141,10 +168,10 @@ export default function OrdersPage() {
   // Component for the Loading/Error/Empty states
   const StateFeedback = () => {
     if (error) {
-      const isPermissionError = error.toLowerCase().includes('insufficient permissions') || 
-                                error.toLowerCase().includes('forbidden') ||
-                                error.toLowerCase().includes('permission')
-      
+      const isPermissionError = error.toLowerCase().includes('insufficient permissions') ||
+        error.toLowerCase().includes('forbidden') ||
+        error.toLowerCase().includes('permission')
+
       return (
         <div className="flex flex-col items-center justify-center p-10 text-red-700 bg-red-50 border border-red-300 rounded-b-3xl">
           <AlertTriangle className="h-6 w-6 mb-3 animate-pulse" />
@@ -336,8 +363,8 @@ export default function OrdersPage() {
                                   key={page}
                                   onClick={() => goToPage(page)}
                                   className={`px-3 py-1 rounded-lg text-sm font-medium transition ${currentPage === page
-                                      ? 'bg-indigo-600 text-white'
-                                      : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                                     }`}
                                 >
                                   {page}

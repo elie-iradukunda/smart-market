@@ -1,4 +1,6 @@
 import pool from '../config/database.js';
+import emailService from '../services/emailService.js';
+import { autoCreateInvoice } from './financeController.js';
 
 export const createQuote = async (req, res) => {
   const { customer_id, items } = req.body;
@@ -8,20 +10,25 @@ export const createQuote = async (req, res) => {
     return res.status(400).json({ error: 'customer_id is required' });
   }
 
-  const total = items ? items.reduce((sum, item) => {
+  const subtotal = items ? items.reduce((sum, item) => {
     return sum + (parseFloat(item.unit_price || 0) * parseInt(item.quantity || 0));
   }, 0) : 0;
+  
+  // For now simple total, can add tax later if needed
+  const total = subtotal;
 
   try {
-    // Test if customer exists first
-    const [customerCheck] = await pool.execute(
-      'SELECT id FROM customers WHERE id = ?',
+    // Test if customer exists and get their info for email
+    const [customerRows] = await pool.execute(
+      'SELECT id, name, email FROM customers WHERE id = ?',
       [customer_id]
     );
     
-    if (customerCheck.length === 0) {
+    if (customerRows.length === 0) {
       return res.status(400).json({ error: 'Customer not found' });
     }
+    
+    const customer = customerRows[0];
 
     // Create quote
     const [result] = await pool.execute(
@@ -30,25 +37,49 @@ export const createQuote = async (req, res) => {
     );
 
     const quote_id = result.insertId;
+    const createdItems = [];
 
     // Create quote items if items array exists and quote_items table exists
     if (items && Array.isArray(items)) {
       for (const item of items) {
         try {
+          const itemTotal = parseFloat(item.unit_price) * parseInt(item.quantity);
           await pool.execute(
             'INSERT INTO quote_items (quote_id, material_id, description, unit_price, quantity, total) VALUES (?, ?, ?, ?, ?, ?)',
-            [quote_id, item.material_id || null, item.description, parseFloat(item.unit_price), parseInt(item.quantity), parseFloat(item.unit_price) * parseInt(item.quantity)]
+            [quote_id, item.material_id || null, item.description, parseFloat(item.unit_price), parseInt(item.quantity), itemTotal]
           );
+          createdItems.push({
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: parseFloat(item.unit_price)
+          });
         } catch (itemError) {
           console.log('Quote items insertion error:', itemError.message);
         }
       }
     }
     
+    // Send email to customer
+    if (customer.email) {
+      try {
+        await emailService.sendQuote(customer.email, {
+          quote_id,
+          customer_name: customer.name,
+          items: createdItems,
+          subtotal: subtotal,
+          total_amount: total,
+          valid_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+        });
+        console.log(`Quote email sent to ${customer.email}`);
+      } catch (emailErr) {
+        console.error('Failed to send quote email:', emailErr);
+      }
+    }
+    
     res.json({ 
       quote_id, 
       total_amount: total, 
-      message: 'Quote created successfully' 
+      message: 'Quote created successfully and notification sent' 
     });
   } catch (error) {
     console.error('Quote creation error:', error);
@@ -115,6 +146,14 @@ export const updateQuote = async (req, res) => {
         
         const orderId = orderResult.insertId;
         
+        // AUTO-CREATE INVOICE
+        try {
+          await autoCreateInvoice(orderId, quote[0].total_amount);
+          console.log(`Auto-invoice triggered for order ${orderId} via quote approval`);
+        } catch (invErr) {
+          console.error('Failed to auto-create invoice on quote approval:', invErr);
+        }
+
         // Auto-create work order for design stage
         await pool.execute(
           'INSERT INTO work_orders (order_id, stage, started_at) VALUES (?, ?, NOW())',

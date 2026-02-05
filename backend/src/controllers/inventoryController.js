@@ -16,7 +16,7 @@ export const createMaterial = async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
-    const { name, unit, category, reorder_level } = req.body;
+    const { name, unit, category, description, usage_instructions, reorder_level, initial_stock } = req.body;
     
     if (!name || !unit) {
       return res.status(400).json({ 
@@ -43,9 +43,19 @@ export const createMaterial = async (req, res) => {
       }
 
       const [result] = await connection.execute(
-        'INSERT INTO materials (name, unit, category, reorder_level) VALUES (?, ?, ?, ?)',
-        [name.trim(), unit, category || null, reorder_level || 0]
+        'INSERT INTO materials (name, unit, category, description, usage_instructions, reorder_level, current_stock) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [name.trim(), unit, category || null, description || null, usage_instructions || null, reorder_level || 0, initial_stock || 0]
       );
+
+      const materialId = result.insertId;
+
+      // If initial stock is provided, record a "grn" (Goods Received Note) movement
+      if (initial_stock && parseFloat(initial_stock) > 0) {
+        await connection.execute(
+          'INSERT INTO stock_movements (material_id, type, quantity, reference, user_id) VALUES (?, ?, ?, ?, ?)',
+          [materialId, 'grn', initial_stock, 'Initial Stock Setup', req.user?.id || null]
+        );
+      }
 
       await connection.commit();
       
@@ -102,9 +112,23 @@ export const getMaterial = async (req, res) => {
             });
         }
 
+        // Fetch recent movements for this material
+        const [movements] = await pool.execute(
+            `SELECT sm.*, u.name as user_name 
+             FROM stock_movements sm 
+             LEFT JOIN users u ON sm.user_id = u.id 
+             WHERE sm.material_id = ? 
+             ORDER BY sm.created_at DESC 
+             LIMIT 50`,
+            [id]
+        );
+
         res.json({
             success: true,
-            data: material[0]
+            data: {
+                ...material[0],
+                movements
+            }
         });
     } catch (error) {
         console.error('Error fetching material:', error);
@@ -120,7 +144,7 @@ export const updateMaterial = async (req, res) => {
     const connection = await pool.getConnection();
     try {
         const { id } = req.params;
-        const { name, unit, category, reorder_level } = req.body;
+        const { name, unit, category, description, usage_instructions, reorder_level } = req.body;
 
         // Validate required fields
         if (!name || !unit) {
@@ -164,12 +188,14 @@ export const updateMaterial = async (req, res) => {
             // Update material
             await connection.execute(
                 `UPDATE materials 
-                 SET name = ?, unit = ?, category = ?, reorder_level = ?
+                 SET name = ?, unit = ?, category = ?, description = ?, usage_instructions = ?, reorder_level = ?
                  WHERE id = ?`,
                 [
                     name.trim(),
                     unit,
                     category || null,
+                    description || null,
+                    usage_instructions || null,
                     reorder_level || 0,
                     id
                 ]

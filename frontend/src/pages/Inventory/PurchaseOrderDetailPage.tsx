@@ -212,12 +212,8 @@ export default function PurchaseOrderDetailPage() {
     return formData.items.reduce((sum, item) => sum + (item.total || 0), 0);
   };
 
-  const calculateTax = (): number => {
-    return calculateSubtotal() * 0.18; // 18% tax
-  };
-
   const calculateTotal = (): number => {
-    return calculateSubtotal() + calculateTax();
+    return calculateSubtotal();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -228,7 +224,7 @@ export default function PurchaseOrderDetailPage() {
       const orderData = {
         ...formData,
         subtotal: calculateSubtotal(),
-        tax: calculateTax(),
+        tax: 0,
         total: calculateTotal(),
         created_by: user?.id || null
       };
@@ -302,9 +298,9 @@ export default function PurchaseOrderDetailPage() {
                   </h1>
                   {!isNew && (
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${formData.status === 'received' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                        formData.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                          formData.status === 'approved' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                            'bg-gray-100 text-gray-700 border-gray-200'
+                      formData.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                        formData.status === 'approved' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                          'bg-gray-100 text-gray-700 border-gray-200'
                       }`}>
                       {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
                     </span>
@@ -512,18 +508,6 @@ export default function PurchaseOrderDetailPage() {
                   <h3 className="font-semibold">Order Summary</h3>
                 </div>
                 <div className="p-6 space-y-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-indigo-100">Subtotal</span>
-                    <span className="font-semibold">
-                      RF {calculateSubtotal().toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-indigo-100">Tax (18%)</span>
-                    <span className="font-semibold">
-                      RF {calculateTax().toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
                   <div className="pt-4 border-t border-white/20 flex justify-between items-center">
                     <span className="text-base font-bold">Total</span>
                     <span className="text-2xl font-bold">

@@ -4,18 +4,10 @@ import { getAuthUser } from '@/utils/apiClient';
 
 const getDashboardPath = (roleId: number) => {
     switch (Number(roleId)) {
-        case 1: return '/dashboard/owner';
-        case 2: return '/dashboard/admin';
-        case 3: return '/dashboard/accountant';
-        case 4: return '/dashboard/controller';
-        case 5: return '/dashboard/reception';
-        case 6: return '/dashboard/technician';
-        case 7: return '/dashboard/production';
-        case 8: return '/dashboard/inventory';
-        case 9: return '/dashboard/sales';
-        case 10: return '/dashboard/marketing';
-        case 11: return '/dashboard/pos';
-        case 12: return '/dashboard/support';
+        case 1: return '/dashboard/admin'; // Admin
+        case 2: return '/dashboard/sales'; // Sales
+        case 3: return '/dashboard/staff'; // Staff
+        case 4: return '/client';           // Client
         default: return '/login';
     }
 };

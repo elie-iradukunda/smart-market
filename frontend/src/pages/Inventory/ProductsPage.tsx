@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { fetchProducts, createProduct, updateProduct, uploadProductImage } from '@/api/apiClient'
-import { Plus, Edit, Package, Upload, X, Image as ImageIcon } from 'lucide-react'
+import { Plus, Edit, Package, Upload, X, Megaphone } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 // Helper to get full image URL
 const getImageUrl = (path: string) => {
@@ -27,9 +28,10 @@ const getCategoryColor = (category: string) => {
 interface ProductRowProps {
     product: any
     onEdit: (product: any) => void
+    onPromote: (product: any) => void
 }
 
-const ProductRow: React.FC<ProductRowProps> = ({ product, onEdit }) => {
+const ProductRow: React.FC<ProductRowProps> = ({ product, onEdit, onPromote }) => {
     const [imageError, setImageError] = useState(false)
     const categoryColors = getCategoryColor(product.category || 'Other')
     const hasImage = product.image && !imageError
@@ -72,9 +74,19 @@ const ProductRow: React.FC<ProductRowProps> = ({ product, onEdit }) => {
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">RF {Number(product.price).toFixed(2)}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.stock_quantity}</td>
             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button onClick={() => onEdit(product)} className="text-blue-600 hover:text-blue-900 ml-4">
-                    <Edit size={18} />
-                </button>
+                <div className="flex items-center justify-end gap-3">
+                    <button
+                        onClick={() => onPromote(product)}
+                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1"
+                        title="Promote Product"
+                    >
+                        <Megaphone size={16} />
+                        <span className="text-xs">Promote</span>
+                    </button>
+                    <button onClick={() => onEdit(product)} className="text-blue-600 hover:text-blue-900 border p-2 rounded-lg hover:bg-gray-50 border-gray-100">
+                        <Edit size={16} />
+                    </button>
+                </div>
             </td>
         </tr>
     )
@@ -86,6 +98,7 @@ export default function ProductsPage() {
     const [error, setError] = useState<string | null>(null)
     const [showAddModal, setShowAddModal] = useState(false)
     const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
+    const navigate = useNavigate()
 
     const [imagePreview, setImagePreview] = useState<string>('')
 
@@ -184,6 +197,18 @@ export default function ProductsPage() {
         }
     }
 
+    const handlePromote = (product: any) => {
+        // Find the correct marketing route based on current path
+        const currentPath = window.location.pathname;
+        let marketingPath = '/dashboard/admin/marketing/campaigns';
+
+        if (currentPath.includes('/dashboard/sales')) {
+            marketingPath = '/dashboard/sales/marketing/campaigns';
+        }
+
+        navigate(`${marketingPath}?productId=${product.id}&template=launch`);
+    }
+
     const handleCloseModal = () => {
         setShowAddModal(false)
         setNewProduct({ name: '', description: '', price: '', category: '', stock_quantity: '', image: '' })
@@ -238,7 +263,7 @@ export default function ProductsPage() {
                                 <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">No products found</td></tr>
                             ) : (
                                 products.map((product) => (
-                                    <ProductRow key={product.id} product={product} onEdit={handleEdit} />
+                                    <ProductRow key={product.id} product={product} onEdit={handleEdit} onPromote={handlePromote} />
                                 ))
                             )}
                         </tbody>

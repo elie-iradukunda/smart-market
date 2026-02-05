@@ -12,6 +12,8 @@ export default function MaterialsPage() {
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
+  const user = getAuthUser()
+  const dashboardPrefix = user?.role_id === 1 ? 'admin' : 'staff'
 
   useEffect(() => {
     let isMounted = true
@@ -88,7 +90,7 @@ export default function MaterialsPage() {
               {currentUserHasPermission('material.create') && (
                 <button
                   type="button"
-                  onClick={() => navigate('/inventory/materials/new')}
+                  onClick={() => navigate(`/dashboard/${dashboardPrefix}/inventory/materials/new`)}
                   className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-700 hover:shadow-emerald-500/40 transition-all"
                 >
                   <Plus size={18} />
@@ -147,10 +149,10 @@ export default function MaterialsPage() {
                           {m.current_stock}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-500">{m.uom}</td>
+                      <td className="px-6 py-4 text-gray-500">{m.unit}</td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => navigate(`/inventory/materials/${m.id}`)}
+                          onClick={() => navigate(`/dashboard/${dashboardPrefix}/inventory/materials/${m.id}`)}
                           className="text-sm font-medium text-emerald-600 hover:text-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           View Details

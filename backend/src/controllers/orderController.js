@@ -1,5 +1,6 @@
 import pool from '../config/database.js';
 import emailService from '../services/emailService.js';
+import { autoCreateInvoice } from './financeController.js';
 
 export const createQuote = async (req, res) => {
   try {
@@ -97,6 +98,14 @@ export const approveQuote = async (req, res) => {
 
 
     const orderId = orderResult.insertId;
+
+    // AUTO-CREATE INVOICE
+    try {
+      await autoCreateInvoice(orderId, quote[0].total_amount);
+      console.log(`Auto-invoice triggered for order ${orderId}`);
+    } catch (invErr) {
+      console.error('Failed to auto-create invoice:', invErr);
+    }
 
     // Immediately reduce stock for each material on the quote.
     // If anything goes wrong here, we still want the quote and order
@@ -312,5 +321,55 @@ export const getOrdersReadyForCommunication = async (req, res) => {
     res.json(rows);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch orders for communication' });
+  }
+};
+
+export const updateOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // Allowed fields to update
+    const allowedFields = ['status', 'assigned_to', 'assigned_worker_id', 'due_date', 'notes', 'priority'];
+    const fieldsToUpdate = [];
+    const values = [];
+
+    // Filter updates
+    Object.keys(updates).forEach(key => {
+      if (allowedFields.includes(key)) {
+        fieldsToUpdate.push(`${key} = ?`);
+        values.push(updates[key]);
+      }
+    });
+
+    if (fieldsToUpdate.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    values.push(id);
+
+    const [result] = await pool.execute(
+      `UPDATE orders SET ${fieldsToUpdate.join(', ')} WHERE id = ?`,
+      values
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({ message: 'Order updated successfully' });
+  } catch (error) {
+    console.error('Update order error:', error);
+    res.status(500).json({ error: 'Failed to update order' });
+  }
+};
+
+export const deleteOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.execute('DELETE FROM orders WHERE id = ?', [id]);
+    res.json({ message: 'Order deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete order' });
   }
 };

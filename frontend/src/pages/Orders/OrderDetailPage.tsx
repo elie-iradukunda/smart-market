@@ -28,8 +28,8 @@ export default function OrderDetailPage() {
   const [processingPayment, setProcessingPayment] = useState(false)
   const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null)
 
-  const stages = ['Design', 'Pre-Press', 'Print', 'Finishing', 'QA', 'Ready', 'Delivered']
-  const stageStatusCodes = ['design', 'prepress', 'print', 'finishing', 'qa', 'ready', 'delivered']
+  const stages = ['Design', 'Print', 'Finish', 'Ready', 'Delivered']
+  const stageStatusCodes = ['design', 'print', 'finish', 'ready', 'delivered']
 
   useEffect(() => {
     if (!id) return
@@ -90,12 +90,9 @@ export default function OrderDetailPage() {
   }, [id])
 
   const user = getAuthUser()
-  const isTechnician = user?.role_id === 6
-  const isReception = user?.role_id === 5
-  const isOwner = user?.role_id === 1
-  const isAccountant = user?.role_id === 3
-  const canMarkDelivered = isOwner || isReception
-  const canProcessPayments = isAccountant || isReception
+  const isAdmin = user?.role_id === 1 || user?.role_id === 2 // Admin or Owner
+  const canMarkDelivered = isAdmin
+  const canProcessPayments = isAdmin || user?.role_id === 3 // Accountant (3)
 
   const handleProcessPayment = async () => {
     if (!order) return
@@ -158,21 +155,17 @@ export default function OrderDetailPage() {
 
   const getStatusClasses = (status) => {
     switch (status?.toLowerCase()) {
-      case 'pending':
-      case 'processing':
       case 'design':
-      case 'prepress':
+        return 'bg-purple-100 text-purple-800 border-purple-300'
       case 'print':
         return 'bg-blue-100 text-blue-800 border-blue-300'
+      case 'finish':
       case 'finishing':
-      case 'qa':
+        return 'bg-amber-100 text-amber-800 border-amber-300'
       case 'ready':
-        return 'bg-indigo-100 text-indigo-800 border-indigo-300'
+        return 'bg-teal-100 text-teal-800 border-teal-300'
       case 'delivered':
         return 'bg-green-100 text-green-800 border-green-300'
-      case 'cancelled':
-      case 'failed':
-        return 'bg-red-100 text-red-800 border-red-300'
       default:
         return 'bg-gray-100 text-gray-700 border-gray-300'
     }

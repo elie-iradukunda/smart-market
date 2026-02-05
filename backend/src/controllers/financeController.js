@@ -369,6 +369,7 @@ export const createPOSSale = async (req, res) => {
 
     // Also create an order so the sale appears in production/finance flows
     let order_id = null;
+    let invoice_id = null;
     if (customer_id) {
       try {
         const [orderResult] = await pool.execute(
@@ -376,8 +377,14 @@ export const createPOSSale = async (req, res) => {
           [customer_id, 'ready', total]
         );
         order_id = orderResult.insertId;
+
+        // AUTO-CREATE INVOICE
+        const invResult = await autoCreateInvoice(order_id, total);
+        if (invResult.success) {
+          invoice_id = invResult.invoice_id;
+        }
       } catch (orderError) {
-        console.error('Order creation failed (non-critical):', orderError);
+        console.error('Order/Invoice creation failed (non-critical):', orderError);
       }
     }
 
@@ -444,7 +451,7 @@ export const createPOSSale = async (req, res) => {
       console.error('Journal entry creation failed (non-critical):', journalError);
     }
 
-    res.status(201).json({ id: pos_id, order_id, message: 'POS sale recorded with journal entries' });
+    res.status(201).json({ id: pos_id, order_id, invoice_id, message: 'POS sale recorded with journal entries' });
   } catch (error) {
     console.error('POS sale error:', error);
     res.status(500).json({ error: 'POS sale failed', details: error.message });
@@ -475,7 +482,7 @@ export const createJournalEntry = async (req, res) => {
   }
 };
 
-// Auto-create invoice when order is completed
+// Auto-create invoice when order is created
 export const autoCreateInvoice = async (order_id, amount) => {
   try {
     // Check if invoice already exists
@@ -486,30 +493,49 @@ export const autoCreateInvoice = async (order_id, amount) => {
 
     const [result] = await pool.execute(
       'INSERT INTO invoices (order_id, amount, status) VALUES (?, ?, ?)',
-      [order_id, amount, 'pending']
+      [order_id, amount, 'unpaid']
     );
 
-    // Get customer email for notification
-    const [customer] = await pool.execute(`
-      SELECT c.email, c.name 
-      FROM customers c 
-      JOIN orders o ON c.id = o.customer_id 
+    const invoiceId = result.insertId;
+
+    // Get order details including customer and quote items for the invoice
+    const [orderDetails] = await pool.execute(`
+      SELECT o.id as order_id, o.quote_id, c.email as customer_email, c.name as customer_name
+      FROM orders o
+      JOIN customers c ON o.customer_id = c.id
       WHERE o.id = ?
     `, [order_id]);
 
-    if (customer.length > 0 && customer[0].email) {
-      try {
-        await emailService.sendInvoice(customer[0].email, {
-          id: result.insertId,
-          amount: amount,
-          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toDateString()
-        });
-      } catch (emailError) {
-        console.error('Auto-invoice email failed:', emailError);
+    if (orderDetails.length > 0) {
+      const order = orderDetails[0];
+      let items = [];
+
+      // If there's a quote_id, get the items for a detailed invoice
+      if (order.quote_id) {
+        const [quoteItems] = await pool.execute(
+          'SELECT description, quantity, unit_price FROM quote_items WHERE quote_id = ?',
+          [order.quote_id]
+        );
+        items = quoteItems;
+      }
+
+      if (order.customer_email) {
+        try {
+          await emailService.sendInvoice(order.customer_email, {
+            id: invoiceId,
+            customer_name: order.customer_name,
+            amount: amount,
+            items: items,
+            due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 days due
+          });
+          console.log(`Auto-invoice email sent to ${order.customer_email} for INV-${invoiceId}`);
+        } catch (emailError) {
+          console.error('Auto-invoice email failed:', emailError);
+        }
       }
     }
 
-    return { success: true, invoice_id: result.insertId };
+    return { success: true, invoice_id: invoiceId };
   } catch (error) {
     console.error('Auto-invoice creation failed:', error);
     return { success: false, error: error.message };
@@ -528,7 +554,8 @@ export const getInvoices = async (req, res) => {
     `);
     res.json(invoices);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch invoices' });
+    console.error('getInvoices error:', error);
+    res.status(500).json({ error: 'Failed to fetch invoices', details: error.message });
   }
 };
 
@@ -559,7 +586,8 @@ export const getInvoice = async (req, res) => {
       remaining_balance: remainingBalance > 0 ? remainingBalance : 0
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch invoice' });
+    console.error('getInvoice error:', error);
+    res.status(500).json({ error: 'Failed to fetch invoice', details: error.message });
   }
 };
 

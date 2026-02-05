@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { fetchLeads, createLead, fetchMaterials, createCustomer } from '../../api/apiClient'
 import { toast } from 'react-toastify'
+import { Eye, ArrowRight } from 'lucide-react'
 
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
@@ -25,7 +26,7 @@ export default function LeadsPage() {
   const [materialsError, setMaterialsError] = useState<string | null>(null)
   const [loadingMaterials, setLoadingMaterials] = useState(false)
   const [leadItems, setLeadItems] = useState(
-    Array.from({ length: 3 }).map(() => ({ material_id: '', quantity: '1' }))
+    Array.from({ length: 3 }).map(() => ({ description: '', quantity: '1' }))
   )
 
   // Pagination state
@@ -125,13 +126,14 @@ export default function LeadsPage() {
 
       const items = leadItems
         .map((row) => ({
-          material_id: row.material_id ? Number(row.material_id) : null,
+          material_id: null,
+          description: row.description || null,
           quantity: Number(row.quantity || '0'),
         }))
-        .filter((row) => row.material_id && row.quantity > 0)
+        .filter((row) => row.description && row.quantity > 0)
 
       if (items.length === 0) {
-        setMaterialsError('Please select at least one material/product and quantity for this lead.')
+        setMaterialsError('Please describe what the customer needs and set a quantity.')
         setCreating(false)
         return
       }
@@ -165,7 +167,7 @@ export default function LeadsPage() {
         setTotalPages(refreshed.pagination.totalPages)
       }
       setNewLead({ name: '', company: '', phone: '', email: '', address: '', channel: 'Walk-in' })
-      setLeadItems(Array.from({ length: 3 }).map(() => ({ material_id: '', quantity: '1' })))
+      setLeadItems(Array.from({ length: 3 }).map(() => ({ description: '', quantity: '1' })))
       toast.success('Lead created successfully')
     } catch (err: any) {
       setError(err.message || 'Failed to create lead')
@@ -300,22 +302,17 @@ export default function LeadsPage() {
                         key={index}
                         className="grid gap-1 sm:grid-cols-[minmax(0,2.2fr)_minmax(0,0.8fr)] items-center"
                       >
-                        <select
-                          className="rounded-full border border-blue-200/60 bg-white/95 px-2 py-1.5 text-[11px] text-slate-900"
-                          value={row.material_id}
+                        <input
+                          type="text"
+                          className="rounded-full border border-blue-200/60 bg-white/95 px-3 py-1.5 text-[11px] text-slate-900 placeholder-blue-300"
+                          placeholder="What does the customer need? (e.g. 50 Custom Stickers)"
+                          value={row.description || ''}
                           onChange={(e) => {
                             const next = [...leadItems]
-                            next[index] = { ...next[index], material_id: e.target.value }
+                            next[index] = { ...next[index], description: e.target.value }
                             setLeadItems(next)
                           }}
-                        >
-                          <option value="">Select material / product</option>
-                          {materials.map((m: any) => (
-                            <option key={m.id} value={String(m.id)}>
-                              {m.name || m.material_name || m.sku || `Material ${m.id}`}
-                            </option>
-                          ))}
-                        </select>
+                        />
                         <input
                           type="number"
                           min="0"
@@ -379,6 +376,7 @@ export default function LeadsPage() {
                     <th className="px-4 py-3 text-left font-semibold text-slate-700">Channel</th>
                     <th className="px-4 py-3 text-left font-semibold text-slate-700">Status</th>
                     <th className="px-4 py-3 text-left font-semibold text-slate-700">Date</th>
+                    <th className="px-4 py-3 text-right font-semibold text-slate-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -405,11 +403,20 @@ export default function LeadsPage() {
                           minute: '2-digit'
                         }) : 'Just now'}
                       </td>
+                      <td className="px-4 py-3 text-right">
+                        <Link
+                          to={`/dashboard/sales/crm/leads/${lead.id}`}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-[#0555b0] hover:text-white transition-all duration-200"
+                        >
+                          <Eye size={14} />
+                          Details
+                        </Link>
+                      </td>
                     </tr>
                   ))}
                   {leads.length === 0 && !loading && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                      <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                         No leads found. Create one above!
                       </td>
                     </tr>

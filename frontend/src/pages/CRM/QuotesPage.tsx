@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 // WARNING: This import is causing a compilation error in this isolated environment
 // because it cannot resolve the path '../../api/apiClient'.
@@ -11,7 +11,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { getAuthUser } from '@/utils/apiClient'
 
 // Import necessary icons
-import { Search, Loader2, DollarSign, Users, CheckCircle, Clock, XCircle, FileText } from 'lucide-react'
+import { Search, Loader2, DollarSign, Users, CheckCircle, Clock, XCircle, FileText, User } from 'lucide-react'
 
 // =========================================================================
 // API Fallback/Check
@@ -140,6 +140,26 @@ export default function QuotesPage() {
     }
   }, [])
 
+  // Auto-load lead if leadId present in URL
+  const location = useLocation()
+  const hasAutoLoaded = React.useRef(false)
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const qLeadId = params.get('leadId')
+
+    if (qLeadId && availableLeads.length > 0 && !hasAutoLoaded.current) {
+      setLeadIdForQuote(qLeadId)
+      hasAutoLoaded.current = true
+    }
+  }, [location.search, availableLeads])
+
+  useEffect(() => {
+    if (leadIdForQuote && availableLeads.length > 0) {
+      handleLoadFromLead()
+    }
+  }, [leadIdForQuote, availableLeads])
+
   const refreshQuotes = async () => {
     setLoading(true)
     try {
@@ -179,7 +199,7 @@ export default function QuotesPage() {
       const items = Array.isArray(lead.items)
         ? lead.items.map((it: any) => ({
           material_id: it.material_id,
-          description: it.material_name || `Material ${it.material_id}`,
+          description: it.description || it.material_name || `Item ${it.id}`,
           quantity: Number(it.quantity || 0) || 0,
           unitPrice: '',
         }))
@@ -213,10 +233,10 @@ export default function QuotesPage() {
           unit_price: Number(row.unitPrice || 0),
           quantity: Number(row.quantity || 0) || 0,
         }))
-        .filter((row) => row.material_id && row.quantity > 0)
+        .filter((row) => (row.material_id || row.description) && row.quantity > 0)
 
       if (itemsPayload.length === 0) {
-        setError('Loaded lead has no valid materials. Please check the lead items.')
+        setError('Loaded lead has no valid items. Please check the lead items.')
         setSaving(false)
         return
       }
@@ -307,29 +327,24 @@ export default function QuotesPage() {
 
                 {/* New Quote form: now always based on a lead so materials are linked to stock */}
                 <form onSubmit={handleCreateQuote} className="flex flex-wrap gap-2 items-center rounded-2xl bg-indigo-50/70 border border-indigo-200 px-3 py-3 text-xs sm:text-sm">
-                  <span className="font-semibold text-indigo-900 mr-1">New quote (from lead):</span>
+                  <span className="font-semibold text-indigo-900 mr-2 flex items-center gap-1.5">
+                    <User size={14} />
+                    Customer:
+                  </span>
 
                   <select
                     value={newQuote.customerId}
                     onChange={(e) => setNewQuote({ ...newQuote, customerId: e.target.value })}
-                    className="min-w-[150px] rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                    className="flex-1 min-w-[150px] rounded-xl border border-indigo-100 bg-white px-4 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-400/20 focus:border-indigo-400 transition-all shadow-sm"
                     required
                   >
-                    <option value="">Select customer</option>
+                    <option value="">Choose a customer profile...</option>
                     {customers.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name}
+                        {c.name} {c.company ? `(${c.company})` : ''}
                       </option>
                     ))}
                   </select>
-
-                  <button
-                    type="submit"
-                    disabled={saving || !newQuote.customerId || leadItemsForQuote.length === 0}
-                    className="inline-flex items-center rounded-full bg-indigo-600 px-4 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {saving ? 'Saving…' : 'Create Quote from loaded items'}
-                  </button>
                 </form>
 
                 {/* Load materials from an existing lead (required for quote creation) */}
@@ -361,36 +376,121 @@ export default function QuotesPage() {
                     <p className="mt-1 rounded-md bg-red-50 px-2 py-1 text-[10px] text-red-700 border border-red-200">{leadLoadError}</p>
                   )}
                   {leadItemsForQuote.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {leadItemsForQuote.map((row, index) => (
-                        <div
-                          key={index}
-                          className="grid gap-1 sm:grid-cols-[minmax(0,2.2fr)_minmax(0,0.8fr)_minmax(0,0.8fr)] items-center"
-                        >
-                          <p className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] text-slate-900 border border-indigo-100 truncate">
-                            {row.description} (Qty: {row.quantity})
-                          </p>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            className="rounded-full border border-indigo-200 bg-white px-2 py-1.5 text-[11px] text-slate-900"
-                            placeholder="Unit price"
-                            value={row.unitPrice}
-                            onChange={(e) => {
-                              const next = [...leadItemsForQuote]
-                              next[index] = { ...next[index], unitPrice: e.target.value }
-                              setLeadItemsForQuote(next)
-                            }}
-                          />
-                          <p className="text-[11px] text-slate-600">
-                            Line total: {row.unitPrice && row.quantity ? `RF ${(Number(row.unitPrice) * Number(row.quantity)).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : '--'}
-                          </p>
+                    <div className="mt-4 space-y-4">
+                      <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 shadow-sm">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-sm font-bold text-[#043b84] flex items-center gap-2">
+                            <div className="bg-indigo-600 p-1 rounded-lg">
+                              <DollarSign size={16} className="text-white" />
+                            </div>
+                            Line Items & Pricing
+                          </h4>
+                          <span className="text-[10px] font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-full border border-indigo-100 uppercase tracking-wider shadow-sm">
+                            Ready to Price
+                          </span>
                         </div>
-                      ))}
-                      <p className="mt-1 text-[10px] text-indigo-800/80">
-                        When you click Create Quote, all these lines will be saved as quote items.
-                      </p>
+
+                        <div className="space-y-3">
+                          {leadItemsForQuote.map((row, index) => (
+                            <div
+                              key={index}
+                              className="grid gap-4 md:grid-cols-[2fr,120px,180px,120px] items-end bg-white p-4 rounded-2xl border border-indigo-50 shadow-sm hover:shadow-md transition-shadow"
+                            >
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">Product Description</label>
+                                <input
+                                  type="text"
+                                  className="w-full rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2 text-xs text-slate-700 focus:ring-2 focus:ring-indigo-400/20 focus:border-indigo-400 transition-all font-medium"
+                                  value={row.description}
+                                  onChange={(e) => {
+                                    const next = [...leadItemsForQuote]
+                                    next[index] = { ...next[index], description: e.target.value }
+                                    setLeadItemsForQuote(next)
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">Quantity</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  className="w-full rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2 text-xs text-slate-700 focus:ring-2 focus:ring-indigo-400/20 focus:border-indigo-400 transition-all font-medium text-center"
+                                  value={row.quantity}
+                                  onChange={(e) => {
+                                    const next = [...leadItemsForQuote]
+                                    next[index] = { ...next[index], quantity: e.target.value }
+                                    setLeadItemsForQuote(next)
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold text-indigo-600 uppercase mb-1.5 block px-1 flex items-center gap-1">
+                                  Price per Unit <span className="text-[8px] opacity-60">(RWF)</span>
+                                </label>
+                                <div className="relative">
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    className="w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 text-xs text-indigo-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold placeholder:font-normal placeholder:text-slate-300"
+                                    placeholder="Enter price..."
+                                    value={row.unitPrice}
+                                    onChange={(e) => {
+                                      const next = [...leadItemsForQuote]
+                                      next[index] = { ...next[index], unitPrice: e.target.value }
+                                      setLeadItemsForQuote(next)
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="text-right px-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Item Total</label>
+                                <p className="text-sm font-black text-[#043b84]">
+                                  {row.unitPrice && row.quantity ? `RF ${(Number(row.unitPrice) * Number(row.quantity)).toLocaleString()}` : '0'}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Final Quote Summary & Action */}
+                        <div className="mt-6 pt-6 border-t border-indigo-100/60 flex flex-col sm:flex-row items-center justify-between gap-6">
+                          <div className="max-w-md">
+                            <h5 className="text-xs font-bold text-slate-700 mb-1">Confirmation</h5>
+                            <p className="text-[10px] text-slate-500 leading-relaxed italic">
+                              Review your prices and quantities. Clicking "Generate Official Quote" will save this to the database and email the customer directly.
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-6">
+                            <div className="text-right">
+                              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-indigo-500 mb-0.5">Grand Total Quote</p>
+                              <p className="text-2xl font-black text-indigo-900 leading-none">
+                                RF {leadItemsForQuote.reduce((sum, item) => sum + (Number(item.unitPrice || 0) * Number(item.quantity || 0)), 0).toLocaleString()}
+                              </p>
+                            </div>
+
+                            <button
+                              type="submit"
+                              onClick={handleCreateQuote}
+                              disabled={saving || !newQuote.customerId}
+                              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-8 py-4 text-sm font-bold text-white shadow-xl shadow-indigo-200 hover:scale-[1.02] hover:shadow-indigo-300 active:scale-[0.98] transition-all disabled:opacity-60 disabled:grayscale disabled:cursor-not-allowed"
+                            >
+                              {saving ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <FileText size={18} />
+                                  Generate Official Quote
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -434,7 +534,6 @@ export default function QuotesPage() {
                           <th className="px-4 py-3 text-left font-semibold text-indigo-700 uppercase tracking-wider text-xs">Customer</th>
                           <th className="px-4 py-3 text-right font-semibold text-indigo-700 uppercase tracking-wider text-xs">Value</th>
                           <th className="px-4 py-3 text-left font-semibold text-indigo-700 uppercase tracking-wider text-xs">Status</th>
-                          <th className="px-4 py-3 text-left font-semibold text-indigo-700 uppercase tracking-wider text-xs hidden sm:table-cell">Rep</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-slate-100">
@@ -450,12 +549,11 @@ export default function QuotesPage() {
                             <td className="px-4 py-3">
                               {getStatusTag(q.status)}
                             </td>
-                            <td className="px-4 py-3 text-slate-500 hidden sm:table-cell">{q.rep || 'Unassigned'}</td>
                           </tr>
                         ))}
                         {filteredQuotes.length === 0 && !loading && (
                           <tr>
-                            <td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">
+                            <td colSpan={4} className="px-4 py-8 text-center text-sm text-slate-500">
                               {search ? `No quotes found matching "${search}".` : "No quotes available. Check your API endpoint."}
                             </td>
                           </tr>
@@ -497,10 +595,6 @@ export default function QuotesPage() {
                             <div className="mt-1">
                               {getStatusTag(selectedQuote.status)}
                             </div>
-                          </div>
-                          <div className="rounded-lg bg-white px-3 py-2 border border-slate-200">
-                            <p className="text-slate-500">Owner / Rep</p>
-                            <p className="mt-1 text-sm font-semibold text-slate-900">{selectedQuote.rep || 'Unassigned'}</p>
                           </div>
                           <div className="rounded-lg bg-white px-3 py-2 border border-slate-200">
                             <p className="text-slate-500">Quote ID</p>

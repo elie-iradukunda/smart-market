@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { fetchCampaigns } from '../../api/apiClient'
 import CampaignWizard from '@/components/marketing/CampaignWizard'
 import MarketingTopNav from '@/components/layout/MarketingTopNav'
@@ -21,8 +21,12 @@ import {
   MoreHorizontal,
   AlertCircle,
   Settings,
-  Key
+  Key,
+  MessageSquare,
+  Send,
+  Zap
 } from 'lucide-react'
+import { createCampaign } from '@/api/apiClient'
 import { toast } from 'react-toastify'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
@@ -34,6 +38,17 @@ function CampaignsPage() {
   const [showApiSettings, setShowApiSettings] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+
+  useEffect(() => {
+    const template = searchParams.get('template')
+    const productId = searchParams.get('productId')
+
+    if (template || productId) {
+      setShowForm(true)
+    }
+  }, [searchParams])
 
   const [connectedChannels, setConnectedChannels] = useState({
     facebook: true,
@@ -51,6 +66,60 @@ function CampaignsPage() {
 
   const user = getAuthUser()
   const isOwner = user?.role_id === 1
+
+  // Quick post state
+  const [quickPost, setQuickPost] = useState({
+    message: '',
+    selectedPlatforms: {
+      facebook: true,
+      instagram: false,
+      twitter: true,
+      linkedin: false
+    }
+  })
+  const [isPosting, setIsPosting] = useState(false)
+
+  const handleQuickPost = async () => {
+    if (!quickPost.message.trim()) {
+      toast.warn('Please enter a message to post')
+      return
+    }
+
+    const platforms = Object.entries(quickPost.selectedPlatforms)
+      .filter(([key, selected]) => selected && connectedChannels[key])
+      .map(([key]) => key)
+
+    if (platforms.length === 0) {
+      toast.warn('Please select at least one connected platform')
+      return
+    }
+
+    setIsPosting(true)
+    try {
+      // 1. Create a "Quick Social" campaign record
+      await createCampaign({
+        name: `Quick Post: ${quickPost.message.substring(0, 20)}...`,
+        channel: 'Social Media',
+        budget: 0,
+        message: quickPost.message
+      })
+
+      // 2. Simulate social posting
+      toast.info(`Posting to ${platforms.join(', ')}...`)
+
+      setTimeout(() => {
+        toast.success('Successfully posted to social media!')
+        setQuickPost(prev => ({ ...prev, message: '' }))
+        setIsPosting(false)
+        // Refresh list
+        fetchCampaigns().then(setCampaigns).catch(() => { })
+      }, 1500)
+
+    } catch (err) {
+      toast.error(err.message || 'Failed to post')
+      setIsPosting(false)
+    }
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -92,7 +161,7 @@ function CampaignsPage() {
 
     const newValue = !connectedChannels[channel]
     setConnectedChannels(prev => ({ ...prev, [channel]: newValue }))
-    
+
     // Show toast after state update
     if (newValue) {
       toast.success(`Connected to ${channel.charAt(0).toUpperCase() + channel.slice(1)}`)
@@ -134,332 +203,397 @@ function CampaignsPage() {
   return (
     <DashboardLayout>
 
-        <main className=" mx-auto space-y-8">
+      <main className=" mx-auto space-y-8">
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
-                Campaigns
-              </h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Create and publish marketing campaigns across all channels.
-              </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+              Campaigns
+            </h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Create and publish marketing campaigns across all channels.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-sm hover:shadow-md transition-all"
+          >
+            <Plus className="w-5 h-5" />
+            New Campaign
+          </button>
+        </div>
+
+        {/* Quick Social Post Section */}
+        <section className="bg-white rounded-2xl border-2 border-indigo-100 shadow-sm overflow-hidden">
+          <div className="p-4 bg-indigo-50/50 border-b border-indigo-100 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-indigo-600" />
+            <h2 className="font-bold text-gray-900">Quick Social Post</h2>
+          </div>
+          <div className="p-5">
+            <div className="flex flex-col lg:flex-row gap-6">
+              <div className="flex-1">
+                <textarea
+                  value={quickPost.message}
+                  onChange={(e) => setQuickPost(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="What's on your mind? Type a message to post instantly to all connected social media..."
+                  rows={3}
+                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none text-sm"
+                />
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-xs text-gray-400">{quickPost.message.length} characters</span>
+                  <div className="flex gap-4">
+                    {[
+                      { key: 'facebook', icon: Facebook, color: 'text-blue-600' },
+                      { key: 'instagram', icon: Instagram, color: 'text-pink-600' },
+                      { key: 'twitter', icon: Twitter, color: 'text-gray-900' },
+                      { key: 'linkedin', icon: Linkedin, color: 'text-blue-700' }
+                    ].map(p => (
+                      <button
+                        key={p.key}
+                        onClick={() => setQuickPost(prev => ({
+                          ...prev,
+                          selectedPlatforms: { ...prev.selectedPlatforms, [p.key]: !prev.selectedPlatforms[p.key] }
+                        }))}
+                        disabled={!connectedChannels[p.key]}
+                        className={`transition-all ${quickPost.selectedPlatforms[p.key] && connectedChannels[p.key] ? p.color : 'text-gray-300 opacity-50'} ${!connectedChannels[p.key] ? 'cursor-not-allowed' : 'hover:scale-110'}`}
+                        title={connectedChannels[p.key] ? `Post to ${p.key}` : `${p.key} not connected`}
+                      >
+                        <p.icon className="w-5 h-5" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="lg:w-48 flex flex-col justify-end">
+                <button
+                  onClick={handleQuickPost}
+                  disabled={isPosting || !quickPost.message.trim()}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:bg-gray-400 flex items-center justify-center gap-2"
+                >
+                  {isPosting ? 'Posting...' : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      Post Now
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
+          </div>
+        </section>
 
+        {/* Social Media Connections Hub */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <Share2 className="w-5 h-5 text-indigo-600" />
+              Social Media Connections
+            </h2>
             <button
-              onClick={() => setShowForm(true)}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-sm hover:shadow-md transition-all"
+              onClick={() => setShowApiSettings(!showApiSettings)}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
             >
-              <Plus className="w-5 h-5" />
-              New Campaign
+              <Settings className="w-4 h-4" />
+              API Settings
             </button>
           </div>
 
-          {/* Social Media Connections Hub */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Share2 className="w-5 h-5 text-indigo-600" />
-                Social Media Connections
-              </h2>
+          {showApiSettings && (
+            <div className="mb-6 p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Key className="w-5 h-5 text-indigo-600" />
+                  <h3 className="font-bold text-gray-900">API Configuration</h3>
+                </div>
+                <button
+                  onClick={() => setShowApiSettings(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Note:</strong> To publish campaigns to social media, you need to configure API credentials for each platform.
+                    Visit the respective developer portals to create apps and obtain API keys.
+                  </p>
+                </div>
+
+                {/* Facebook API */}
+                <div className="p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Facebook className="w-5 h-5 text-blue-600" />
+                    <h4 className="font-semibold text-gray-900">Facebook / Meta</h4>
+                  </div>
+                  <div className="grid gap-3">
+                    <input
+                      type="text"
+                      placeholder="App ID"
+                      value={apiKeys.facebook.appId}
+                      onChange={(e) => setApiKeys(prev => ({
+                        ...prev,
+                        facebook: { ...prev.facebook, appId: e.target.value }
+                      }))}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                    <input
+                      type="password"
+                      placeholder="App Secret"
+                      value={apiKeys.facebook.appSecret}
+                      onChange={(e) => setApiKeys(prev => ({
+                        ...prev,
+                        facebook: { ...prev.facebook, appSecret: e.target.value }
+                      }))}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                    <input
+                      type="password"
+                      placeholder="Access Token"
+                      value={apiKeys.facebook.accessToken}
+                      onChange={(e) => setApiKeys(prev => ({
+                        ...prev,
+                        facebook: { ...prev.facebook, accessToken: e.target.value }
+                      }))}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Twitter API */}
+                <div className="p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Twitter className="w-5 h-5 text-gray-800" />
+                    <h4 className="font-semibold text-gray-900">X (Twitter)</h4>
+                  </div>
+                  <div className="grid gap-3">
+                    <input
+                      type="text"
+                      placeholder="API Key"
+                      value={apiKeys.twitter.apiKey}
+                      onChange={(e) => setApiKeys(prev => ({
+                        ...prev,
+                        twitter: { ...prev.twitter, apiKey: e.target.value }
+                      }))}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                    <input
+                      type="password"
+                      placeholder="API Secret"
+                      value={apiKeys.twitter.apiSecret}
+                      onChange={(e) => setApiKeys(prev => ({
+                        ...prev,
+                        twitter: { ...prev.twitter, apiSecret: e.target.value }
+                      }))}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    toast.success('API credentials saved successfully!')
+                    setShowApiSettings(false)
+                  }}
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors"
+                >
+                  Save Credentials
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Facebook */}
+            <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.facebook ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2 rounded-lg ${connectedChannels.facebook ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
+                  <Facebook className="w-5 h-5" />
+                </div>
+                <div className={`w-2 h-2 rounded-full ${connectedChannels.facebook ? 'bg-green-500' : 'bg-gray-300'}`} />
+              </div>
+              <h3 className="font-semibold text-gray-900">Facebook</h3>
+              <p className="text-xs text-gray-500 mb-3">{connectedChannels.facebook ? 'Connected' : 'Not connected'}</p>
               <button
-                onClick={() => setShowApiSettings(!showApiSettings)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                onClick={() => toggleConnection('facebook')}
+                className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.facebook ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
               >
-                <Settings className="w-4 h-4" />
-                API Settings
+                {connectedChannels.facebook ? 'Disconnect' : 'Connect'}
               </button>
             </div>
 
-            {showApiSettings && (
-              <div className="mb-6 p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Key className="w-5 h-5 text-indigo-600" />
-                    <h3 className="font-bold text-gray-900">API Configuration</h3>
-                  </div>
-                  <button
-                    onClick={() => setShowApiSettings(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    Close
-                  </button>
+            {/* Instagram */}
+            <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.instagram ? 'bg-pink-50 border-pink-200' : 'bg-white border-gray-200'}`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2 rounded-lg ${connectedChannels.instagram ? 'bg-pink-100 text-pink-600' : 'bg-gray-100 text-gray-500'}`}>
+                  <Instagram className="w-5 h-5" />
                 </div>
-
-                <div className="space-y-4">
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      <strong>Note:</strong> To publish campaigns to social media, you need to configure API credentials for each platform.
-                      Visit the respective developer portals to create apps and obtain API keys.
-                    </p>
-                  </div>
-
-                  {/* Facebook API */}
-                  <div className="p-4 border border-gray-200 rounded-lg">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Facebook className="w-5 h-5 text-blue-600" />
-                      <h4 className="font-semibold text-gray-900">Facebook / Meta</h4>
-                    </div>
-                    <div className="grid gap-3">
-                      <input
-                        type="text"
-                        placeholder="App ID"
-                        value={apiKeys.facebook.appId}
-                        onChange={(e) => setApiKeys(prev => ({
-                          ...prev,
-                          facebook: { ...prev.facebook, appId: e.target.value }
-                        }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      />
-                      <input
-                        type="password"
-                        placeholder="App Secret"
-                        value={apiKeys.facebook.appSecret}
-                        onChange={(e) => setApiKeys(prev => ({
-                          ...prev,
-                          facebook: { ...prev.facebook, appSecret: e.target.value }
-                        }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      />
-                      <input
-                        type="password"
-                        placeholder="Access Token"
-                        value={apiKeys.facebook.accessToken}
-                        onChange={(e) => setApiKeys(prev => ({
-                          ...prev,
-                          facebook: { ...prev.facebook, accessToken: e.target.value }
-                        }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Twitter API */}
-                  <div className="p-4 border border-gray-200 rounded-lg">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Twitter className="w-5 h-5 text-gray-800" />
-                      <h4 className="font-semibold text-gray-900">X (Twitter)</h4>
-                    </div>
-                    <div className="grid gap-3">
-                      <input
-                        type="text"
-                        placeholder="API Key"
-                        value={apiKeys.twitter.apiKey}
-                        onChange={(e) => setApiKeys(prev => ({
-                          ...prev,
-                          twitter: { ...prev.twitter, apiKey: e.target.value }
-                        }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      />
-                      <input
-                        type="password"
-                        placeholder="API Secret"
-                        value={apiKeys.twitter.apiSecret}
-                        onChange={(e) => setApiKeys(prev => ({
-                          ...prev,
-                          twitter: { ...prev.twitter, apiSecret: e.target.value }
-                        }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      toast.success('API credentials saved successfully!')
-                      setShowApiSettings(false)
-                    }}
-                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors"
-                  >
-                    Save Credentials
-                  </button>
-                </div>
+                <div className={`w-2 h-2 rounded-full ${connectedChannels.instagram ? 'bg-green-500' : 'bg-gray-300'}`} />
               </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Facebook */}
-              <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.facebook ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`p-2 rounded-lg ${connectedChannels.facebook ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
-                    <Facebook className="w-5 h-5" />
-                  </div>
-                  <div className={`w-2 h-2 rounded-full ${connectedChannels.facebook ? 'bg-green-500' : 'bg-gray-300'}`} />
-                </div>
-                <h3 className="font-semibold text-gray-900">Facebook</h3>
-                <p className="text-xs text-gray-500 mb-3">{connectedChannels.facebook ? 'Connected' : 'Not connected'}</p>
-                <button
-                  onClick={() => toggleConnection('facebook')}
-                  className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.facebook ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
-                >
-                  {connectedChannels.facebook ? 'Disconnect' : 'Connect'}
-                </button>
-              </div>
-
-              {/* Instagram */}
-              <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.instagram ? 'bg-pink-50 border-pink-200' : 'bg-white border-gray-200'}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`p-2 rounded-lg ${connectedChannels.instagram ? 'bg-pink-100 text-pink-600' : 'bg-gray-100 text-gray-500'}`}>
-                    <Instagram className="w-5 h-5" />
-                  </div>
-                  <div className={`w-2 h-2 rounded-full ${connectedChannels.instagram ? 'bg-green-500' : 'bg-gray-300'}`} />
-                </div>
-                <h3 className="font-semibold text-gray-900">Instagram</h3>
-                <p className="text-xs text-gray-500 mb-3">{connectedChannels.instagram ? 'Connected' : 'Not connected'}</p>
-                <button
-                  onClick={() => toggleConnection('instagram')}
-                  className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.instagram ? 'bg-white border-pink-200 text-pink-700 hover:bg-pink-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
-                >
-                  {connectedChannels.instagram ? 'Disconnect' : 'Connect'}
-                </button>
-              </div>
-
-              {/* Twitter / X */}
-              <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.twitter ? 'bg-gray-100 border-gray-300' : 'bg-white border-gray-200'}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`p-2 rounded-lg ${connectedChannels.twitter ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 text-gray-500'}`}>
-                    <Twitter className="w-5 h-5" />
-                  </div>
-                  <div className={`w-2 h-2 rounded-full ${connectedChannels.twitter ? 'bg-green-500' : 'bg-gray-300'}`} />
-                </div>
-                <h3 className="font-semibold text-gray-900">X (Twitter)</h3>
-                <p className="text-xs text-gray-500 mb-3">{connectedChannels.twitter ? 'Connected' : 'Not connected'}</p>
-                <button
-                  onClick={() => toggleConnection('twitter')}
-                  className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.twitter ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
-                >
-                  {connectedChannels.twitter ? 'Disconnect' : 'Connect'}
-                </button>
-              </div>
-
-              {/* LinkedIn */}
-              <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.linkedin ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`p-2 rounded-lg ${connectedChannels.linkedin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
-                    <Linkedin className="w-5 h-5" />
-                  </div>
-                  <div className={`w-2 h-2 rounded-full ${connectedChannels.linkedin ? 'bg-green-500' : 'bg-gray-300'}`} />
-                </div>
-                <h3 className="font-semibold text-gray-900">LinkedIn</h3>
-                <p className="text-xs text-gray-500 mb-3">{connectedChannels.linkedin ? 'Connected' : 'Not connected'}</p>
-                <button
-                  onClick={() => toggleConnection('linkedin')}
-                  className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.linkedin ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
-                >
-                  {connectedChannels.linkedin ? 'Disconnect' : 'Connect'}
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {showForm && (
-            <CampaignWizard
-              connectedChannels={connectedChannels}
-              onClose={() => setShowForm(false)}
-              onSuccess={() => {
-                fetchCampaigns()
-                  .then(data => setCampaigns(data || []))
-                  .catch(() => { })
-                setShowForm(false)
-              }}
-            />
-          )}
-
-          {/* Campaigns List */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="text-lg font-bold text-gray-900">Active Campaigns</h2>
-
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search campaigns..."
-                    className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full sm:w-64"
-                  />
-                </div>
-                <button className="p-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-100">
-                  <Filter className="w-4 h-4" />
-                </button>
-              </div>
+              <h3 className="font-semibold text-gray-900">Instagram</h3>
+              <p className="text-xs text-gray-500 mb-3">{connectedChannels.instagram ? 'Connected' : 'Not connected'}</p>
+              <button
+                onClick={() => toggleConnection('instagram')}
+                className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.instagram ? 'bg-white border-pink-200 text-pink-700 hover:bg-pink-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
+              >
+                {connectedChannels.instagram ? 'Disconnect' : 'Connect'}
+              </button>
             </div>
 
-            {error && (
-              <div className="p-4 bg-red-50 border-b border-red-100 text-sm text-red-600 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                {error}
+            {/* Twitter / X */}
+            <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.twitter ? 'bg-gray-100 border-gray-300' : 'bg-white border-gray-200'}`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2 rounded-lg ${connectedChannels.twitter ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 text-gray-500'}`}>
+                  <Twitter className="w-5 h-5" />
+                </div>
+                <div className={`w-2 h-2 rounded-full ${connectedChannels.twitter ? 'bg-green-500' : 'bg-gray-300'}`} />
               </div>
-            )}
+              <h3 className="font-semibold text-gray-900">X (Twitter)</h3>
+              <p className="text-xs text-gray-500 mb-3">{connectedChannels.twitter ? 'Connected' : 'Not connected'}</p>
+              <button
+                onClick={() => toggleConnection('twitter')}
+                className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.twitter ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
+              >
+                {connectedChannels.twitter ? 'Disconnect' : 'Connect'}
+              </button>
+            </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50/50">
-                  <tr>
-                    <th className="px-6 py-4 font-semibold text-gray-900">Campaign Name</th>
-                    <th className="px-6 py-4 font-semibold text-gray-900">Channel</th>
-                    <th className="px-6 py-4 font-semibold text-gray-900">Status</th>
-                    <th className="px-6 py-4 font-semibold text-gray-900 text-right">Budget</th>
-                    <th className="px-6 py-4 font-semibold text-gray-900 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">Loading campaigns...</td>
-                    </tr>
-                  ) : campaigns.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">No campaigns found. Create one to get started!</td>
-                    </tr>
-                  ) : (
-                    campaigns.map((cmp) => (
-                      <tr
-                        key={cmp.id}
-                        onClick={() => navigate(`/marketing/campaigns/${cmp.id}`)}
-                        className="hover:bg-gray-50/50 transition-colors cursor-pointer group"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="font-medium text-gray-900">{cmp.name}</div>
-                          <div className="text-xs text-gray-500 font-mono mt-0.5">ID: {cmp.id}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <Globe className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-600">{cmp.channel}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(cmp.status)}`}>
-                            {cmp.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right font-medium text-gray-900">
-                          ${Number(cmp.budget).toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={(e) => handlePublish(e, cmp)}
-                              className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                              title="Publish to Social Media"
-                            >
-                              <Share2 className="w-4 h-4" />
-                            </button>
-                            <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+            {/* LinkedIn */}
+            <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.linkedin ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2 rounded-lg ${connectedChannels.linkedin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <Linkedin className="w-5 h-5" />
+                </div>
+                <div className={`w-2 h-2 rounded-full ${connectedChannels.linkedin ? 'bg-green-500' : 'bg-gray-300'}`} />
+              </div>
+              <h3 className="font-semibold text-gray-900">LinkedIn</h3>
+              <p className="text-xs text-gray-500 mb-3">{connectedChannels.linkedin ? 'Connected' : 'Not connected'}</p>
+              <button
+                onClick={() => toggleConnection('linkedin')}
+                className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.linkedin ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
+              >
+                {connectedChannels.linkedin ? 'Disconnect' : 'Connect'}
+              </button>
             </div>
           </div>
-        </main>
-    
+        </section>
+
+        {showForm && (
+          <CampaignWizard
+            connectedChannels={connectedChannels}
+            initialTemplate={searchParams.get('template')}
+            initialProductId={searchParams.get('productId')}
+            onClose={() => {
+              setShowForm(false)
+              navigate(location.pathname, { replace: true })
+            }}
+            onSuccess={() => {
+              fetchCampaigns()
+                .then(data => setCampaigns(data || []))
+                .catch(() => { })
+              setShowForm(false)
+              navigate(location.pathname, { replace: true })
+            }}
+          />
+        )}
+
+        {/* Campaigns List */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h2 className="text-lg font-bold text-gray-900">Active Campaigns</h2>
+
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search campaigns..."
+                  className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full sm:w-64"
+                />
+              </div>
+              <button className="p-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-100">
+                <Filter className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <div className="p-4 bg-red-50 border-b border-red-100 text-sm text-red-600 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              {error}
+            </div>
+          )}
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50/50">
+                <tr>
+                  <th className="px-6 py-4 font-semibold text-gray-900">Campaign Name</th>
+                  <th className="px-6 py-4 font-semibold text-gray-900">Channel</th>
+                  <th className="px-6 py-4 font-semibold text-gray-900">Status</th>
+                  <th className="px-6 py-4 font-semibold text-gray-900 text-right">Budget</th>
+                  <th className="px-6 py-4 font-semibold text-gray-900 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">Loading campaigns...</td>
+                  </tr>
+                ) : campaigns.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">No campaigns found. Create one to get started!</td>
+                  </tr>
+                ) : (
+                  campaigns.map((cmp) => (
+                    <tr
+                      key={cmp.id}
+                      onClick={() => navigate(`${location.pathname}/${cmp.id}`)}
+                      className="hover:bg-gray-50/50 transition-colors cursor-pointer group"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-gray-900">{cmp.name}</div>
+                        <div className="text-xs text-gray-500 font-mono mt-0.5">ID: {cmp.id}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Globe className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-600">{cmp.channel}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(cmp.status)}`}>
+                          {cmp.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right font-medium text-gray-900">
+                        ${Number(cmp.budget).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => handlePublish(e, cmp)}
+                            className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Publish to Social Media"
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </button>
+                          <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
     </DashboardLayout>
   )
 }

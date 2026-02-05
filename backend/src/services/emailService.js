@@ -60,7 +60,16 @@ class EmailService {
 
   // Invoice Email
   async sendInvoice(customerEmail, invoiceData) {
-    const subject = `Invoice #${invoiceData.id} - Top Design`;
+    const itemsHtml = (invoiceData.items || []).map(item => 
+      `<tr>
+        <td style="padding: 12px 8px; border-bottom: 1px solid #eee; vertical-align: top;">${item.description}</td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid #eee; text-align: center; vertical-align: top;">${item.quantity}</td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid #eee; text-align: right; vertical-align: top;">${item.unit_price.toLocaleString()} RWF</td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid #eee; text-align: right; vertical-align: top; font-weight: bold;">${(item.quantity * item.unit_price).toLocaleString()} RWF</td>
+      </tr>`
+    ).join('');
+
+    const subject = `Invoice #${invoiceData.id} - ${COMPANY_NAME}`;
     const content = `
     <!DOCTYPE html>
     <html>
@@ -72,9 +81,9 @@ class EmailService {
     <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
         <!-- Header -->
-        <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center;">
-          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">TOP DESIGN</h1>
-          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Professional Printing Services</p>
+        <div style="background: linear-gradient(135deg, #043b84 0%, #0555b0 100%); color: white; padding: 30px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">${COMPANY_NAME.toUpperCase()}</h1>
+          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Official Invoice</p>
         </div>
         
         <!-- Invoice Header -->
@@ -82,54 +91,63 @@ class EmailService {
           <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
               <h2 style="margin: 0; color: #333; font-size: 24px;">INVOICE</h2>
-              <p style="margin: 5px 0 0 0; color: #666; font-size: 16px;">#${invoiceData.id}</p>
+              <p style="margin: 5px 0 0 0; color: #666; font-size: 16px;">#INV-${invoiceData.id}</p>
             </div>
-            <div style="margin-left: 40px;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <span style="color: #666; font-size: 14px; width: 60px;">Date:</span>
-                <span style="color: #333; font-size: 14px; font-weight: 500;">${new Date().toLocaleDateString()}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between;">
-                <span style="color: #666; font-size: 14px; width: 60px;">Due:</span>
-                <span style="color: #333; font-size: 14px; font-weight: 500;">${new Date(invoiceData.due_date).toLocaleDateString()}</span>
-              </div>
+            <div style="text-align: right;">
+              <p style="margin: 0; color: #666; font-size: 14px;"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+              <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;"><strong>Due Date:</strong> ${new Date(invoiceData.due_date).toLocaleDateString()}</p>
             </div>
           </div>
         </div>
         
+        <!-- Bill To -->
+        <div style="padding: 20px 30px; background-color: #fcfcfc;">
+          <p style="margin: 0; color: #888; text-transform: uppercase; font-size: 10px; font-weight: bold; letter-spacing: 1px;">Bill To:</p>
+          <p style="margin: 5px 0 0 0; color: #333; font-size: 16px; font-weight: bold;">${invoiceData.customer_name || 'Valued Customer'}</p>
+        </div>
+
         <!-- Invoice Details -->
         <div style="padding: 30px;">
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-            <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">Invoice Summary</h3>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-              <span style="color: #666;">Subtotal:</span>
-              <span style="color: #333; font-weight: bold;">${invoiceData.amount.toLocaleString()} RWF</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-              <span style="color: #666;">Tax (0%):</span>
-              <span style="color: #333;">0 RWF</span>
-            </div>
-            <hr style="border: none; border-top: 1px solid #ddd; margin: 15px 0;">
-            <div style="display: flex; justify-content: space-between; font-size: 20px;">
-              <span style="color: #333; font-weight: bold;">Total Amount:</span>
-              <span style="color: #28a745; font-weight: bold;">${invoiceData.amount.toLocaleString()} RWF</span>
-            </div>
-          </div>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+              <tr style="background-color: #f8f9fa;">
+                <th style="padding: 12px 8px; text-align: left; border-bottom: 2px solid #043b84; font-size: 12px;">Description</th>
+                <th style="padding: 12px 8px; text-align: center; border-bottom: 2px solid #043b84; font-size: 12px; width: 40px;">Qty</th>
+                <th style="padding: 12px 8px; text-align: right; border-bottom: 2px solid #043b84; font-size: 12px; width: 90px;">Price</th>
+                <th style="padding: 12px 8px; text-align: right; border-bottom: 2px solid #043b84; font-size: 12px; width: 90px;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #999;">Reference Order Total</td></tr>'}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3" style="text-align: right; padding: 20px 8px 10px 8px; font-size: 14px; color: #666;">Subtotal:</td>
+                <td style="text-align: right; padding: 20px 8px 10px 8px; font-size: 14px; font-weight: bold; color: #333;">${invoiceData.amount.toLocaleString()} RWF</td>
+              </tr>
+              <tr>
+                <td colspan="3" style="text-align: right; padding: 10px 8px; font-size: 18px; font-weight: bold; color: #333;">Total Amount:</td>
+                <td style="text-align: right; padding: 10px 8px; font-size: 18px; font-weight: bold; color: #043b84;">${invoiceData.amount.toLocaleString()} RWF</td>
+              </tr>
+            </tfoot>
+          </table>
           
-          <!-- Payment Instructions -->
-          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745;">
-            <h4 style="margin: 0 0 10px 0; color: #155724;">💳 Payment Instructions</h4>
-            <p style="margin: 0; color: #155724; line-height: 1.5;">Please make payment by the due date. You can pay via cash, check, or bank transfer. Contact us for payment details.</p>
+          <!-- Payment CTA -->
+          <div style="background: #ebf5ff; border-radius: 12px; padding: 20px; border: 1px solid #cce5ff; margin-top: 30px; text-align: center;">
+            <h4 style="margin: 0 0 10px 0; color: #004085; font-size: 16px;">💳 Instant Payment</h4>
+            <p style="margin: 0 0 15px 0; color: #004085; font-size: 13px; line-height: 1.5;">Click below to pay this invoice securely.</p>
+            <a href="${process.env.FRONTEND_URL || 'https://smartmarket.rw'}/pay-invoice/${invoiceData.id}" 
+               style="display: inline-block; background-color: #043b84; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">
+               Pay Invoice Online
+            </a>
           </div>
         </div>
         
         <!-- Footer -->
-        <div style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
-          <h3 style="margin: 0 0 15px 0; color: #333;">Thank you for your business! </h3>
-          <p style="margin: 0 0 10px 0; color: #666;">Top Design - Your trusted printing partner</p>
-          <div style="margin-top: 20px;">
-            <p style="margin: 0; color: #999; font-size: 12px;"> ${GMAIL_USER} |  Contact us for support</p>
-          </div>
+        <div style="background-color: #f8f9fa; padding: 40px 30px; text-align: center; border-top: 1px solid #e9ecef;">
+          <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px;">Thank you for your business!</h3>
+          <p style="margin: 0; color: #666; font-size: 13px;">${COMPANY_NAME}</p>
+          <p style="margin: 5px 0 0 0; color: #999; font-size: 12px;">${COMPANY_ADDRESS} | ${COMPANY_PHONE}</p>
         </div>
       </div>
     </body>

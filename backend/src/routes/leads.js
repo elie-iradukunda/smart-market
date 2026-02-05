@@ -63,7 +63,12 @@ router.get('/leads/:id', async (req, res) => {
     const id = req.params.id;
     if (id === '{id}') {
       // Return first lead for literal {id}
-      const [leads] = await pool.execute('SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id LIMIT 1');
+      const [leads] = await pool.execute(
+        `SELECT l.*, c.name as customer_name, c.company as customer_company, c.email as customer_email, c.phone as customer_phone, c.address as customer_address 
+         FROM leads l 
+         LEFT JOIN customers c ON l.customer_id = c.id 
+         LIMIT 1`
+      );
       if (leads.length === 0) return res.status(404).json({ error: 'Lead not found' });
 
       const lead = leads[0];
@@ -72,7 +77,13 @@ router.get('/leads/:id', async (req, res) => {
 
       return res.json(lead);
     }
-    const [leads] = await pool.execute('SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id WHERE l.id = ?', [id]);
+    const [leads] = await pool.execute(
+      `SELECT l.*, c.name as customer_name, c.company as customer_company, c.email as customer_email, c.phone as customer_phone, c.address as customer_address 
+       FROM leads l 
+       LEFT JOIN customers c ON l.customer_id = c.id 
+       WHERE l.id = ?`, 
+      [id]
+    );
     if (leads.length === 0) return res.status(404).json({ error: 'Lead not found' });
 
     const lead = leads[0];
@@ -99,10 +110,10 @@ router.post('/leads', async (req, res) => {
 
     if (items && Array.isArray(items) && items.length > 0) {
       for (const item of items) {
-        if (item.material_id && item.quantity) {
+        if ((item.material_id || item.description) && item.quantity) {
           await pool.execute(
-            'INSERT INTO lead_items (lead_id, material_id, quantity) VALUES (?, ?, ?)',
-            [leadId, item.material_id, item.quantity]
+            'INSERT INTO lead_items (lead_id, material_id, description, quantity) VALUES (?, ?, ?, ?)',
+            [leadId, item.material_id || null, item.description || null, item.quantity]
           );
         }
       }

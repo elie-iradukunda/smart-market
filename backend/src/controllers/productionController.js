@@ -71,6 +71,8 @@ export const getWorkOrders = async (req, res) => {
         u.name as assigned_user_name,
         o.id as order_number,
         o.due_date,
+        o.status as order_status,
+        o.total_amount,
         o.created_at as order_created_at,
         c.name as customer_name
       FROM work_orders wo
@@ -146,11 +148,26 @@ export const getWorkOrder = async (req, res) => {
 export const updateWorkOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const { started_at, ended_at, notes } = req.body;
-    
+    const { started_at, ended_at, notes, assigned_to } = req.body;
+
+    // Dynamic update query
+    const fields = [];
+    const values = [];
+
+    if (started_at !== undefined) { fields.push('started_at = ?'); values.push(started_at); }
+    if (ended_at !== undefined) { fields.push('ended_at = ?'); values.push(ended_at); }
+    if (notes !== undefined) { fields.push('notes = ?'); values.push(notes); }
+    if (assigned_to !== undefined) { fields.push('assigned_to = ?'); values.push(assigned_to); }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    values.push(id);
+
     await pool.execute(
-      'UPDATE work_orders SET started_at = ?, ended_at = ?, notes = ? WHERE id = ?',
-      [started_at, ended_at, notes, id]
+      `UPDATE work_orders SET ${fields.join(', ')} WHERE id = ?`,
+      values
     );
     
     res.json({ message: 'Work order updated' });
@@ -204,6 +221,9 @@ export const updateOrderStatus = async (req, res) => {
     }
     
     await pool.execute('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
+
+    // Also update the work_order stage to keep them in sync
+    await pool.execute('UPDATE work_orders SET stage = ? WHERE order_id = ?', [status, id]);
     
     // Send status update email to customer if order is ready or delivered
     if (['ready', 'delivered'].includes(status)) {

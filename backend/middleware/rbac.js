@@ -38,8 +38,10 @@ const rbacMiddleware = async (req, res, next) => {
     }
     
     const routePattern = getRoutePattern(req.method, req.path);
+    console.log(`RBAC: Checking ${req.method} ${req.path} -> Pattern: ${routePattern} for role: ${role}`);
     
     if (!routePattern) {
+      console.log(`RBAC: Route not found for ${req.method} ${req.path}`);
       return res.status(404).json({ error: 'Route not found' });
     }
     

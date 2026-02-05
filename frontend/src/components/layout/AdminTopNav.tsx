@@ -2,8 +2,8 @@
 import React from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
-import { 
-  Menu, 
+import {
+  Menu,
   Shield,
   Users,
   FileText,
@@ -17,7 +17,7 @@ const QUICK_LINKS = [
   { path: '/dashboard/admin/users', label: 'Users', icon: Users },
   { path: '/dashboard/admin/finance/invoices', label: 'Invoices', icon: FileText },
   { path: '/dashboard/admin/finance/payments', label: 'Payments', icon: CreditCard },
-  { path: '/dashboard/admin/pos/terminal', label: 'POS', icon: Receipt },
+  { path: '/dashboard/staff/pos/terminal', label: 'POS', icon: Receipt },
 ]
 
 interface AdminTopNavProps {
@@ -43,7 +43,7 @@ export default function AdminTopNav({ onMenuClick }: AdminTopNavProps) {
   return (
     <header className="bg-slate-900 text-white shadow-lg sticky top-0 z-30 border-b border-slate-800">
       <div className="px-4 lg:px-8 h-16 flex items-center justify-between gap-6">
-        
+
         {/* Left: Mobile Menu + Branding */}
         <div className="flex items-center gap-4 shrink-0">
           <button
@@ -70,11 +70,10 @@ export default function AdminTopNav({ onMenuClick }: AdminTopNavProps) {
             <Link
               key={link.path}
               to={link.path}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                isActive(link.path)
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${isActive(link.path)
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-white hover:bg-slate-700'
-              }`}
+                }`}
             >
               <link.icon size={14} />
               <span>{link.label}</span>

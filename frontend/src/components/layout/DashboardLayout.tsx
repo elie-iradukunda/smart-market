@@ -3,7 +3,7 @@ import { getAuthUser } from '@/utils/apiClient';
 import AdminDashboardLayout from './AdminDashboardLayout';
 import SalesDashboardLayout from './SalesDashboardLayout';
 import StaffDashboardLayout from './StaffDashboardLayout';
-// import ClientDashboardLayout from './ClientDashboardLayout';
+import ClientDashboardLayout from './ClientDashboardLayout';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -19,7 +19,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     // Ensure role_id is treated as a number
     const roleId = Number(user.role_id);
 
-    console.log(roleId)
     switch (roleId) {
         case 1: // Admin (includes: owner, admin, accountant, controller)
             return <AdminDashboardLayout>{children}</AdminDashboardLayout>;
@@ -28,8 +27,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         case 3: // Staff (includes: production_manager, inventory_manager, technician, reception, support_agent)
             return <StaffDashboardLayout>{children}</StaffDashboardLayout>;
         case 4: // Client (customer)
-          return <p>Not found</p>
-            // return <ClientDashboardLayout>{children}</ClientDashboardLayout>;
+            return <ClientDashboardLayout>{children}</ClientDashboardLayout>;
         default:
             // Fallback to Admin layout for unknown roles
             return <AdminDashboardLayout>{children}</AdminDashboardLayout>;

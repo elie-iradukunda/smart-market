@@ -1,8 +1,8 @@
 // Dashboard imports for 4 consolidated roles
 import AdminDashboard from '../pages/AdminDashboard';
 import SalesDashboard from '../pages/SalesDashboard';
-import StaffDashboard from '../pages/StaffDashboard';
-import ClientDashboard from '../pages/ClientDashboard';
+import StaffDashboard from '../pages/StaffDashboard.tsx';
+import ClientDashboard from '../pages/ClientDashboard.tsx';
 
 // Shared page imports
 import LeadsPage from '../pages/CRM/LeadsPage';
@@ -33,7 +33,7 @@ import OperationsReportsPage from '../pages/Reports/OperationsReportsPage';
 import ProductionReportsPage from '../pages/Reports/ProductionReportsPage';
 import FinancialReportsPage from '../pages/Finance/FinancialReportsPage';
 
-import POSTerminalPage from '../pages/POS/POSTerminalPage';
+import POSTerminalPage from '../pages/POS/PosTerminalPage';
 import PosSalesHistoryPage from '../pages/POS/PosSalesHistoryPage';
 
 import InvoicesPage from '../pages/Finance/InvoicesPage';
@@ -57,28 +57,33 @@ import UsersPage from '../pages/Admin/UsersPage';
 import UserDetailPage from '../pages/Admin/UserDetailPage';
 import RolesPage from '../pages/Admin/RolesPage';
 import RoleDetailPage from '../pages/Admin/RoleDetailPage';
-import AuditLogsPage from '../pages/Admin/AuditLogsPage';
 import SystemSettingsPage from '../pages/Admin/SystemSettingsPage';
 import ChangePasswordPage from '../pages/Account/ChangePasswordPage';
 import FilesPage from '../pages/FilesPage';
 import InventoryDashboard from '@/pages/InventoryDashboard';
 import ReceptionDashboard from '@/pages/ReceptionDashboard';
+import MyTasksPage from '../pages/Staff/MyTasksPage';
 
 export const routes = [
   // Main dashboard routes for 4 consolidated roles
   { path: '/', element: <ClientDashboard /> }, // Default
-  
+
   { path: '/dashboard/admin', element: <AdminDashboard /> },
   { path: '/dashboard/sales', element: <SalesDashboard /> },
   { path: '/dashboard/staff', element: <StaffDashboard /> },
   { path: '/client', element: <ClientDashboard /> },
-  
+
   // Files (available to many roles)
   { path: '/files', element: <FilesPage /> },
-  
+
+  // Shared Order View (accessible via direct link, e.g. from Order Lists)
+  { path: '/orders/:id', element: <OrderDetailPage /> },
+
   // Nested routes under dashboards
-  
+
   // ADMIN nested routes (role_id: 1)
+  { path: '/dashboard/admin/orders', element: <OrdersPage /> },
+  { path: '/dashboard/admin/orders/:id', element: <OrderDetailPage /> },
   { path: '/dashboard/admin/finance/invoices', element: <InvoicesPage /> },
   { path: '/dashboard/admin/finance/invoices/:id', element: <InvoiceDetailPage /> },
   { path: '/dashboard/admin/finance/payments', element: <PaymentsPage /> },
@@ -90,10 +95,12 @@ export const routes = [
   { path: '/dashboard/admin/users/:id', element: <UserDetailPage /> },
   { path: '/dashboard/admin/roles', element: <RolesPage /> },
   { path: '/dashboard/admin/roles/:id', element: <RoleDetailPage /> },
-  { path: '/dashboard/admin/audit-logs', element: <AuditLogsPage /> },
   { path: '/dashboard/admin/system-settings', element: <SystemSettingsPage /> },
+  { path: '/dashboard/admin/production/work-orders', element: <WorkOrdersBoardPage /> },
+  { path: '/dashboard/admin/inventory/materials', element: <MaterialsPage /> },
+  { path: '/dashboard/admin/inventory/materials/:sku', element: <MaterialDetailPage /> },
   { path: '/dashboard/admin/ai/overview', element: <AiOverviewPage /> },
-  
+
   // SALES nested routes (role_id: 2)
   { path: '/dashboard/sales/crm/leads', element: <LeadsPage /> },
   { path: '/dashboard/sales/crm/leads/:id', element: <LeadDetailPage /> },
@@ -110,8 +117,10 @@ export const routes = [
   { path: '/dashboard/sales/marketing/ads', element: <AdsManagementPage /> },
   { path: '/dashboard/sales/communications/inbox', element: <InboxPage /> },
   { path: '/dashboard/sales/communications/conversations/:id', element: <ConversationDetailPage /> },
-  
+
   // STAFF nested routes (role_id: 3)
+  { path: '/dashboard/staff/tasks', element: <MyTasksPage /> },
+  { path: '/dashboard/staff/orders', element: <OrdersPage /> },
   { path: '/dashboard/staff/reception', element: <ReceptionDashboard /> },
   { path: '/dashboard/staff/production/work-orders', element: <WorkOrdersBoardPage /> },
   { path: '/dashboard/staff/production/work-orders/:id', element: <WorkOrderDetailPage /> },
@@ -137,13 +146,13 @@ export const routes = [
   { path: '/dashboard/staff/communications/conversations/:id', element: <ConversationDetailPage /> },
   { path: '/dashboard/staff/pos/terminal', element: <POSTerminalPage /> },
   { path: '/dashboard/staff/pos/sales-history', element: <PosSalesHistoryPage /> },
-  
+
   // CLIENT nested routes (role_id: 4)
   { path: '/client/orders', element: <OrdersPage /> },
   { path: '/client/orders/:id', element: <OrderDetailPage /> },
   { path: '/client/quotes', element: <QuotesPage /> },
   { path: '/client/files', element: <FilesPage /> },
-  
+
   // Account (available to all authenticated users - outside dashboard hierarchy)
   { path: '/account/change-password', element: <ChangePasswordPage /> },
 ]

@@ -4,57 +4,40 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
     LayoutDashboard,
     Users,
-    FileText,
     ShoppingCart,
     ChevronDown,
     ChevronRight,
     LogOut,
-    Briefcase,
-    Phone,
     Megaphone,
-    BarChart3,
-    BrainCircuit,
-    Monitor,
-    History,
-    Settings,
     Receipt,
-    Package,
-    CreditCard,
-    DollarSign,
-    Factory,
-    Banknote,
-    BookOpen,
-    Shield,
-    Crown,
-    Activity,
-    PieChart,
-    Wallet
+    Wallet,
+    Briefcase
 } from 'lucide-react'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
-import { filterSidebarItemsByPermission, SidebarItem } from '@/utils/sidebarUtils'
 
-const sidebarItems: SidebarItem[] = [
+const sidebarItems = [
     {
-        label: 'Dashboards',
+        label: 'Dashboard',
+        path: '/dashboard/sales',
         icon: LayoutDashboard,
-        children: [
-            { label: 'Admin', path: '/dashboard/sales/admin', icon: Shield },
-            { label: 'Sales', path: '/dashboard/sales', icon: LayoutDashboard },
-            { label: 'Marketing', path: '/dashboard/sales/marketing', icon: LayoutDashboard },
-            { label: 'Owner', path: '/dashboard/sales/owner', icon: Crown },
-            { label: 'Accountant', path: '/dashboard/sales/accountant', icon: DollarSign },
-            { label: 'Controller', path: '/dashboard/sales/controller', icon: Activity },
-            { label: 'POS Overview', path: '/dashboard/sales/pos', icon: LayoutDashboard },
-        ]
     },
     {
-        label: 'Sales & CRM',
+        label: 'POS Terminal',
+        path: '/dashboard/staff/pos/terminal',
+        icon: Receipt,
+    },
+    {
+        label: 'Orders',
+        path: '/dashboard/sales/orders',
+        icon: ShoppingCart,
+    },
+    {
+        label: 'Customers',
         icon: Users,
         children: [
-            { label: 'Leads', path: '/dashboard/sales/crm/leads', icon: Phone },
-            { label: 'Customers', path: '/dashboard/sales/crm/customers', icon: Users },
-            { label: 'Quotes', path: '/dashboard/sales/crm/quotes', icon: FileText },
-            { label: 'Orders', path: '/dashboard/sales/orders', icon: ShoppingCart },
+            { label: 'Leads', path: '/dashboard/sales/crm/leads', icon: Users },
+            { label: 'All Customers', path: '/dashboard/sales/crm/customers', icon: Users },
+            { label: 'Quotes', path: '/dashboard/sales/crm/quotes', icon: Briefcase },
         ]
     },
     {
@@ -62,122 +45,91 @@ const sidebarItems: SidebarItem[] = [
         icon: Megaphone,
         children: [
             { label: 'Campaigns', path: '/dashboard/sales/marketing/campaigns', icon: Megaphone },
-            { label: 'Ads Management', path: '/dashboard/sales/marketing/ads', icon: Monitor },
-            { label: 'Performance', path: '/dashboard/sales/marketing/ad-performance', icon: BarChart3 },
+            { label: 'Ads', path: '/dashboard/sales/marketing/ads', icon: Megaphone },
         ]
     },
-    {
-        label: 'Finance',
-        icon: Banknote,
-        children: [
-            { label: 'Reports', path: '/dashboard/sales/finance/reports', icon: PieChart },
-            { label: 'Invoices', path: '/dashboard/sales/finance/invoices', icon: FileText },
-            { label: 'Payments', path: '/dashboard/sales/finance/payments', icon: CreditCard },
-            { label: 'Journals', path: '/dashboard/sales/finance/journals', icon: BookOpen },
-            { label: 'Finance Main', path: '/dashboard/sales/finance', icon: Banknote },
-        ]
-    },
-    {
-        label: 'Operations',
-        icon: Factory,
-        children: [
-            { label: 'Production', path: '/dashboard/sales/production/work-orders', icon: Factory },
-            { label: 'Materials', path: '/dashboard/sales/inventory/materials', icon: Package },
-            { label: 'Purchasing', path: '/dashboard/sales/inventory/purchase-orders', icon: FileText },
-            { label: 'Inventory', path: '/dashboard/sales/inventory/materials', icon: Package },
-            { label: 'Operations Main', path: '/dashboard/sales/operations', icon: Factory },
-        ]
-    },
-    {
-        label: 'Point of Sale',
-        icon: Receipt,
-        children: [
-            { label: 'POS Terminal', path: '/dashboard/sales/pos/terminal', icon: Receipt },
-            { label: 'Sales History', path: '/dashboard/sales/pos/sales-history', icon: Wallet },
-        ]
-    },
-    {
-        label: 'Administration',
-        icon: Shield,
-        children: [
-            { label: 'Users', path: '/dashboard/sales/users', icon: Users },
-            { label: 'Roles', path: '/dashboard/sales/roles', icon: Shield },
-            { label: 'System Settings', path: '/dashboard/sales/system-settings', icon: Settings },
-            { label: 'Audit Logs', path: '/dashboard/sales/audit-logs', icon: FileText },
-            { label: 'Admin Main', path: '/dashboard/sales/admin', icon: Settings },
-        ]
-    },
-    { label: 'AI Insights', path: '/dashboard/sales/ai/overview', icon: BrainCircuit },
-    { label: 'Reports', path: '/dashboard/sales/reports/operations', icon: BarChart3 },
-    { label: 'Settings', path: '/dashboard/sales/settings', icon: Settings },
-];
+]
+
 const SalesSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen: boolean) => void }) => {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [expandedItems, setExpandedItems] = useState<string[]>(['Dashboards']);
-    const user = getAuthUser();
+    const location = useLocation()
+    const navigate = useNavigate()
+    const [expandedItems, setExpandedItems] = useState<string[]>([])
+    const user = getAuthUser()
+
+    if (!user) return null
 
     const toggleExpand = (label: string) => {
         setExpandedItems(prev =>
             prev.includes(label) ? prev.filter(item => item !== label) : [...prev, label]
-        );
+        )
     }
 
     const isActive = (path?: string) => {
-        if (!path) return false;
-        return location.pathname === path || location.pathname.startsWith(path + '/');
+        if (!path) return false
+        return location.pathname === path || location.pathname.startsWith(path + '/')
     }
 
     const handleLogout = () => {
-        clearAuth();
-        navigate('/login');
+        clearAuth()
+        navigate('/login')
     }
-
-    const filteredItems = filterSidebarItemsByPermission([...sidebarItems]);
 
     return (
         <>
             {/* Mobile Overlay */}
             <div
-                className={`fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm transition-opacity lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm transition-opacity lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                 onClick={() => setIsOpen(false)}
             />
 
-            {/* Fixed Sidebar */}
+            {/* Sidebar Container */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+                className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
-                {/* Logo Section - Fixed at top */}
-                <div className="flex h-16 shrink-0 items-center justify-center border-b border-slate-100 px-6 bg-slate-900 text-white font-bold text-xl">
-                    <Briefcase size={20} className="mr-2" />
-                    <span>TopDesign</span>
+                {/* Brand Logo */}
+                <div className="flex h-20 shrink-0 items-center px-6">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-100">
+                            <Briefcase size={20} />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-lg font-bold text-slate-900 leading-tight">SmartMarket</span>
+                            <span className="text-[10px] font-medium text-blue-600 uppercase tracking-wider">Sales Portal</span>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Scrollable Navigation Area */}
-                <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1 scrollbar-thin scrollbar-thumb-slate-200">
-                    {filteredItems.map((item) => (
-                        <div key={item.label}>
+                {/* Navigation */}
+                <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1.5 scrollbar-hide">
+                    {sidebarItems.map((item) => (
+                        <div key={item.label} className="mb-1">
                             {item.children ? (
                                 <div className="space-y-1">
                                     <button
                                         onClick={() => toggleExpand(item.label)}
-                                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${expandedItems.includes(item.label) ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'}`}
+                                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${expandedItems.includes(item.label)
+                                            ? 'text-blue-900 bg-blue-50/50'
+                                            : 'text-slate-600 hover:bg-slate-50'
+                                            }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <item.icon size={18} className="text-slate-500" />
+                                            <item.icon size={18} className={expandedItems.includes(item.label) ? 'text-blue-600' : 'text-slate-500'} />
                                             <span>{item.label}</span>
                                         </div>
-                                        {expandedItems.includes(item.label) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                        {expandedItems.includes(item.label) ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
                                     </button>
 
-                                    <div className={`space-y-1 overflow-hidden transition-all duration-300 ${expandedItems.includes(item.label) ? 'max-h-[600px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
+                                    <div className={`space-y-1 overflow-hidden transition-all duration-300 ${expandedItems.includes(item.label) ? 'max-h-60 opacity-100 mt-1 pb-1' : 'max-h-0 opacity-0'}`}>
                                         {item.children.map((child) => (
                                             <Link
                                                 key={child.label}
                                                 to={child.path!}
-                                                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ml-4 transition-all ${isActive(child.path) ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}
+                                                onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
+                                                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ml-8 transition-colors ${isActive(child.path)
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50/30'
+                                                    }`}
                                             >
-                                                <child.icon size={16} />
                                                 <span>{child.label}</span>
                                             </Link>
                                         ))}
@@ -186,7 +138,11 @@ const SalesSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
                             ) : (
                                 <Link
                                     to={item.path!}
-                                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all ${isActive(item.path) ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
+                                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${isActive(item.path)
+                                        ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                        }`}
                                 >
                                     <item.icon size={18} className={isActive(item.path) ? 'text-white' : 'text-slate-500'} />
                                     <span>{item.label}</span>
@@ -196,22 +152,31 @@ const SalesSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
                     ))}
                 </nav>
 
-                {/* Footer Section - Fixed at bottom */}
-                <div className="shrink-0 border-t border-slate-100 p-4 bg-white">
+                {/* Footer / User Profile */}
+                <div className="shrink-0 p-4 border-t border-slate-100 bg-slate-50/50">
+                    <div className="flex items-center gap-3 rounded-xl bg-white p-3 border border-slate-200/60 shadow-sm mb-3">
+                        <div className="h-9 w-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                            {user?.name?.charAt(0).toUpperCase() || 'S'}
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                            <p className="truncate text-sm font-semibold text-slate-900">{user?.name || 'Sales Agent'}</p>
+                            <p className="truncate text-[10px] text-slate-500 uppercase tracking-tighter">Growth & Revenue</p>
+                        </div>
+                    </div>
+
                     <button
                         onClick={handleLogout}
-                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all shadow-sm"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all"
                     >
                         <LogOut size={16} />
                         <span>Sign Out</span>
                     </button>
                 </div>
             </aside>
-            
-            {/* Spacer for Main Content to prevent overlap on Desktop */}
+
             <div className="hidden lg:block lg:w-64 lg:shrink-0" />
         </>
     )
 }
 
-export default SalesSidebar;
+export default SalesSidebar

@@ -151,7 +151,7 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
         'po.approve',
         'marketing.analytics'
       ]
-    
+
     case 2: // Sales (includes: sales_rep, marketing, pos_cashier)
       return [
         'customer.manage',
@@ -190,7 +190,7 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
         'invoice.create',
         'payment.create'
       ]
-    
+
     case 3: // Staff (includes: production_manager, inventory_manager, technician, reception, support_agent)
       return [
         'worklog.create',
@@ -201,12 +201,9 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
         'order.update',
         'order.create',
         'material.view',
-        'material.create',
         'file.view',
         'file.upload',
-        'inventory.manage',
         'supplier.view',
-        'supplier.create',
         'stock.move',
         'stock.adjust',
         'po.create',
@@ -234,7 +231,7 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
         'conversation.create',
         'message.send'
       ]
-    
+
     case 4: // Client (customer) - external user
       return [
         'customer.view', // their own profile
@@ -244,7 +241,7 @@ export function getPermissionsForRole(roleId: number | null | undefined): string
         'conversation.view', // their conversations
         'message.send' // send messages
       ]
-    
+
     default:
       return []
   }
@@ -279,52 +276,14 @@ export function currentUserHasPermission(code: string): boolean {
   return hasPermission
 }
 
-// Map backend role_id to the correct dashboard route inside the business app
-export function getDashboardPathForRoless(roleId: number | null | undefined): string {
-  switch (roleId) {
-    case 1: // Owner
-      return '/dashboard/owner'
-    case 2: // Sys Admin
-      return '/dashboard/admin'
-    case 3: // Accountant
-      return '/dashboard/accountant'
-    case 4: // Controller
-      return '/dashboard/controller'
-    case 5: // Reception
-      return '/dashboard/reception'
-    case 6: // Technician
-      return '/dashboard/technician'
-    case 7: // Production Manager
-      return '/dashboard/production'
-    case 8: // Inventory Manager
-      return '/dashboard/inventory'
-    case 9: // Sales Rep
-      return '/dashboard/sales'
-    case 10: // Marketing Manager
-      return '/dashboard/marketing'
-    case 11: // POS Cashier
-      return '/dashboard/pos'
-    case 12: // Support Agent
-      return '/dashboard/support'
-    case 13: // Customer (e-commerce)
-      return '/' 
-    default:
-      
-      return '/dashboard/owner'
-  }
-}
-
 // Map backend role_id to the correct dashboard route (4 dashboards total)
 export function getDashboardPathForRole(roleId: number | null | undefined): string {
-  switch (roleId) {
+  switch (Number(roleId)) {
     case 1: // Admin (includes owner, admin, accountant, controller)
       return '/dashboard/admin'
-    case 2: // Sales (includes sales_rep, 
-    // marketing, pos_cashier)
+    case 2: // Sales (includes sales_rep, marketing, pos_cashier)
       return '/dashboard/sales'
-    case 3: 
-    // Staff (includes production_manager, inventory_manager,
-    // technician, reception, support_agent)
+    case 3: // Staff (includes production_manager, inventory_manager, technician, reception, support_agent)
       return '/dashboard/staff'
     case 4: // Client (customer)
       return '/client'
@@ -370,7 +329,17 @@ export async function fetchMaterials() {
     headers: { Authorization: `Bearer ${getAuthToken()}` },
   })
   if (!res.ok) throw new Error('Failed to fetch materials')
-  return res.json()
+  const data = await res.json()
+  return data.data || data
+}
+
+export async function fetchMaterial(id: string | number) {
+  const res = await fetch(`${API_BASE}/materials/${id}`, {
+    headers: { Authorization: `Bearer ${getAuthToken()}` },
+  })
+  if (!res.ok) throw new Error('Failed to fetch material')
+  const data = await res.json()
+  return data.data || data
 }
 
 export async function createCustomer(data: any) {

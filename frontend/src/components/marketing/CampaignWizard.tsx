@@ -1,8 +1,9 @@
 // @ts-nocheck
 import React, { useState } from 'react'
-import { X, ChevronRight, ChevronLeft, Check, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react'
-import { createCampaign } from '@/api/apiClient'
+import { X, ChevronRight, ChevronLeft, Check, Facebook, Instagram, Twitter, Linkedin, Plus, Share2, Search, Package, Image as ImageIcon } from 'lucide-react'
+import { createCampaign, fetchProducts } from '@/api/apiClient'
 import { toast } from 'react-toastify'
+import { useEffect } from 'react'
 
 interface CampaignWizardProps {
     onClose: () => void
@@ -12,10 +13,12 @@ interface CampaignWizardProps {
         instagram: boolean
         twitter: boolean
         linkedin: boolean
-    }
+    },
+    initialTemplate?: string | null
+    initialProductId?: string | null
 }
 
-export default function CampaignWizard({ onClose, onSuccess, connectedChannels }: CampaignWizardProps) {
+export default function CampaignWizard({ onClose, onSuccess, connectedChannels, initialTemplate, initialProductId }: CampaignWizardProps) {
     const [step, setStep] = useState(1)
     const [loading, setLoading] = useState(false)
 
@@ -40,8 +43,100 @@ export default function CampaignWizard({ onClose, onSuccess, connectedChannels }
             message: '',
             hashtags: '',
             imageUrl: ''
-        }
+        },
+        template: initialTemplate || null,
+        productId: initialProductId || null
     })
+
+    const [products, setProducts] = useState([])
+    const [searchingProducts, setSearchingProducts] = useState(false)
+    const [productSearch, setProductSearch] = useState('')
+
+    useEffect(() => {
+        if (formData.template === 'launch' || initialTemplate === 'launch') {
+            setSearchingProducts(true)
+            fetchProducts()
+                .then(data => {
+                    setProducts(data)
+                    if (initialProductId) {
+                        const product = data.find(p => String(p.id) === String(initialProductId))
+                        if (product) selectProduct(product)
+                    }
+                })
+                .catch(() => toast.error('Failed to load products'))
+                .finally(() => setSearchingProducts(false))
+        }
+    }, [formData.template, initialTemplate, initialProductId])
+
+    const filteredProducts = products.filter(p =>
+        p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+        p.sku?.toLowerCase().includes(productSearch.toLowerCase())
+    )
+
+    const selectProduct = (product: any) => {
+        setFormData(prev => ({
+            ...prev,
+            name: `Launch: ${product.name}`,
+            description: `Official launch campaign for ${product.name}. SKU: ${product.sku}. ${product.description || ''}`,
+            productId: product.id,
+            socialContent: {
+                ...prev.socialContent,
+                message: `Exciting news! Our new ${product.name} is now available. Get yours today!`,
+                imageUrl: product.image_url || ''
+            }
+        }))
+    }
+
+    const templates = [
+        {
+            id: 'launch',
+            name: 'Product Launch',
+            objective: 'awareness',
+            description: 'Introduction of a new product or service to the market.',
+            channel: 'Meta',
+            budget: '500000',
+            message: 'We are thrilled to announce the launch of our newest collection! Check it out now.',
+            hashtags: '#NewLaunch #Innovation #SmartMarket'
+        },
+        {
+            id: 'sale',
+            name: 'Flash Sale',
+            objective: 'sales',
+            description: 'Limited-time discount to drive immediate revenue.',
+            channel: 'Meta',
+            budget: '200000',
+            message: 'FLASH SALE! Get up to 50% off on all items for the next 48 hours only!',
+            hashtags: '#FlashSale #Discount #LimitedTime'
+        },
+        {
+            id: 'holiday',
+            name: 'Holiday Promo',
+            objective: 'engagement',
+            description: 'Themed campaign for upcoming holidays or special events.',
+            channel: 'Meta',
+            budget: '350000',
+            message: 'Happy Holidays! Celebrate with us and enjoy special festive offers across our store.',
+            hashtags: '#Holidays #Festive #Gifts'
+        }
+    ]
+
+    const applyTemplate = (tpl: any) => {
+        setFormData(prev => ({
+            ...prev,
+            name: tpl.name,
+            objective: tpl.objective,
+            description: tpl.description,
+            channel: tpl.channel,
+            budget: tpl.budget,
+            socialContent: {
+                ...prev.socialContent,
+                message: tpl.message,
+                hashtags: tpl.hashtags
+            },
+            template: tpl.id
+        }))
+        setStep(1) // Go to basic info with prefilled data
+    }
 
     const updateField = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }))
@@ -53,7 +148,8 @@ export default function CampaignWizard({ onClose, onSuccess, connectedChannels }
             await createCampaign({
                 name: formData.name,
                 channel: formData.channel,
-                budget: Number(formData.budget)
+                budget: Number(formData.budget),
+                message: formData.publishToSocial ? formData.socialContent.message : formData.description
             })
 
             toast.success('Campaign created successfully!')
@@ -109,8 +205,8 @@ export default function CampaignWizard({ onClose, onSuccess, connectedChannels }
                             <React.Fragment key={s.number}>
                                 <div className="flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${step > s.number ? 'bg-green-500 text-white' :
-                                            step === s.number ? 'bg-indigo-600 text-white' :
-                                                'bg-gray-200 text-gray-500'
+                                        step === s.number ? 'bg-indigo-600 text-white' :
+                                            'bg-gray-200 text-gray-500'
                                         }`}>
                                         {step > s.number ? <Check className="w-5 h-5" /> : s.number}
                                     </div>
@@ -130,9 +226,85 @@ export default function CampaignWizard({ onClose, onSuccess, connectedChannels }
                 {/* Content */}
                 <div className="p-6 overflow-y-auto max-h-[calc(90vh-280px)]">
 
-                    {/* Step 1: Basic Info */}
-                    {step === 1 && (
+                    {/* Step -1 (Optional): Select Template */}
+                    {step === 1 && !formData.name && (
                         <div className="space-y-6">
+                            <div className="text-center mb-8">
+                                <h3 className="text-lg font-semibold text-gray-900">How would you like to start?</h3>
+                                <p className="text-sm text-gray-500">Pick a template to save time or start from scratch</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {templates.map(tpl => (
+                                    <button
+                                        key={tpl.id}
+                                        onClick={() => applyTemplate(tpl)}
+                                        className="p-5 border-2 border-gray-100 rounded-2xl text-left hover:border-indigo-600 hover:bg-indigo-50/50 transition-all group"
+                                    >
+                                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-4 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                            {tpl.id === 'launch' ? <Plus className="w-6 h-6" /> :
+                                                tpl.id === 'sale' ? <Check className="w-6 h-6" /> :
+                                                    <Share2 className="w-6 h-6" />}
+                                        </div>
+                                        <h4 className="font-bold text-gray-900 group-hover:text-indigo-700">{tpl.name}</h4>
+                                        <p className="text-xs text-gray-500 mt-2 leading-relaxed">{tpl.description}</p>
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setStep(1)}
+                                    className="p-5 border-2 border-dashed border-gray-300 rounded-2xl text-center flex flex-col items-center justify-center hover:border-gray-900 hover:bg-gray-50 transition-all"
+                                >
+                                    <Plus className="w-8 h-8 text-gray-400 mb-2" />
+                                    <p className="font-bold text-gray-900">Start Blank</p>
+                                    <p className="text-xs text-gray-500 mt-1">Full control over every step</p>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 1: Basic Info */}
+                    {(step === 1 && (formData.name || step > 1)) && (
+                        <div className="space-y-6">
+                            {formData.template === 'launch' && (
+                                <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl space-y-3">
+                                    <label className="block text-sm font-semibold text-gray-700">Select Product to Promote</label>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            value={productSearch}
+                                            onChange={(e) => setProductSearch(e.target.value)}
+                                            placeholder="Search products by name or SKU..."
+                                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                                        />
+                                    </div>
+                                    <div className="max-h-48 overflow-y-auto space-y-2">
+                                        {searchingProducts ? (
+                                            <p className="text-xs text-center text-gray-500 py-4">Loading products...</p>
+                                        ) : filteredProducts.length === 0 ? (
+                                            <p className="text-xs text-center text-gray-500 py-4">No products found</p>
+                                        ) : (
+                                            filteredProducts.map(p => (
+                                                <button
+                                                    key={p.id}
+                                                    onClick={() => selectProduct(p)}
+                                                    className={`w-full p-3 flex items-center gap-3 rounded-lg border transition-all ${formData.productId === p.id ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 hover:border-indigo-300'}`}
+                                                >
+                                                    <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center overflow-hidden flex-shrink-0">
+                                                        {p.image_url ? <img src={p.image_url} alt="" className="w-full h-full object-cover" /> : <Package className={`w-5 h-5 ${formData.productId === p.id ? 'text-indigo-200' : 'text-gray-400'}`} />}
+                                                    </div>
+                                                    <div className="flex-1 text-left min-w-0">
+                                                        <p className="font-semibold text-sm truncate">{p.name}</p>
+                                                        <p className={`text-xs truncate ${formData.productId === p.id ? 'text-indigo-100' : 'text-gray-500'}`}>{p.sku}</p>
+                                                    </div>
+                                                    {formData.productId === p.id && <Check className="w-4 h-4" />}
+                                                </button>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Campaign Name *</label>
                                 <input
@@ -143,6 +315,12 @@ export default function CampaignWizard({ onClose, onSuccess, connectedChannels }
                                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     required
                                 />
+                                {formData.template && (
+                                    <p className="mt-2 text-xs text-indigo-600 font-medium flex items-center gap-1">
+                                        <Check className="w-3 h-3" />
+                                        Template applied. You can still modify these details.
+                                    </p>
+                                )}
                             </div>
 
                             <div>
@@ -285,10 +463,10 @@ export default function CampaignWizard({ onClose, onSuccess, connectedChannels }
                                                     }}
                                                     disabled={!connectedChannels[platform.key]}
                                                     className={`p-4 border-2 rounded-xl flex items-center gap-3 transition-all ${formData.selectedPlatforms[platform.key]
-                                                            ? `border-${platform.color}-500 bg-${platform.color}-50`
-                                                            : connectedChannels[platform.key]
-                                                                ? 'border-gray-200 hover:border-gray-300'
-                                                                : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
+                                                        ? `border-${platform.color}-500 bg-${platform.color}-50`
+                                                        : connectedChannels[platform.key]
+                                                            ? 'border-gray-200 hover:border-gray-300'
+                                                            : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
                                                         }`}
                                                 >
                                                     <platform.icon className={`w-5 h-5 ${formData.selectedPlatforms[platform.key] ? `text-${platform.color}-600` : 'text-gray-400'}`} />

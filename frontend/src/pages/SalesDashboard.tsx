@@ -7,7 +7,7 @@ import RevenueOverview from '../modules/dashboards/components/RevenueOverview'
 import {
   User, Calendar, CreditCard, Download, AlertTriangle, Loader, Package,
   TrendingUp, Users, FileText, MessageSquare, Target, ArrowRight,
-  DollarSign, ShoppingCart, Zap, BarChart3
+  DollarSign, ShoppingCart, Zap, BarChart3, Plus, Search
 } from 'lucide-react'
 
 export default function SalesDashboard() {
@@ -250,561 +250,245 @@ export default function SalesDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <div className="min-h-screen bg-[#F8FAFC]">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="space-y-8">
-            {/* Hero Section */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-8 shadow-2xl">
-              <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]"></div>
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                    <TrendingUp className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-wider text-white/90">Sales Dashboard</p>
-                    <h1 className="text-3xl font-extrabold text-white sm:text-4xl">Drive Revenue Growth</h1>
-                  </div>
+
+          {/* Sales Hero */}
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-indigo-600 p-10 shadow-2xl mb-10">
+            <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 blur-[80px] opacity-40">
+              <div className="h-64 w-64 rounded-full bg-indigo-400"></div>
+            </div>
+            <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-4 py-1.5 border border-white/30">
+                  <TrendingUp size={14} className="text-white" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white">Revenue Accelerator</span>
                 </div>
-                <p className="mt-4 max-w-2xl text-base text-white/90 leading-relaxed">
-                  Track leads, manage quotes, close deals, and monitor POS sales—all from one powerful dashboard.
+                <h1 className="text-4xl font-black text-white sm:text-5xl tracking-tight">Sales Growth Hub</h1>
+                <p className="max-w-xl text-lg text-indigo-100 leading-relaxed font-medium">
+                  Empower your sales team with real-time leads, rapid quoting, and high-velocity POS transactions.
                 </p>
-
-                {/* Quick Action Pills */}
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Link
-                    to="/crm/leads"
-                    className="group inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-4 py-2 text-sm font-medium text-white border border-white/30 hover:bg-white/30 transition-all duration-200"
-                  >
-                    <Target className="h-4 w-4" />
-                    Leads
-                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                  </Link>
-                  <Link
-                    to="/crm/quotes"
-                    className="group inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-4 py-2 text-sm font-medium text-white border border-white/30 hover:bg-white/30 transition-all duration-200"
-                  >
-                    <FileText className="h-4 w-4" />
-                    Quotes
-                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                  </Link>
-                  <Link
-                    to="/orders"
-                    className="group inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-4 py-2 text-sm font-medium text-white border border-white/30 hover:bg-white/30 transition-all duration-200"
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    Orders
-                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                  </Link>
-                  <Link
-                    to="/communications/inbox"
-                    className="group inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-4 py-2 text-sm font-medium text-white border border-white/30 hover:bg-white/30 transition-all duration-200"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    Inbox
-                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                  </Link>
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <Link to="/crm/leads" className="bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all shadow-xl shadow-indigo-900/20">Manage Leads</Link>
+                  <Link to="/crm/quotes" className="bg-indigo-500 text-white border border-indigo-400 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-indigo-400 transition-all">New Quote</Link>
                 </div>
+              </div>
+
+              {/* Today's Sales Snapshot */}
+              <div className="rounded-[2rem] bg-white/10 backdrop-blur-xl border border-white/20 p-8 min-w-[300px]">
+                <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest mb-4">Today's Revenue</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-black text-white">RF {posSummary.todayTotal.toLocaleString()}</span>
+                  <span className="text-xs font-bold text-indigo-200">+{posSummary.todayCount} sales</span>
+                </div>
+                <div className="mt-6 h-2 w-full bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-white rounded-full" style={{ width: '65%' }}></div>
+                </div>
+                <p className="text-[10px] font-medium text-indigo-100 mt-2 text-center uppercase tracking-tighter">Daily Target: 65% Reached</p>
               </div>
             </div>
+          </div>
 
-            {/* Sales Process Cards */}
-            <div className="grid gap-6 md:grid-cols-3">
-              <div className="group relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-6 shadow-sm hover:shadow-xl transition-all duration-300">
-                <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-blue-50 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-                <div className="relative">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 mb-4">
-                    <Target className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">1. Capture Leads</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Add every inquiry as a lead to track opportunities and never miss a potential sale.
-                  </p>
-                  <Link
-                    to="/crm/leads"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
-                  >
-                    Manage Leads
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+            <div className="lg:col-span-8 space-y-8">
 
-              <div className="group relative overflow-hidden rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm hover:shadow-xl transition-all duration-300">
-                <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-indigo-50 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-                <div className="relative">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 mb-4">
-                    <FileText className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">2. Send Quotes</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Create professional price quotes and track their status from draft to accepted.
-                  </p>
-                  <Link
-                    to="/crm/quotes"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
-                  >
-                    Create Quote
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-
-              <div className="group relative overflow-hidden rounded-2xl border border-purple-100 bg-white p-6 shadow-sm hover:shadow-xl transition-all duration-300">
-                <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-purple-50 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-                <div className="relative">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600 mb-4">
-                    <Zap className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">3. Close Deals</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Approve quotes to convert them into orders and start the fulfillment process.
-                  </p>
-                  <div className="flex gap-2">
-                    <Link
-                      to="/crm/quotes"
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-purple-600 hover:text-purple-700"
-                    >
-                      Review Quotes
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Analytics Widgets */}
-            <div className="grid gap-6 lg:grid-cols-3">
-              <div className="lg:col-span-2 space-y-6">
-                {/* Sales Pipeline Overview */}
-                <div className="rounded-2xl border border-gray-100 bg-white shadow-lg overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
-                    <h3 className="text-xl font-bold text-white mb-2">Sales Pipeline</h3>
-                    <p className="text-sm text-blue-100">Track your leads through the sales funnel</p>
-                  </div>
-                  <div className="p-6">
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white">
-                            <Target className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Active Leads</p>
-                            <p className="text-2xl font-bold text-blue-900">-</p>
-                          </div>
-                        </div>
-                        <Link to="/crm/leads" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                          View all leads →
-                        </Link>
-                      </div>
-
-                      <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600 text-white">
-                            <FileText className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-700">Pending Quotes</p>
-                            <p className="text-2xl font-bold text-indigo-900">-</p>
-                          </div>
-                        </div>
-                        <Link to="/crm/quotes" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
-                          Review quotes →
-                        </Link>
-                      </div>
-
-                      <div className="rounded-xl border border-purple-100 bg-purple-50 p-4">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-600 text-white">
-                            <ShoppingCart className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-purple-700">Active Orders</p>
-                            <p className="text-2xl font-bold text-purple-900">-</p>
-                          </div>
-                        </div>
-                        <Link to="/orders" className="text-xs text-purple-600 hover:text-purple-700 font-medium">
-                          View orders →
-                        </Link>
-                      </div>
+              {/* CRM Actions */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { label: 'Capture Lead', icon: Target, path: '/crm/leads', color: 'bg-blue-600', text: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Draft Quote', icon: FileText, path: '/crm/quotes', color: 'bg-indigo-600', text: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { label: 'Marketing', icon: Zap, path: '/marketing/campaigns', color: 'bg-amber-600', text: 'text-amber-600', bg: 'bg-amber-50' },
+                ].map((card, i) => (
+                  <Link key={i} to={card.path} className="group rounded-3xl border border-slate-200 bg-white p-6 hover:shadow-xl hover:border-indigo-100 transition-all">
+                    <div className={`h-12 w-12 rounded-2xl ${card.bg} ${card.text} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                      <card.icon size={24} />
                     </div>
-
-                    <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
-                      <p className="text-sm font-semibold text-gray-900 mb-2">Quick Tips for Sales Success</p>
-                      <ul className="space-y-2 text-xs text-gray-700">
-                        <li className="flex items-start gap-2">
-                          <span className="text-blue-600 mt-0.5">•</span>
-                          <span>Follow up with leads within 24 hours to increase conversion rates</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-blue-600 mt-0.5">•</span>
-                          <span>Keep quotes updated and send reminders for pending approvals</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-blue-600 mt-0.5">•</span>
-                          <span>Use the inbox to maintain customer relationships and close deals faster</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+                    <h4 className="font-black text-slate-900 font-mono tracking-tight">{card.label}</h4>
+                    <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">ACCESS MODULE →</p>
+                  </Link>
+                ))}
               </div>
 
-              <div className="space-y-6">
-                <div className="rounded-2xl border border-gray-100 bg-white shadow-lg overflow-hidden">
-                  <RevenueOverview />
-                </div>
-
-                {/* POS Summary Card */}
-                <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-lg">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white">
-                      <DollarSign className="h-5 w-5" />
+              {/* POS Transaction History */}
+              <div className="rounded-[2.5rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div className="p-8 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                      <BarChart3 size={24} />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">POS Sales</p>
-                      <p className="text-sm font-bold text-emerald-900">Today's Performance</p>
+                      <h3 className="text-xl font-black text-slate-900 tracking-tight">Daily Transactions</h3>
+                      <p className="text-sm text-slate-500">Real-time counter sales and reconciliation.</p>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-emerald-800">Today's Total</span>
-                      <span className="text-lg font-bold text-emerald-900">
-                        RF {posSummary.todayTotal.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-emerald-800">Transactions</span>
-                      <span className="text-lg font-bold text-emerald-900">{posSummary.todayCount}</span>
-                    </div>
-                    <div className="pt-3 border-t border-emerald-200">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-emerald-700">Last 7 Days</span>
-                        <span className="text-sm font-semibold text-emerald-800">
-                          RF {posSummary.last7Total.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <Link
-                    to="/pos/sales-history"
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
-                  >
-                    <BarChart3 className="h-4 w-4" />
-                    View Full Report
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Create Customer */}
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-                    <Users className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">Quick Add Customer</h2>
-                    <p className="text-sm text-gray-600">Register new customers instantly</p>
-                  </div>
-                </div>
-
-                {customerStatus && (
-                  <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
-                    {customerStatus}
-                  </div>
-                )}
-                {customerError && (
-                  <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                    {customerError}
-                  </div>
-                )}
-
-                <form onSubmit={handleCustomerSubmit} className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <input
-                      className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                      placeholder="Customer name *"
-                      value={customerForm.name}
-                      onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
-                      required
-                    />
-                    <input
-                      className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                      placeholder="Phone *"
-                      value={customerForm.phone}
-                      onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <input
-                    className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                    placeholder="Email (optional)"
-                    type="email"
-                    value={customerForm.email}
-                    onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
-                  />
-                  <input
-                    className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                    placeholder="Address"
-                    value={customerForm.address}
-                    onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })}
-                  />
-                  <div className="flex gap-3">
-                    <input
-                      className="flex-1 rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                      placeholder="Source (e.g. Walk-in, WhatsApp)"
-                      value={customerForm.source}
-                      onChange={(e) => setCustomerForm({ ...customerForm, source: e.target.value })}
-                    />
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-500/30"
-                    >
-                      {isSubmitting ? <Loader className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
-                      Save
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {/* Quick POS Sale */}
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-600">
-                    <ShoppingCart className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">Quick POS Sale</h2>
-                    <p className="text-sm text-gray-600">Record walk-in sales quickly</p>
-                  </div>
-                </div>
-
-                {posStatus && (
-                  <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
-                    {posStatus}
-                  </div>
-                )}
-                {posSubmitError && (
-                  <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                    {posSubmitError}
-                  </div>
-                )}
-
-                <form onSubmit={handlePosSubmit} className="space-y-4">
-                  <select
-                    className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-                    value={posForm.customer_id}
-                    onChange={(e) => setPosForm({ ...posForm, customer_id: e.target.value })}
-                  >
-                    <option value="">Walk-in customer (no name)</option>
-                    {customers.map((c) => (
-                      <option key={c.id} value={String(c.id)}>
-                        {c.name || c.customer_name || `Customer ${c.id}`}
-                      </option>
-                    ))}
-                  </select>
-
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-3">Line Items</p>
-                    {posItems.map((row, index) => (
-                      <div key={index} className="grid gap-2 sm:grid-cols-[2fr,1fr,1fr]">
-                        <select
-                          className="rounded-lg border border-gray-300 px-3 py-2 text-xs focus:border-purple-500 focus:ring-1 focus:ring-purple-200 transition-all"
-                          value={row.material_id}
-                          onChange={(e) => {
-                            const next = [...posItems]
-                            next[index] = { ...next[index], material_id: e.target.value }
-                            setPosItems(next)
-                          }}
-                        >
-                          <option value="">Select item</option>
-                          {materials.map((m: any) => (
-                            <option key={m.id} value={String(m.id)}>
-                              {m.name || m.material_name || m.sku || `Material ${m.id}`}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          className="rounded-lg border border-gray-300 px-3 py-2 text-xs focus:border-purple-500 focus:ring-1 focus:ring-purple-200 transition-all"
-                          placeholder="Qty"
-                          type="number"
-                          min="0"
-                          value={row.quantity}
-                          onChange={(e) => {
-                            const next = [...posItems]
-                            next[index] = { ...next[index], quantity: e.target.value }
-                            setPosItems(next)
-                          }}
-                        />
-                        <input
-                          className="rounded-lg border border-gray-300 px-3 py-2 text-xs focus:border-purple-500 focus:ring-1 focus:ring-purple-200 transition-all"
-                          placeholder="Price"
-                          type="number"
-                          step="0.01"
-                          value={row.price}
-                          onChange={(e) => {
-                            const next = [...posItems]
-                            next[index] = { ...next[index], price: e.target.value }
-                            setPosItems(next)
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/30"
-                  >
-                    {isSubmitting ? <Loader className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
-                    Record Sale
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            {/* Daily Sales Report */}
-            <div className="rounded-2xl border border-gray-200 bg-white shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-2xl font-extrabold text-white mb-2">Daily Sales Transactions</h2>
-                    <p className="text-sm text-blue-100">
-                      Review and reconcile today's counter transactions
-                    </p>
-                  </div>
-                  <button
-                    className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition-all shadow-lg"
-                    onClick={handleExportDaily}
-                  >
-                    <Download className="h-4 w-4" />
-                    Export CSV
+                  <button onClick={handleExportDaily} className="flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-all">
+                    <Download size={14} /> EXPORT CSV
                   </button>
                 </div>
-              </div>
 
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {filteredSales.length} Transactions
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Total: <span className="font-semibold text-gray-900">RF {totalForFilterDay.toLocaleString()}</span>
-                    </p>
+                {/* Filters Bar */}
+                <div className="bg-slate-50/50 px-8 py-4 border-b border-slate-100 flex flex-wrap gap-4 items-center justify-between">
+                  <div className="flex items-center gap-6">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Total Sales</p>
+                      <p className="font-black text-indigo-600 font-mono">RF {totalForFilterDay.toLocaleString()}</p>
+                    </div>
+                    <div className="h-8 w-px bg-slate-200"></div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Avg. Ticket</p>
+                      <p className="font-black text-slate-900 font-mono">RF {Math.round(averageTicketForDay).toLocaleString()}</p>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex gap-2">
                     <select
                       name="paymentMethod"
                       value={posFilter.paymentMethod}
                       onChange={handlePosFilterChange}
-                      className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                     >
                       <option value="All">All Methods</option>
                       <option value="Cash">Cash</option>
-                      <option value="Mobile Money">Mobile Money</option>
-                      <option value="Bank Card">Bank Card</option>
-                      <option value="Bank Transfer">Bank Transfer</option>
+                      <option value="Mobile Money">M-Pesa</option>
+                      <option value="Bank Card">Card</option>
                     </select>
                     <input
                       name="date"
                       type="date"
                       value={posFilter.date}
                       onChange={handlePosFilterChange}
-                      className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="p-6 grid gap-4 sm:grid-cols-3 border-b border-gray-100">
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-600">Transactions</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">{transactionCountForDay}</p>
-                </div>
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Total Sales</p>
-                  <p className="mt-2 text-2xl font-bold text-emerald-900">RF {totalForFilterDay.toLocaleString()}</p>
-                </div>
-                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Avg Ticket</p>
-                  <p className="mt-2 text-2xl font-bold text-blue-900">RF {Math.round(averageTicketForDay).toLocaleString()}</p>
-                </div>
-              </div>
-
-              {posError && !posLoading && (
-                <div className="p-6">
-                  <div className="flex items-center justify-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                    <AlertTriangle className="h-4 w-4" />
-                    <p>Error: {posError}</p>
-                  </div>
-                </div>
-              )}
-
-              {posLoading ? (
-                <div className="p-12 flex flex-col items-center justify-center">
-                  <Loader className="h-8 w-8 text-blue-500 animate-spin mb-3" />
-                  <p className="text-sm text-gray-500">Loading sales data...</p>
-                </div>
-              ) : filteredSales.length === 0 && !posError ? (
-                <div className="p-12 flex flex-col items-center justify-center text-gray-500">
-                  <Package className="h-12 w-12 mb-4 text-gray-400" />
-                  <p className="text-sm font-semibold">No transactions found</p>
-                  <p className="text-xs mt-1">Adjust your filters or check back later</p>
-                </div>
-              ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-100">
                       <tr>
-                        <th className="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">ID</th>
-                        <th className="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">
-                          <User className="inline h-4 w-4 mr-1" />
-                          Customer
-                        </th>
-                        <th className="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">Cashier</th>
-                        <th className="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">
-                          <CreditCard className="inline h-4 w-4 mr-1" />
-                          Method
-                        </th>
-                        <th className="px-6 py-3 text-right font-semibold text-gray-700 uppercase tracking-wider">Total</th>
-                        <th className="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">
-                          <Calendar className="inline h-4 w-4 mr-1" />
-                          Date & Time
-                        </th>
+                        <th className="px-8 py-4">Status</th>
+                        <th className="px-8 py-4">Customer</th>
+                        <th className="px-8 py-4">Payment</th>
+                        <th className="px-8 py-4 text-right">Amount (RF)</th>
+                        <th className="px-8 py-4">Time</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-slate-50 font-medium text-slate-600 text-sm">
                       {filteredSales.map((sale) => (
-                        <tr key={sale.id} className="hover:bg-blue-50/50 transition-colors">
-                          <td className="px-6 py-4 text-gray-600 font-mono text-xs">{sale.id}</td>
-                          <td className="px-6 py-4 text-gray-900 font-medium">{sale.customer}</td>
-                          <td className="px-6 py-4 text-gray-700">{sale.cashier}</td>
-                          <td className="px-6 py-4">
-                            <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                              {sale.paymentMethod}
+                        <tr key={sale.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-8 py-4">
+                            <span className="flex items-center gap-2">
+                              <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+                              <span className="font-black text-[10px] uppercase text-emerald-600 font-mono tracking-tighter">Verified</span>
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right text-gray-900 font-bold font-mono">
-                            RF {sale.total.toLocaleString()}
+                          <td className="px-8 py-4 font-bold text-slate-900">{sale.customer}</td>
+                          <td className="px-8 py-4 text-xs font-bold uppercase">{sale.paymentMethod}</td>
+                          <td className="px-8 py-4 text-right font-black text-slate-900 font-mono italic">
+                            {sale.total.toLocaleString()}
                           </td>
-                          <td className="px-6 py-4 text-gray-700">
-                            {sale.date} <span className="text-xs text-gray-500">({sale.time})</span>
-                          </td>
+                          <td className="px-8 py-4 text-xs font-bold text-slate-400">{sale.time}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              )}
+              </div>
+            </div>
+
+            {/* Side Tools */}
+            <div className="lg:col-span-4 space-y-8">
+
+              {/* Quick Add POS Sale */}
+              <div className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-10 w-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <Plus size={20} />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Express Checkout</h3>
+                </div>
+                <form onSubmit={handlePosSubmit} className="space-y-4">
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <select
+                      className="w-full rounded-2xl bg-slate-50 border-none pl-12 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all outline-none appearance-none"
+                      value={posForm.customer_id}
+                      onChange={(e) => setPosForm({ ...posForm, customer_id: e.target.value })}
+                    >
+                      <option value="">Walk-in Customer</option>
+                      {customers.map((c) => (
+                        <option key={c.id} value={String(c.id)}>{c.name || `Customer ${c.id}`}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200">
+                    {posItems.map((row, index) => (
+                      <div key={index} className="flex gap-2">
+                        <select
+                          className="flex-1 rounded-xl bg-slate-50 border-none px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-500"
+                          value={row.material_id}
+                          onChange={(e) => {
+                            const next = [...posItems];
+                            next[index].material_id = e.target.value;
+                            setPosItems(next);
+                          }}
+                        >
+                          <option value="">Item...</option>
+                          {materials.map(m => (
+                            <option key={m.id} value={m.id}>{m.name}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          placeholder="Amt"
+                          className="w-16 rounded-xl bg-slate-50 border-none px-3 py-2 text-xs font-black text-center focus:ring-2 focus:ring-indigo-500"
+                          value={row.price}
+                          onChange={(e) => {
+                            const next = [...posItems];
+                            next[index].price = e.target.value;
+                            setPosItems(next);
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <button className="w-full bg-slate-900 text-white rounded-2xl py-4 font-black text-xs uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200">
+                    GENERATE RECEIPT
+                  </button>
+                </form>
+              </div>
+
+              {/* New Customer Lead */}
+              <div className="rounded-[2.5rem] bg-indigo-900 p-8 text-white">
+                <h3 className="text-xl font-black mb-6">Quick Registration</h3>
+                <form onSubmit={handleCustomerSubmit} className="space-y-4">
+                  <input
+                    className="w-full rounded-2xl bg-white/10 border-white/10 px-5 py-3 text-sm font-bold text-white placeholder-indigo-300 focus:bg-white/20 outline-none transition-all"
+                    placeholder="Customer Full Name"
+                    value={customerForm.name}
+                    onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
+                  />
+                  <input
+                    className="w-full rounded-2xl bg-white/10 border-white/10 px-5 py-3 text-sm font-bold text-white placeholder-indigo-300 focus:bg-white/20 outline-none transition-all"
+                    placeholder="Phone Number"
+                    value={customerForm.phone}
+                    onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                  />
+                  <button className="w-full bg-white text-indigo-900 rounded-2xl py-3 font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all">
+                    SAVE CONTACT
+                  </button>
+                </form>
+              </div>
+
+              {/* Revenue Overview Link Card */}
+              <div className="rounded-[2.5rem] border border-slate-200 bg-white p-8">
+                <RevenueOverview />
+              </div>
+
             </div>
           </div>
+
         </div>
       </div>
     </DashboardLayout>

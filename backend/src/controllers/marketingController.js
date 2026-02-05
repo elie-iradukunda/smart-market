@@ -155,15 +155,15 @@ export const broadcastToSegment = async (req, res) => {
 // Create a new campaign
 export const createCampaign = async (req, res) => {
   try {
-    const { name, platform, budget } = req.body;
+    const { name, platform, budget, subject, message } = req.body;
     
     if (!name || !platform) {
       return res.status(400).json({ error: 'Missing required fields: name, platform' });
     }
     
     const [result] = await pool.execute(
-      'INSERT INTO campaigns (title, platform, budget, status) VALUES (?, ?, ?, ?)',
-      [name, platform, budget || 0, 'active']
+      'INSERT INTO campaigns (title, platform, budget, status, subject, message) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, platform, budget || 0, 'active', subject || '', message || '']
     );
     
     res.json({

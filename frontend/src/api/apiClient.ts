@@ -624,7 +624,8 @@ export async function fetchMaterial(id: number | string) {
     throw new Error(data.error || 'Failed to fetch material')
   }
 
-  return res.json()
+  const response = await res.json()
+  return response.data || response
 }
 
 // Inventory: create material
@@ -1384,7 +1385,7 @@ export async function fetchProductionReport() {
 export const fetchDemoCampaigns = fetchCampaigns
 
 // Marketing: create campaign
-export async function createCampaign(payload: { name: string; channel: string; budget: number }) {
+export async function createCampaign(payload: { name: string; channel: string; budget: number; subject?: string; message?: string }) {
   const token = getAuthToken()
   if (!token) {
     throw new Error('Not authenticated')
@@ -1400,6 +1401,8 @@ export async function createCampaign(payload: { name: string; channel: string; b
       name: payload.name,
       platform: payload.channel,
       budget: payload.budget,
+      subject: payload.subject || '',
+      message: payload.message || '',
     }),
   })
 

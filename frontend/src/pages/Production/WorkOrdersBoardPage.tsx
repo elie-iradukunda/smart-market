@@ -7,7 +7,8 @@ import { getAuthUser } from '@/utils/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
 // Importing Lucide icons for the visual design
-import { PlusCircle, Search, AlertTriangle, Loader2 } from 'lucide-react'
+import { PlusCircle, Search, AlertTriangle, Loader2, UserPlus } from 'lucide-react'
+import AssignWorkerModal from '@/components/orders/AssignWorkerModal'
 
 export default function WorkOrdersBoardPage() {
     const [workOrders, setWorkOrders] = useState([])
@@ -16,6 +17,8 @@ export default function WorkOrdersBoardPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [currentUser, setCurrentUser] = useState<any | null>(null)
     const [myTasksOnly, setMyTasksOnly] = useState(false)
+    const [showAssignModal, setShowAssignModal] = useState(false)
+    const [selectedWorkOrder, setSelectedWorkOrder] = useState<any | null>(null)
 
     // NOTE: useNavigate is retained from the original imports
     const navigate = useNavigate()
@@ -52,22 +55,44 @@ export default function WorkOrdersBoardPage() {
         }
     }, [])
 
+    // Handler to open assign modal
+    const handleAssignClick = (workOrder: any, e: React.MouseEvent) => {
+        e.stopPropagation() // Prevent row click navigation
+        setSelectedWorkOrder(workOrder)
+        setShowAssignModal(true)
+    }
+
+    // Handler after successful assignment
+    const handleAssignmentComplete = async () => {
+        setShowAssignModal(false)
+        setSelectedWorkOrder(null)
+        // Refresh work orders
+        try {
+            const data = await fetchWorkOrders()
+            setWorkOrders(Array.isArray(data) ? data : [])
+        } catch (err) {
+            console.error('Failed to refresh work orders:', err)
+        }
+    }
+
     // Helper function to color the stage tag (using Tailwind classes)
     const getStageColor = (stage) => {
-        switch (stage) {
-            case 'Design':
-                return 'bg-purple-100 text-purple-800 border-purple-200';
-            case 'Print':
-                return 'bg-blue-100 text-blue-600 border-blue-200';
-            case 'Finish':
-                return 'bg-amber-100 text-amber-800 border-amber-200';
-            case 'QC': // Quality Control
-            case 'Quality Control':
-                return 'bg-teal-100 text-teal-800 border-teal-200';
-            case 'Complete':
-                return 'bg-green-100 text-green-800 border-green-200';
+        switch ((stage || '').toLowerCase()) {
+            case 'design':
+                return 'bg-purple-100 text-purple-800 border-purple-200 capitalize';
+            case 'print':
+            case 'prepress':
+                return 'bg-blue-100 text-blue-600 border-blue-200 capitalize';
+            case 'finish':
+            case 'finishing':
+                return 'bg-amber-100 text-amber-800 border-amber-200 capitalize';
+            case 'ready':
+                return 'bg-teal-100 text-teal-800 border-teal-200 capitalize';
+            case 'delivered':
+            case 'complete': // Legacy support
+                return 'bg-green-100 text-green-800 border-green-200 capitalize';
             default:
-                return 'bg-gray-100 text-gray-600 border-gray-200';
+                return 'bg-gray-100 text-gray-600 border-gray-200 capitalize';
         }
     };
 
@@ -118,6 +143,7 @@ export default function WorkOrdersBoardPage() {
     // Calculate total active jobs (non-Complete)
     const totalActiveJobs = workOrders.filter((wo: any) => wo.status !== 'Complete').length
     const myTasksCount = myAssignedWorkOrders.length
+    const isAdmin = currentUser?.role_id === 1 || currentUser?.role_id === 2
 
     return (
         <DashboardLayout>
@@ -188,14 +214,15 @@ export default function WorkOrdersBoardPage() {
                                         <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider">Customer / Job Name</th>
                                         <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider">Stage</th>
                                         <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider">Technician</th>
-                                        <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider text-right rounded-tr-lg">Priority</th>
+                                        <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider text-right">Priority</th>
+                                        {isAdmin && <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider text-center rounded-tr-lg">Actions</th>}
                                     </tr>
                                 </thead>
 
                                 {error && (
                                     <tbody>
                                         <tr>
-                                            <td colSpan={5} className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                                            <td colSpan={isAdmin ? 6 : 5} className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
                                                 <AlertTriangle className="h-4 w-4 inline mr-2" />
                                                 Error: {error}
                                             </td>
@@ -206,7 +233,7 @@ export default function WorkOrdersBoardPage() {
                                 {loading ? (
                                     <tbody>
                                         <tr>
-                                            <td colSpan={5} className="p-8 text-center text-sm text-gray-500">
+                                            <td colSpan={isAdmin ? 6 : 5} className="p-8 text-center text-sm text-gray-500">
                                                 <Loader2 className="h-5 w-5 animate-spin inline mr-2 text-blue-500" />
                                                 Loading work orders...
                                             </td>
@@ -214,38 +241,55 @@ export default function WorkOrdersBoardPage() {
                                     </tbody>
                                 ) : (
                                     <tbody className="">
-                                        {filteredWorkOrders.map((wo, index) => (
-                                            <tr
-                                                key={wo.id || index}
-                                                onClick={() => navigate(`/orders/${wo.order_id || wo.order_number}`)}
-                                                // Row styling with elevation and hover effect
-                                                className="bg-white rounded-xl shadow-md hover:shadow-lg hover:ring-2 hover:ring-blue-500/50 transition duration-200 cursor-pointer"
-                                            >
-                                                <td className="px-6 py-4 text-gray-500 font-mono text-xs rounded-l-xl">
-                                                    {wo.id}
-                                                </td>
-                                                <td className="px-6 py-4 text-gray-800 font-medium truncate">
-                                                    {wo.customer || wo.customer_name || `Order #${wo.id}`}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    {/* Stage Tag */}
-                                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border ${getStageColor(wo.status)}`}>
-                                                        {wo.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-gray-600">
-                                                    {wo.technician || '—'}
-                                                </td>
-                                                <td className="px-6 py-4 text-right rounded-r-xl">
-                                                    <span className={`text-xs font-semibold ${wo.priority === 'High' ? 'text-red-600' : wo.priority === 'Medium' ? 'text-amber-600' : 'text-green-600'}`}>
-                                                        {wo.priority || 'Low'}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {filteredWorkOrders.map((wo, index) => {
+                                            const isAssignedToMe = Number(wo.assigned_to) === Number(currentUser?.id);
+                                            const canClick = isAdmin || isAssignedToMe;
+
+                                            return (
+                                                <tr
+                                                    key={wo.id || index}
+                                                    onClick={canClick ? () => navigate(`/orders/${wo.order_id || wo.order_number}`) : undefined}
+                                                    // Row styling with elevation and hover effect
+                                                    className={`bg-white rounded-xl shadow-md transition duration-200 ${canClick ? 'hover:shadow-lg hover:ring-2 hover:ring-blue-500/50 cursor-pointer' : ''}`}
+                                                >
+                                                    <td className="px-6 py-4 text-gray-500 font-mono text-xs rounded-l-xl">
+                                                        {wo.id}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-gray-800 font-medium truncate">
+                                                        {wo.customer || wo.customer_name || `Order #${wo.id}`}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {/* Stage Tag */}
+                                                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border ${getStageColor(wo.order_status || wo.stage || wo.status)}`}>
+                                                            {wo.order_status || wo.stage || wo.status || 'Pending'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-gray-600">
+                                                        {wo.assigned_user_name || wo.technician || '—'}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <span className={`text-xs font-semibold ${wo.priority === 'High' ? 'text-red-600' : wo.priority === 'Medium' ? 'text-amber-600' : 'text-green-600'}`}>
+                                                            {wo.priority || 'Low'}
+                                                        </span>
+                                                    </td>
+                                                    {isAdmin && (
+                                                        <td className="px-6 py-4 text-center rounded-r-xl">
+                                                            <button
+                                                                onClick={(e) => handleAssignClick(wo, e)}
+                                                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md"
+                                                                title="Assign to worker"
+                                                            >
+                                                                <UserPlus size={14} />
+                                                                Assign
+                                                            </button>
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            );
+                                        })}
                                         {filteredWorkOrders.length === 0 && !loading && !error && (
                                             <tr>
-                                                <td colSpan={5} className="p-8 text-center text-sm text-gray-500">
+                                                <td colSpan={6} className="p-8 text-center text-sm text-gray-500">
                                                     <AlertTriangle className="h-5 w-5 inline text-amber-500 mr-2" />
                                                     No work orders found matching your search criteria.
                                                 </td>
@@ -258,6 +302,19 @@ export default function WorkOrdersBoardPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Assign Worker Modal */}
+            {showAssignModal && selectedWorkOrder && (
+                <AssignWorkerModal
+                    orderId={selectedWorkOrder.id}
+                    currentAssignee={selectedWorkOrder.technician ? {
+                        id: selectedWorkOrder.assigned_to || selectedWorkOrder.technician_id,
+                        name: selectedWorkOrder.technician
+                    } : undefined}
+                    onClose={() => setShowAssignModal(false)}
+                    onAssigned={handleAssignmentComplete}
+                />
+            )}
         </DashboardLayout>
     )
 }

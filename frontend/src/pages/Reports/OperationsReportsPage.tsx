@@ -38,11 +38,23 @@ export default function OperationsReportsPage() {
     // Calculate statistics
     const stats = {
         totalOrders: orders.length,
-        pendingOrders: orders.filter(o => o.status?.toLowerCase() === 'pending').length,
-        processingOrders: orders.filter(o => o.status?.toLowerCase() === 'processing').length,
-        completedOrders: orders.filter(o => ['delivered', 'completed'].includes(o.status?.toLowerCase())).length,
+        pendingOrders: orders.filter(o => {
+            const s = o.status?.toLowerCase() || 'pending';
+            return s === 'pending';
+        }).length,
+        processingOrders: orders.filter(o => {
+            const s = o.status?.toLowerCase();
+            return ['design', 'print', 'finish', 'finishing', 'prepress'].includes(s);
+        }).length,
+        completedOrders: orders.filter(o => {
+            const s = o.status?.toLowerCase();
+            return ['ready', 'delivered', 'complete', 'completed'].includes(s);
+        }).length,
         totalWorkOrders: workOrders.length,
-        activeWorkOrders: workOrders.filter(wo => wo.status?.toLowerCase() !== 'complete').length,
+        activeWorkOrders: workOrders.filter(wo => {
+            const s = (wo.order_status || wo.stage || wo.status)?.toLowerCase();
+            return s !== 'delivered' && s !== 'complete' && s !== 'completed';
+        }).length,
     }
 
     return (
@@ -150,19 +162,19 @@ export default function OperationsReportsPage() {
                                     {orders.slice(0, 10).map((order) => (
                                         <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="px-6 py-3 whitespace-nowrap text-gray-500 font-mono text-xs">#{order.id}</td>
-                                            <td className="px-6 py-3 whitespace-nowrap text-gray-900 font-medium">{order.customer_name || 'N/A'}</td>
+                                            <td className="px-6 py-3 whitespace-nowrap text-gray-900 font-medium">{order.customer || 'N/A'}</td>
                                             <td className="px-6 py-3 whitespace-nowrap">
-                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${order.status?.toLowerCase() === 'completed' || order.status?.toLowerCase() === 'delivered'
-                                                        ? 'bg-green-50 text-green-700'
-                                                        : order.status?.toLowerCase() === 'processing'
-                                                            ? 'bg-blue-50 text-blue-700'
-                                                            : 'bg-amber-50 text-amber-700'
+                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${['ready', 'delivered', 'complete', 'completed'].includes(order.status?.toLowerCase())
+                                                    ? 'bg-green-50 text-green-700'
+                                                    : ['design', 'print', 'finish', 'finishing', 'prepress'].includes(order.status?.toLowerCase())
+                                                        ? 'bg-blue-50 text-blue-700'
+                                                        : 'bg-amber-50 text-amber-700'
                                                     }`}>
                                                     {order.status || 'Pending'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-3 whitespace-nowrap text-gray-900">
-                                                {order.total_amount ? `RF ${Number(order.total_amount).toLocaleString()}` : '—'}
+                                                {order.total_amount ? `RF ${Number(order.total_amount).toLocaleString()}` : order.total ? `RF ${Number(order.total).toLocaleString()}` : '—'}
                                             </td>
                                         </tr>
                                     ))}
@@ -194,23 +206,28 @@ export default function OperationsReportsPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 bg-white">
-                                    {workOrders.slice(0, 10).map((wo) => (
-                                        <tr key={wo.id} className="hover:bg-gray-50/50 transition-colors">
-                                            <td className="px-6 py-3 whitespace-nowrap text-gray-500 font-mono text-xs">#{wo.id}</td>
-                                            <td className="px-6 py-3 whitespace-nowrap text-gray-900 font-medium">{wo.customer || wo.customer_name || 'N/A'}</td>
-                                            <td className="px-6 py-3 whitespace-nowrap">
-                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${wo.status?.toLowerCase() === 'complete'
+                                    {workOrders.slice(0, 10).map((wo) => {
+                                        const currentStage = (wo.order_status || wo.stage || wo.status || 'Pending').toLowerCase();
+                                        return (
+                                            <tr key={wo.id} className="hover:bg-gray-50/50 transition-colors">
+                                                <td className="px-6 py-3 whitespace-nowrap text-gray-500 font-mono text-xs">#{wo.id}</td>
+                                                <td className="px-6 py-3 whitespace-nowrap text-gray-900 font-medium">{wo.customer_name || wo.customer || 'N/A'}</td>
+                                                <td className="px-6 py-3 whitespace-nowrap">
+                                                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${['ready', 'delivered', 'complete', 'completed'].includes(currentStage)
                                                         ? 'bg-green-50 text-green-700'
-                                                        : wo.status?.toLowerCase() === 'print'
+                                                        : ['design', 'print', 'finish', 'finishing', 'prepress'].includes(currentStage)
                                                             ? 'bg-blue-50 text-blue-700'
                                                             : 'bg-purple-50 text-purple-700'
-                                                    }`}>
-                                                    {wo.status || 'Pending'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-3 whitespace-nowrap text-gray-600">{wo.technician || '—'}</td>
-                                        </tr>
-                                    ))}
+                                                        }`}>
+                                                        {currentStage}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-3 whitespace-nowrap text-gray-600 truncate max-w-[150px]">
+                                                    {wo.assigned_user_name || wo.technician || '—'}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                     {!loading && workOrders.length === 0 && (
                                         <tr>
                                             <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">

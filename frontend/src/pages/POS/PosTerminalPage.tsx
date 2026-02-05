@@ -16,6 +16,7 @@ export default function POSTerminalPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [customerSearchQuery, setCustomerSearchQuery] = useState('')
   const [saving, setSaving] = useState(false)
+  const [processingMethod, setProcessingMethod] = useState(null)
   const [successMessage, setSuccessMessage] = useState('')
   const [lastSale, setLastSale] = useState(null)
   const [sendingInvoice, setSendingInvoice] = useState(false)
@@ -143,13 +144,12 @@ export default function POSTerminalPage() {
     }
 
     setSaving(true)
+    setProcessingMethod(method)
     setError('')
     setSuccessMessage('')
 
     try {
-      const subtotal = cartItems.reduce((sum, it) => sum + (it.qty || 1) * (it.price || 0), 0)
-      const tax = Math.round(subtotal * 0.18 * 100) / 100
-      const total = subtotal + tax
+      const total = cartItems.reduce((sum, it) => sum + (it.qty || 1) * (it.price || 0), 0)
 
       // 1. Create POS Sale
       const saleResult = await createPOSSale({
@@ -162,16 +162,28 @@ export default function POSTerminalPage() {
         total,
       })
 
-      // 2. Create Invoice (using order ID created by POS sale)
-      const invoiceResult = await createInvoice({
-        order_id: saleResult.order_id,
-        amount: total,
-        status: 'paid'
-      })
+      if (!saleResult || !saleResult.id) {
+        throw new Error('Failed to create POS sale record')
+      }
+
+      // 2. Use existing invoice from saleResult or create if not present
+      let invoiceId = saleResult.invoice_id;
+      if (!invoiceId) {
+        const invoiceResult = await createInvoice({
+          order_id: saleResult.order_id,
+          amount: total,
+          status: 'paid'
+        })
+        invoiceId = invoiceResult.id;
+      }
+
+      if (!invoiceId) {
+        throw new Error('Failed to associate an invoice with this sale')
+      }
 
       // 3. Record Payment
       const paymentResult = await recordPayment({
-        invoice_id: invoiceResult.id,
+        invoice_id: invoiceId,
         method: method.toLowerCase().replace(' ', '_'),
         amount: total,
         reference: `POS-${saleResult.id}-${Date.now()}`,
@@ -180,29 +192,33 @@ export default function POSTerminalPage() {
       // Store sale details for invoice modal
       setLastSale({
         id: saleResult.id,
-        invoiceId: invoiceResult.id,
+        invoiceId: invoiceId,
         customer: selectedCustomer,
-        items: cartItems,
-        subtotal,
-        tax,
-        total,
+        items: [...cartItems],
+        total: total,
         method,
         date: new Date().toLocaleString(),
-        paymentStatus: paymentResult.status,
-        remainingBalance: paymentResult.remainingBalance || 0
+        paymentStatus: paymentResult?.status || 'paid',
+        remainingBalance: paymentResult?.remainingBalance || 0
       })
 
-      const statusMessage = paymentResult.status === 'paid'
+      const statusMessage = paymentResult?.status === 'paid'
         ? `Sale of RF ${total.toFixed(2)} completed via ${method}! Invoice fully paid.`
-        : `Partial payment of RF ${total.toFixed(2)} recorded. Remaining balance: RF ${paymentResult.remainingBalance.toFixed(2)}`
+        : `Transaction recorded. View invoice for details.`
 
       setSuccessMessage(statusMessage)
       setShowInvoiceModal(true)
 
+      // Clear cart ONLY after successful processing
+      setCartItems([])
+      setSelectedCustomer(null)
+
     } catch (err) {
+      console.error('POS Payment Error:', err)
       setError(err.message || 'Failed to process payment')
     } finally {
       setSaving(false)
+      setProcessingMethod(null)
     }
   }
 
@@ -249,14 +265,6 @@ export default function POSTerminalPage() {
                 `).join('')}
               </tbody>
               <tfoot>
-                <tr>
-                  <td colspan="3" style="padding: 8px; text-align: right; border: 1px solid #ddd;"><strong>Subtotal:</strong></td>
-                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">RF ${lastSale.subtotal.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td colspan="3" style="padding: 8px; text-align: right; border: 1px solid #ddd;"><strong>VAT (18%):</strong></td>
-                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">RF ${lastSale.tax.toFixed(2)}</td>
-                </tr>
                 <tr style="background: #f3f4f6;">
                   <td colspan="3" style="padding: 8px; text-align: right; border: 1px solid #ddd;"><strong>Total:</strong></td>
                   <td style="padding: 8px; text-align: right; border: 1px solid #ddd;"><strong>RF ${lastSale.total.toFixed(2)}</strong></td>
@@ -308,9 +316,7 @@ export default function POSTerminalPage() {
     return name.includes(query) || phone.includes(query)
   })
 
-  const subtotal = cartItems.reduce((sum, it) => sum + (it.qty || 1) * (it.price || 0), 0)
-  const tax = Math.round(subtotal * 0.18 * 100) / 100
-  const total = subtotal + tax
+  const total = cartItems.reduce((sum, it) => sum + (it.qty || 1) * (it.price || 0), 0)
 
   return (
     <DashboardLayout>
@@ -512,16 +518,8 @@ export default function POSTerminalPage() {
                 </div>
 
                 {/* Totals */}
-                <div className="space-y-2 border-t border-gray-200 pt-4 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium text-gray-900">RF {subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">VAT (18%)</span>
-                    <span className="font-medium text-gray-900">RF {tax.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2">
+                <div className="space-y-4 border-t border-gray-200 pt-4 mb-4">
+                  <div className="flex justify-between text-lg font-bold">
                     <span className="text-gray-900">Total</span>
                     <span className="text-indigo-600">RF {total.toFixed(2)}</span>
                   </div>
@@ -542,21 +540,28 @@ export default function POSTerminalPage() {
                     disabled={saving || cartItems.length === 0 || !selectedCustomer}
                     className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg hover:shadow-xl"
                   >
-                    {saving ? 'Processing...' : 'Cash'}
+                    {processingMethod === 'Cash' ? 'Processing...' : 'Cash'}
                   </button>
                   <button
                     onClick={() => handlePayment('Mobile Money')}
                     disabled={saving || cartItems.length === 0 || !selectedCustomer}
                     className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg hover:shadow-xl"
                   >
-                    {saving ? 'Processing...' : 'Mobile Money'}
+                    {processingMethod === 'Mobile Money' ? 'Processing...' : 'Mobile Money'}
                   </button>
                   <button
                     onClick={() => handlePayment('Card')}
                     disabled={saving || cartItems.length === 0 || !selectedCustomer}
                     className="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg hover:shadow-xl"
                   >
-                    {saving ? 'Processing...' : 'Card'}
+                    {processingMethod === 'Card' ? 'Processing...' : 'Card'}
+                  </button>
+                  <button
+                    onClick={() => handlePayment('Bank')}
+                    disabled={saving || cartItems.length === 0 || !selectedCustomer}
+                    className="w-full rounded-xl bg-orange-600 px-4 py-3 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg hover:shadow-xl"
+                  >
+                    {processingMethod === 'Bank' ? 'Processing...' : 'Bank Transfer'}
                   </button>
                 </div>
               </div>
@@ -727,14 +732,6 @@ export default function POSTerminalPage() {
                   ))}
                 </tbody>
                 <tfoot className="border-t-2 border-gray-300">
-                  <tr>
-                    <td colSpan="3" className="px-3 py-2 text-right font-medium text-gray-700">Subtotal:</td>
-                    <td className="px-3 py-2 text-right font-medium text-gray-900">RF {lastSale.subtotal.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td colSpan="3" className="px-3 py-2 text-right font-medium text-gray-700">VAT (18%):</td>
-                    <td className="px-3 py-2 text-right font-medium text-gray-900">RF {lastSale.tax.toFixed(2)}</td>
-                  </tr>
                   <tr className="bg-gray-50">
                     <td colSpan="3" className="px-3 py-2 text-right font-bold text-gray-900">Total:</td>
                     <td className="px-3 py-2 text-right font-bold text-indigo-600 text-lg">

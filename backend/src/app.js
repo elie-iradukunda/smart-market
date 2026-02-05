@@ -52,6 +52,26 @@ if (process.env.NODE_ENV === 'production') {
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
+
+// Debug middleware for 400 errors
+app.use((req, res, next) => {
+  const originalJson = res.json;
+  res.json = function(data) {
+    if (res.statusCode === 400) {
+      const logMsg = `[${new Date().toISOString()}] 400 ${req.method} ${req.originalUrl}
+      USER: ${req.user?.id || 'none'}
+      HEADERS: ${JSON.stringify(req.headers)}
+      QUERY: ${JSON.stringify(req.query)}
+      BODY: ${JSON.stringify(req.body)}
+      DATA: ${JSON.stringify(data)}
+      STACK: ${new Error().stack}\n\n`;
+      fs.appendFileSync(path.join(process.cwd(), '400_errors.log'), logMsg);
+    }
+    return originalJson.call(this, data);
+  };
+  next();
+});
+
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files (uploaded images)
@@ -440,6 +460,7 @@ socketService.init(server);
 server.listen(PORT, () => {
   console.log(`Top Design Backend running on port ${PORT}`);
   console.log(`Socket.IO server initialized`);
+  console.log('Server reloaded with new routes');
 });
 
 export default app;

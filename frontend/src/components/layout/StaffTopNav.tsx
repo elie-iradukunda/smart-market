@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { clearAuth } from '@/utils/apiClient';
-import { Menu, LogOut, LayoutDashboard, ShoppingCart, BarChart3, Mail, Settings } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, ShoppingCart, BarChart3, Mail, Settings, Receipt } from 'lucide-react';
 
 interface StaffTopNavProps {
   onMenuClick?: () => void;
@@ -22,13 +22,12 @@ export default function StaffTopNav({ onMenuClick }: StaffTopNavProps) {
   // Define the main links to reuse for both top and bottom nav
   const mainLinks = [
     { to: "/dashboard/staff", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/dashboard/staff/orders", label: "Orders", icon: ShoppingCart },
-    { to: "/dashboard/staff/reports", label: "Reports", icon: BarChart3 },
+    { to: "/dashboard/staff/reports/operations", label: "Reports", icon: BarChart3 },
   ];
 
   const utilLinks = [
-    { to: "/communications/inbox", label: "Messages", icon: Mail },
-    { to: "/settings/profile", label: "Settings", icon: Settings },
+    { to: "/dashboard/staff/communications/inbox", label: "Messages", icon: Mail },
+    { to: "/account/change-password", label: "Settings", icon: Settings },
   ];
 
   return (
@@ -52,25 +51,25 @@ export default function StaffTopNav({ onMenuClick }: StaffTopNavProps) {
               <p className="text-xs sm:text-sm font-bold text-white">Admin</p>
             </div>
           </div>
-          
-          
+
+
           <nav className="hidden md:flex items-center gap-6">
             {mainLinks.map((link) => (
-              <Link 
-                key={link.to} 
-                to={link.to} 
+              <Link
+                key={link.to}
+                to={link.to}
                 className={`text-sm font-bold transition-colors ${isActive(link.to) ? 'text-blue-600' : 'text-slate-700 hover:text-blue-600'}`}
               >
                 {link.label}
               </Link>
             ))}
-            
+
             <div className="h-4 w-px bg-slate-300 mx-1"></div>
-            
+
             {utilLinks.map((link) => (
-              <Link 
-                key={link.to} 
-                to={link.to} 
+              <Link
+                key={link.to}
+                to={link.to}
                 className={`text-sm font-medium transition-colors ${isActive(link.to) ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}
               >
                 {link.label}
@@ -96,9 +95,8 @@ export default function StaffTopNav({ onMenuClick }: StaffTopNavProps) {
           <Link
             key={link.to}
             to={link.to}
-            className={`flex flex-col items-center p-2 min-w-[64px] transition-colors ${
-              isActive(link.to) ? 'text-blue-600' : 'text-slate-500'
-            }`}
+            className={`flex flex-col items-center p-2 min-w-[64px] transition-colors ${isActive(link.to) ? 'text-blue-600' : 'text-slate-500'
+              }`}
           >
             <link.icon size={20} className={isActive(link.to) ? 'stroke-[2.5px]' : 'stroke-[2px]'} />
             <span className="text-[10px] font-bold mt-1 uppercase tracking-tighter">{link.label}</span>
