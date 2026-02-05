@@ -211,190 +211,174 @@ export default function OrdersPage() {
 
   return (
     <DashboardLayout>
-      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-6">
-        <div className="flex gap-6">
-          <main className="flex-1 space-y-8 max-w-7xl mx-auto">
-            {/* Header Section - Modern, Elevated Card with Blue Accent */}
-            <div className="flex items-center justify-between p-6 bg-white rounded-3xl shadow-2xl border border-slate-200 border-t-4 border-t-indigo-500 transition duration-500 hover:shadow-indigo-300/50">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">
-                  <ListOrdered className="inline h-4 w-4 mr-2" />
-                  Order Management System
-                </p>
-                <h1 className="mt-1 text-4xl font-extrabold text-gray-900 leading-tight">
-                  Active Orders & History
-                </h1>
+     <div className="px-4 py-4">
+  <div className="flex gap-4">
+    <main className="flex-1 space-y-4 max-w-7xl mx-auto">
+      {/* Simple Header */}
+      <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200">
+        <h1 className="text-xl font-bold text-slate-900">
+          Active Orders & History
+        </h1>
+      </div>
+
+      {/* Orders Table Container */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        {loading || error || orders.length === 0 ? (
+          <StateFeedback />
+        ) : (
+          <div className="flow-root">
+            {/* Filter Controls */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+              <span className="text-[10px] font-bold uppercase text-slate-500">
+                {filterMode} Orders
+              </span>
+              <div className="inline-flex gap-1 bg-slate-100 p-1 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange('active')}
+                  className={`px-3 py-1 rounded-md text-[10px] font-bold transition-colors ${
+                    filterMode === 'active' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-white'
+                  }`}
+                >
+                  Active
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange('delivered')}
+                  className={`px-3 py-1 rounded-md text-[10px] font-bold transition-colors ${
+                    filterMode === 'delivered' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-white'
+                  }`}
+                >
+                  Delivered
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange('all')}
+                  className={`px-3 py-1 rounded-md text-[10px] font-bold transition-colors ${
+                    filterMode === 'all' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-white'
+                  }`}
+                >
+                  All
+                </button>
               </div>
             </div>
 
-            {/* Orders Table/List Section - Elevated Design */}
-            <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-100">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Order #
+                    </th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Payment
+                    </th>
+                    <th className="px-4 py-3"></th>
+                  </tr>
+                </thead>
 
-              {loading || error || orders.length === 0 ? (
-                <StateFeedback />
-              ) : (
-                <div className="flow-root">
-                  <div className="flex items-center justify-between px-6 pt-4 pb-2 text-xs text-slate-600">
-                    <span className="font-semibold tracking-wide uppercase text-[11px] text-slate-500">Showing {filterMode === 'active' ? 'Active Orders' : filterMode === 'delivered' ? 'Delivered Orders' : 'All Orders'}</span>
-                    <div className="inline-flex gap-2 bg-slate-100 rounded-full p-1">
-                      <button
-                        type="button"
-                        onClick={() => handleFilterChange('active')}
-                        className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${filterMode === 'active' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}
-                      >
-                        Active
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleFilterChange('delivered')}
-                        className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${filterMode === 'delivered' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}
-                      >
-                        Delivered
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleFilterChange('all')}
-                        className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${filterMode === 'all' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}
-                      >
-                        All
-                      </button>
-                    </div>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-
-                      {/* Table Header - Sticky and Blue Tinted */}
-                      <thead className="bg-indigo-50/70 border-b border-indigo-200 sticky top-0 z-10">
-                        <tr>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                            Order #
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                            <Users className="inline h-4 w-4 mr-2" />
-                            Customer
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                            <Clock className="inline h-4 w-4 mr-2" />
-                            Date
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                            <Tag className="inline h-4 w-4 mr-2" />
-                            Total
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                            Payment
-                          </th>
-                          <th className="px-6 py-4"></th>
-                        </tr>
-                      </thead>
-
-                      {/* Table Body - Dynamic Rows with Hover and Transition */}
-                      <tbody className="bg-white divide-y divide-gray-100">
-                        {paginatedOrders.map((order, index) => (
-                          <tr
-                            key={order.id}
-                            onClick={() => navigate(`/orders/${order.id}`)}
-                            className="group hover:bg-blue-50/50 transition duration-300 ease-in-out cursor-pointer transform hover:shadow-lg hover:z-20 relative"
-                          >
-                            {/* Order ID/Number */}
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 transition duration-300 group-hover:text-indigo-800">
-                              #{String(order.id).substring(0, 8).toUpperCase()}
-                            </td>
-                            {/* Customer */}
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 transition duration-300 group-hover:text-gray-800">
-                              {order.customer}
-                            </td>
-                            {/* Date */}
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 transition duration-300">
-                              {order.date || 'N/A'}
-                            </td>
-                            {/* Total - Uses the formatted span for blue color */}
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              {formatCurrency(order.total)}
-                            </td>
-                            {/* Status */}
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <StatusPill status={order.status} />
-                            </td>
-                            {/* Payment Status */}
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <PaymentStatusPill paymentStatus={order.paymentStatus} />
-                            </td>
-                            {/* Action/View Link with animation */}
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <span className="inline-flex items-center text-blue-600 opacity-80 group-hover:opacity-100 group-hover:font-semibold transition-all duration-300">
-                                Details
-                                <ChevronRight className="h-4 w-4 ml-1 transition-transform duration-300 group-hover:translate-x-1" />
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-                      <div className="text-sm text-gray-600">
-                        Showing {startIndex + 1} to {Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length} orders
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => goToPage(currentPage - 1)}
-                          disabled={currentPage === 1}
-                          className="p-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </button>
-
-                        <div className="flex items-center gap-1">
-                          {[...Array(totalPages)].map((_, i) => {
-                            const page = i + 1
-                            // Show first page, last page, current page, and pages around current
-                            if (
-                              page === 1 ||
-                              page === totalPages ||
-                              (page >= currentPage - 1 && page <= currentPage + 1)
-                            ) {
-                              return (
-                                <button
-                                  key={page}
-                                  onClick={() => goToPage(page)}
-                                  className={`px-3 py-1 rounded-lg text-sm font-medium transition ${currentPage === page
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                                    }`}
-                                >
-                                  {page}
-                                </button>
-                              )
-                            } else if (page === currentPage - 2 || page === currentPage + 2) {
-                              return <span key={page} className="px-2 text-gray-400">...</span>
-                            }
-                            return null
-                          })}
-                        </div>
-
-                        <button
-                          onClick={() => goToPage(currentPage + 1)}
-                          disabled={currentPage === totalPages}
-                          className="p-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {paginatedOrders.map((order) => (
+                    <tr
+                      key={order.id}
+                      onClick={() => navigate(`/orders/${order.id}`)}
+                      className="group hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-slate-900">
+                        #{String(order.id).substring(0, 8).toUpperCase()}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600">
+                        {order.customer}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
+                        {order.date || 'N/A'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                        {formatCurrency(order.total)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <StatusPill status={order.status} />
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <PaymentStatusPill paymentStatus={order.paymentStatus} />
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-right">
+                        <ChevronRight size={14} className="inline text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </main>
-        </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between">
+                <div className="text-[10px] font-bold text-slate-500 uppercase">
+                  {filteredOrders.length} Total
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-1 rounded border border-slate-200 bg-white disabled:opacity-50"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {[...Array(totalPages)].map((_, i) => {
+                      const page = i + 1;
+                      if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => goToPage(page)}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                              currentPage === page
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-white border border-slate-200 text-slate-600'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      }
+                      if (page === currentPage - 2 || page === currentPage + 2) {
+                        return <span key={page} className="text-slate-400 text-[10px]">...</span>;
+                      }
+                      return null;
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-1 rounded border border-slate-200 bg-white disabled:opacity-50"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+    </main>
+  </div>
+</div>
     </DashboardLayout>
   )
 }
