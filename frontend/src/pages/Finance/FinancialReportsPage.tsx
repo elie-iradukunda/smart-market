@@ -251,65 +251,66 @@ export default function FinancialReportsPage() {
   return (
     <DashboardLayout>
       {/* Header Card */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl mb-8">
-        <p className="text-sm font-semibold uppercase tracking-wider text-green-700">Financial Overview</p>
-        <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
-          Executive <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600">Reports</span>
-        </h1>
-        <p className="mt-3 text-base text-gray-600 max-w-xl">
-          High-level financial KPIs for the management team. Use the filters to switch periods and report types.
-        </p>
-      </div>
+      <div className="px-4 py-4">
+  <div className="mx-auto max-w-7xl space-y-6">
+    {/* Header */}
+    <div className="flex items-center justify-between">
+      <h1 className="text-xl font-bold text-gray-900">
+        Executive Reports
+      </h1>
+    </div>
 
-      <div className="space-y-8">
-        {error && (
-          <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700 border border-red-200 flex items-center">
-            <span className="font-bold mr-2">Error:</span> {error}
-          </div>
-        )}
+    <div className="space-y-6">
+      {error && (
+        <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700 border border-red-200 flex items-center">
+          <span className="font-bold mr-2">Error:</span> {error}
+        </div>
+      )}
 
-        {/* KPI Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {kpis.map((kpi, idx) => {
-            const Icon = kpi.icon
-            return (
-              <div
-                key={idx}
-                className={`rounded-2xl border ${kpi.color ? kpi.color.replace('text-', 'border-').split(' ')[2] : 'border-gray-100'} bg-white p-6 shadow-sm transition hover:shadow-md`}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-xl ${kpi.color || 'bg-gray-100'}`}>
-                    <Icon className="w-6 h-6" />
+      {/* KPI Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {kpis.map((kpi, idx) => {
+          const Icon = kpi.icon;
+          return (
+            <div
+              key={idx}
+              className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-gray-200"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2 rounded-lg ${kpi.color || 'bg-gray-100'}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                {kpi.trend && (
+                  <div className={`flex items-center text-xs font-bold ${getTrendColor(kpi.trend)}`}>
+                    {getTrendIcon(kpi.trend)}
+                    {kpi.trend}
                   </div>
-                  {kpi.trend && (
-                    <div className={`flex items-center text-sm font-bold ${getTrendColor(kpi.trend)}`}>
-                      {getTrendIcon(kpi.trend)}
-                      {kpi.trend}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">{kpi.label}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{kpi.value}</p>
-                </div>
+                )}
               </div>
-            )
-          })}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-tight text-gray-500">{kpi.label}</p>
+                <p className="text-2xl font-bold text-gray-900 mt-0.5">{kpi.value}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Charts and Tables Section */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Sales Trend Chart */}
+        <div className="lg:col-span-2 rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden p-1">
+          <SalesTrendChart data={salesData} />
         </div>
 
-        {/* Charts and Tables Section */}
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Sales Trend Chart - Takes up 2 columns */}
-          <div className="lg:col-span-2">
-            <SalesTrendChart data={salesData} />
-          </div>
-
-          {/* Recent Transactions - Takes up 1 column */}
-          <div className="lg:col-span-1">
-            <RecentTransactions payments={payments} invoices={invoices} />
-          </div>
+        {/* Recent Transactions */}
+        <div className="lg:col-span-1 rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden p-1">
+          <RecentTransactions payments={payments} invoices={invoices} />
         </div>
       </div>
+    </div>
+  </div>
+</div>
     </DashboardLayout>
   )
 }

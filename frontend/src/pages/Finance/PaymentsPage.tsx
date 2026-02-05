@@ -73,16 +73,16 @@ export default function PaymentsPage() {
     setFormSuccess(null)
 
     if (!invoiceId) {
-      setFormError('Please select an invoice to pay. If you do not see it, create an invoice first.')
+      setFormError('Please select an invoice to pay.')
       return
     }
     if (!amount) {
-      setFormError('Please enter an amount to record.')
+      setFormError('Please enter an amount.')
       return
     }
     const amountNumber = Number(amount)
     if (!amountNumber || amountNumber <= 0) {
-      setFormError('Payment amount must be greater than zero.')
+      setFormError('Amount must be greater than zero.')
       return
     }
 
@@ -131,17 +131,12 @@ export default function PaymentsPage() {
   const formatMethod = (m: string | null | undefined) => {
     const code = (m || '').toLowerCase()
     switch (code) {
-      case 'cash':
-        return 'Cash'
+      case 'cash': return 'Cash'
       case 'momo':
-      case 'mobile_money':
-        return 'Mobile money'
-      case 'card':
-        return 'Card'
-      case 'bank':
-        return 'Bank transfer'
-      default:
-        return ''
+      case 'mobile_money': return 'Mobile money'
+      case 'card': return 'Card'
+      case 'bank': return 'Bank transfer'
+      default: return ''
     }
   }
 
@@ -157,306 +152,265 @@ export default function PaymentsPage() {
 
   const isFormValid = !!invoiceId && !!amount && Number(amount) > 0
 
-  const user = getAuthUser()
-  const isController = user?.role_id === 4
-  const isPosRole = user?.role_id === 5 || user?.role_id === 11
-
   return (
     <DashboardLayout>
+      <div className="px-4 py-4">
+        <div className="mx-auto max-w-7xl space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-gray-900">Payments</h1>
+          </div>
 
-      {/* Header card with blue accent, similar to other finance pages */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Finance</p>
-        <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900">Payments</h1>
-        <p className="mt-2 text-sm text-gray-600 max-w-xl">
-          Recorded payments from cash, mobile money, and bank. Use this view to reconcile invoices with money received.
-        </p>
-        <div className="mt-4 grid gap-4 md:grid-cols-3 text-sm">
-          <div className="rounded-lg bg-blue-50 px-3 py-2 border border-blue-100">
-            <p className="text-gray-600">Transactions</p>
-            <p className="mt-1 text-xl font-semibold text-gray-900">{filtered.length}</p>
-          </div>
-          <div className="rounded-lg bg-indigo-50 px-3 py-2 border border-indigo-100">
-            <p className="text-gray-600">Total received</p>
-            <p className="mt-1 text-xl font-semibold text-gray-900">{formatCurrency(totalReceived)}</p>
-          </div>
-          <div className="rounded-lg bg-gray-50 px-3 py-2 border border-gray-200">
-            <p className="text-gray-600">Payment methods</p>
-            <p className="mt-1 text-xl font-semibold text-gray-900">3</p>
-          </div>
-        </div>
-
-        {selectedInvoice && (
-          <div className="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/40 px-4 py-3 text-xs flex flex-wrap items-center gap-3">
-            <div className="flex flex-col">
-              <span className="font-semibold text-gray-800">
-                Paying invoice #{selectedInvoice.id}
-              </span>
-              <span className="text-[11px] text-gray-600">
-                Customer: {selectedInvoice.customer_name || 'Customer'} · Amount: {formatCurrency(Number(selectedInvoice.amount || 0))} · Status: {(selectedInvoice.status || '').toUpperCase()}
-              </span>
+          {/* Metrics Grid */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Transactions</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">{filtered.length}</p>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Total Received</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">{formatCurrency(totalReceived)}</p>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Methods Used</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">3</p>
             </div>
           </div>
-        )}
 
-        {/* Quick Record Payment form */}
-        <form
-          onSubmit={handleRecordPayment}
-          className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-indigo-100 bg-indigo-50/40 px-3 py-2 text-xs"
-        >
-          <span className="font-semibold text-gray-800 mr-1">Record payment:</span>
-          <select
-            value={invoiceId}
-            onChange={(e) => {
-              setInvoiceId(e.target.value)
-              setFormError(null)
-              setFormSuccess(null)
-            }}
-            className="w-56 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          >
-            <option value="">Select invoice (customer / amount)</option>
-            {openInvoices.map((inv: any) => (
-              <option key={inv.id} value={inv.id}>
-                #{inv.id} - {inv.customer_name || 'Customer'} - ${inv.amount || 0}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={amount}
-            onChange={(e) => {
-              setAmount(e.target.value)
-              setFormError(null)
-              setFormSuccess(null)
-            }}
-            placeholder="Amount"
-            className="w-24 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-          <select
-            value={method}
-            onChange={(e) => {
-              setMethod(e.target.value)
-              setFormError(null)
-              setFormSuccess(null)
-            }}
-            className="rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          >
-            <option value="cash">Cash</option>
-            <option value="momo">Mobile Money</option>
-            <option value="card">Card</option>
-            <option value="bank">Bank</option>
-          </select>
-          <input
-            type="text"
-            value={reference}
-            onChange={(e) => setReference(e.target.value)}
-            placeholder="Reference (optional)"
-            className="w-40 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-          <button
-            type="submit"
-            disabled={creating || !isFormValid}
-            className="ml-auto rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {creating ? 'Saving…' : 'Save payment'}
-          </button>
-        </form>
+          {/* Quick Record Form */}
+          <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-gray-50">
+              <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">Record Payment</p>
+            </div>
+            <div className="p-4">
+              <form onSubmit={handleRecordPayment} className="flex flex-wrap items-center gap-3">
+                <select
+                  value={invoiceId}
+                  onChange={(e) => {
+                    setInvoiceId(e.target.value)
+                    setFormError(null)
+                    setFormSuccess(null)
+                  }}
+                  className="flex-1 min-w-[240px] rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none transition"
+                >
+                  <option value="">Select invoice (customer / amount)</option>
+                  {openInvoices.map((inv: any) => (
+                    <option key={inv.id} value={inv.id}>
+                      #{inv.id} - {inv.customer_name || 'Customer'} - ${inv.amount || 0}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={amount}
+                  onChange={(e) => {
+                    setAmount(e.target.value)
+                    setFormError(null)
+                    setFormSuccess(null)
+                  }}
+                  placeholder="Amount"
+                  className="w-32 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none transition"
+                />
+                <select
+                  value={method}
+                  onChange={(e) => {
+                    setMethod(e.target.value)
+                    setFormError(null)
+                    setFormSuccess(null)
+                  }}
+                  className="w-36 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none transition"
+                >
+                  <option value="cash">Cash</option>
+                  <option value="momo">Mobile Money</option>
+                  <option value="card">Card</option>
+                  <option value="bank">Bank</option>
+                </select>
+                <input
+                  type="text"
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  placeholder="Reference (optional)"
+                  className="flex-1 min-w-[160px] rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none transition"
+                />
+                <button
+                  type="submit"
+                  disabled={creating || !isFormValid}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 transition"
+                >
+                  {creating ? 'Saving...' : 'Save Payment'}
+                </button>
+              </form>
 
-        {formError && (
-          <p className="mt-2 rounded-lg bg-red-50 border border-red-200 px-3 py-1.5 text-[11px] text-red-700">
-            {formError}
-          </p>
-        )}
-        {formSuccess && !formError && (
-          <p className="mt-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-[11px] text-emerald-700">
-            {formSuccess}
-          </p>
-        )}
-      </div>
-
-      {/* Table card */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xl">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3 text-xs">
-          <p className="text-sm font-medium text-gray-900">Payment list</p>
-          <div className="flex flex-wrap gap-2">
-            <select
-              value={methodFilter}
-              onChange={(e) => setMethodFilter(e.target.value)}
-              className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            >
-              <option value="All">All methods</option>
-              <option value="cash">Cash</option>
-              <option value="mobile_money">Mobile Money</option>
-              <option value="bank">Bank</option>
-            </select>
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
+              {formError && <p className="mt-3 text-[11px] font-bold text-red-600">{formError}</p>}
+              {formSuccess && !formError && <p className="mt-3 text-[11px] font-bold text-emerald-600">{formSuccess}</p>}
+              
+              {selectedInvoice && (
+                <div className="mt-3 text-[10px] text-gray-500 font-medium">
+                  Selected: Invoice #{selectedInvoice.id} | {selectedInvoice.customer_name} | {formatCurrency(Number(selectedInvoice.amount || 0))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="overflow-x-auto">
-          {error && (
-            <p className="mb-3 rounded-lg bg-red-50 p-2 text-xs text-red-700 border border-red-200">{error}</p>
-          )}
-          {loading ? (
-            <p className="text-xs text-gray-500 py-4">Loading payments...</p>
-          ) : (
-            <table className="min-w-full text-left text-xs sm:text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-3 py-2 font-medium text-gray-700">Payment</th>
-                  <th className="px-3 py-2 font-medium text-gray-700">Invoice</th>
-                  <th className="px-3 py-2 font-medium text-gray-700">Method</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-700">Amount</th>
-                  <th className="px-3 py-2 font-medium text-gray-700">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((pmt: any) => (
-                  <tr key={pmt.id} className="border-t border-gray-100 hover:bg-gray-50">
-                    <td className="px-3 py-2 text-gray-800">{pmt.id}</td>
-                    <td className="px-3 py-2 text-gray-800">{pmt.invoice_number}</td>
-                    <td className="px-3 py-2 text-gray-800">{formatMethod(pmt.method)}</td>
-                    <td className="px-3 py-2 text-right text-gray-800">{formatCurrency(typeof pmt.amount === 'number' ? pmt.amount : parseFloat(pmt.amount || '0'))}</td>
-                    <td className="px-3 py-2 text-gray-800">{(pmt.created_at || '').slice(0, 10)}</td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && !loading && (
+
+          {/* Payment List Table */}
+          <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-gray-50 flex items-center justify-between gap-4">
+              <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">Payment History</p>
+              <div className="flex gap-2">
+                <select
+                  value={methodFilter}
+                  onChange={(e) => setMethodFilter(e.target.value)}
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="All">All methods</option>
+                  <option value="cash">Cash</option>
+                  <option value="mobile_money">Mobile Money</option>
+                  <option value="bank">Bank</option>
+                </select>
+                <input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-gray-50 border-b border-gray-100">
                   <tr>
-                    <td colSpan={5} className="px-3 py-4 text-center text-xs text-gray-500">No payments found.</td>
+                    <th className="px-6 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider">ID</th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Invoice</th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Method</th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Amount</th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Date</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {loading ? (
+                    <tr><td colSpan={5} className="px-6 py-8 text-center text-xs text-gray-400 font-bold uppercase italic">Loading payments...</td></tr>
+                  ) : filtered.length === 0 ? (
+                    <tr><td colSpan={5} className="px-6 py-8 text-center text-xs text-gray-400 font-bold uppercase">No payments found.</td></tr>
+                  ) : (
+                    filtered.map((pmt: any) => (
+                      <tr key={pmt.id} className="hover:bg-gray-50 transition duration-150">
+                        <td className="px-6 py-4 text-xs font-bold text-gray-900">{pmt.id}</td>
+                        <td className="px-6 py-4 text-xs text-gray-600">{pmt.invoice_number}</td>
+                        <td className="px-6 py-4 text-xs text-gray-600">{formatMethod(pmt.method)}</td>
+                        <td className="px-6 py-4 text-xs text-right font-medium text-gray-900">
+                          {formatCurrency(typeof pmt.amount === 'number' ? pmt.amount : parseFloat(pmt.amount || '0'))}
+                        </td>
+                        <td className="px-6 py-4 text-xs text-gray-500">{(pmt.created_at || '').slice(0, 10)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-      {/* Lanari mobile money payment panel */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-          <div>
-            <p className="text-sm font-medium text-gray-900">Lanari mobile money payment</p>
-            <p className="text-xs text-gray-500">Initiate a customer payment via Lanari (USSD / MoMo) and track its status.</p>
+          {/* Lanari Panel */}
+          <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-gray-50">
+              <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">Lanari Mobile Payment</p>
+              <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-tight">USSD / MoMo Integration</p>
+            </div>
+            <div className="p-4">
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  setLanariStatus(null)
+                  if (!lanariInvoiceId || !lanariAmount || !lanariPhone) {
+                    setLanariStatus('Please fill all fields.')
+                    return
+                  }
+                  setLanariLoading(true)
+                  try {
+                    const resp = await initiateLanariPayment({
+                      invoice_id: Number(lanariInvoiceId),
+                      amount: Number(lanariAmount),
+                      customer_phone: lanariPhone,
+                    })
+                    setLanariPaymentId(resp.payment_id)
+                    setLanariStatus(resp.message || 'Payment initiated. Waiting for customer...')
+                    reloadPayments()
+                  } catch (err: any) {
+                    setLanariStatus(err.message || 'Failed to initiate.')
+                  } finally {
+                    setLanariLoading(false)
+                  }
+                }}
+                className="flex flex-wrap items-center gap-3"
+              >
+                <select
+                  value={lanariInvoiceId}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setLanariInvoiceId(val)
+                    const inv = openInvoices.find((i: any) => String(i.id) === String(val))
+                    if (inv) setLanariAmount(String(inv.amount || ''))
+                  }}
+                  className="flex-1 min-w-[200px] rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:border-amber-500 focus:outline-none transition"
+                >
+                  <option value="">Select invoice</option>
+                  {openInvoices.map((inv: any) => (
+                    <option key={inv.id} value={inv.id}>
+                      #{inv.id} - {inv.customer_name} - ${inv.amount}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  value={lanariAmount}
+                  onChange={(e) => setLanariAmount(e.target.value)}
+                  placeholder="Amount"
+                  className="w-28 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:border-amber-500 focus:outline-none transition"
+                />
+                <input
+                  type="tel"
+                  value={lanariPhone}
+                  onChange={(e) => setLanariPhone(e.target.value)}
+                  placeholder="Phone (078...)"
+                  className="w-40 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:border-amber-500 focus:outline-none transition"
+                />
+                <button
+                  type="submit"
+                  disabled={lanariLoading}
+                  className="rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-700 disabled:opacity-50 transition"
+                >
+                  {lanariLoading ? 'Sending...' : 'Initiate Lanari'}
+                </button>
+              </form>
+
+              {lanariStatus && <p className="mt-3 text-[11px] font-bold text-amber-700">{lanariStatus}</p>}
+              
+              {lanariPaymentId && (
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">ID: {lanariPaymentId}</span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!lanariPaymentId) return
+                      try {
+                        const status = await checkLanariPaymentStatus(lanariPaymentId)
+                        setLanariStatus(`Gateway: ${status.gateway_status} | Payment: ${status.payment_status}`)
+                        reloadPayments()
+                      } catch (err: any) {
+                        setLanariStatus(err.message || 'Failed check.')
+                      }
+                    }}
+                    className="rounded border border-amber-200 px-2 py-1 text-[10px] font-bold text-amber-700 hover:bg-amber-50 transition"
+                  >
+                    Check Status
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault()
-            setLanariStatus(null)
-
-            if (!lanariInvoiceId) {
-              setLanariStatus('Select an invoice first.')
-              return
-            }
-            const amt = Number(lanariAmount || 0)
-            if (!amt || amt <= 0) {
-              setLanariStatus('Enter a valid amount to charge.')
-              return
-            }
-            if (!lanariPhone) {
-              setLanariStatus('Enter the customer phone number for mobile money/USSD.')
-              return
-            }
-
-            setLanariLoading(true)
-            try {
-              const resp = await initiateLanariPayment({
-                invoice_id: Number(lanariInvoiceId),
-                amount: amt,
-                customer_phone: lanariPhone,
-              })
-              setLanariPaymentId(resp.payment_id)
-              setLanariStatus(resp.message || 'Lanari payment initiated. Waiting for customer confirmation...')
-              reloadPayments()
-            } catch (err: any) {
-              setLanariStatus(err.message || 'Failed to initiate Lanari payment')
-            } finally {
-              setLanariLoading(false)
-            }
-          }}
-          className="flex flex-wrap items-center gap-2 rounded-2xl border border-amber-100 bg-amber-50/40 px-3 py-2 text-xs"
-        >
-          <span className="font-semibold text-gray-800 mr-1">Lanari payment:</span>
-          <select
-            value={lanariInvoiceId}
-            onChange={(e) => {
-              const val = e.target.value
-              setLanariInvoiceId(val)
-              const inv = openInvoices.find((i: any) => String(i.id) === String(val))
-              if (inv) {
-                setLanariAmount(String(inv.amount || ''))
-              }
-            }}
-            className="w-56 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-          >
-            <option value="">Select invoice</option>
-            {openInvoices.map((inv: any) => (
-              <option key={inv.id} value={inv.id}>
-                #{inv.id} - {inv.customer_name || 'Customer'} - ${inv.amount || 0}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={lanariAmount}
-            onChange={(e) => setLanariAmount(e.target.value)}
-            placeholder="Amount"
-            className="w-24 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-          />
-          <input
-            type="tel"
-            value={lanariPhone}
-            onChange={(e) => setLanariPhone(e.target.value)}
-            placeholder="Customer phone (e.g. 078...)"
-            className="w-40 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] text-gray-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-          />
-          <button
-            type="submit"
-            disabled={lanariLoading}
-            className="ml-auto rounded-full bg-amber-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {lanariLoading ? 'Sending…' : 'Initiate Lanari payment'}
-          </button>
-        </form>
-
-        {lanariPaymentId && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-            <span className="text-gray-700">Payment ID: {lanariPaymentId}</span>
-            <button
-              type="button"
-              onClick={async () => {
-                if (!lanariPaymentId) return
-                try {
-                  const status = await checkLanariPaymentStatus(lanariPaymentId)
-                  setLanariStatus(
-                    `Gateway status: ${status.gateway_status || 'unknown'} · Payment status: ${status.payment_status || 'unknown'}`
-                  )
-                  reloadPayments()
-                } catch (err: any) {
-                  setLanariStatus(err.message || 'Failed to check payment status')
-                }
-              }}
-              className="inline-flex items-center rounded-full bg-white px-3 py-1 border border-amber-200 text-amber-800 hover:bg-amber-50"
-            >
-              Check status
-            </button>
-          </div>
-        )}
-
-        {lanariStatus && (
-          <p className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-1.5 text-[11px] text-amber-800">
-            {lanariStatus}
-          </p>
-        )}
       </div>
     </DashboardLayout>
   )
