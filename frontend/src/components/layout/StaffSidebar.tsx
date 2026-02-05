@@ -11,7 +11,8 @@ import {
   Factory,
   CreditCard,
   BarChart3,
-  Wrench
+  Wrench,
+  Palette
 } from 'lucide-react'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
 
@@ -26,6 +27,11 @@ const sidebarItems = [
     path: '/dashboard/staff/tasks',
     icon: ClipboardList,
     badge: 'new'
+  },
+  {
+    label: 'Design Studio',
+    path: '/dashboard/staff/design/hub',
+    icon: Palette,
   },
   {
     label: 'Work Orders',

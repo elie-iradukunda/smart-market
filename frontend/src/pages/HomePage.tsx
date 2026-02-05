@@ -106,7 +106,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products Section */}
+      {/* Featured Design Services Section */}
       <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -115,23 +115,29 @@ export default function HomePage() {
               <span className="text-sm font-semibold text-blue-600">Our Services</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Featured Design Services
+              Professional Design Services
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Professional design solutions for your business needs
+              Custom designs, printing, and branding solutions tailored for you
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {products.map((product, index) => (
-              <div
-                key={product.id}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <ProductCard product={product} />
-              </div>
-            ))}
+            {products
+              .filter(p => {
+                const cat = (p.category || '').toLowerCase();
+                return ['design', 'print', 'banner', 'sign', 'card', 'flyer', 'poster', 'sticker', 'shirt', 'brand'].some(k => cat.includes(k));
+              })
+              .slice(0, 4)
+              .map((product, index) => (
+                <div
+                  key={product.id}
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))}
           </div>
 
           <div className="text-center">
@@ -140,6 +146,52 @@ export default function HomePage() {
               className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold text-lg transition-all shadow-md hover:shadow-lg hover:scale-105 transform"
             >
               View All Services
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Retail Products Section */}
+      <section className="py-20 bg-white border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 rounded-full mb-4">
+              <ShoppingBag className="w-4 h-4 text-purple-600" />
+              <span className="text-sm font-semibold text-purple-600">Store Catalog</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Shop Products
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Browse our collection of high-quality products available for immediate purchase
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {products
+              .filter(p => {
+                const cat = (p.category || '').toLowerCase();
+                return !['design', 'print', 'banner', 'sign', 'card', 'flyer', 'poster', 'sticker', 'shirt', 'brand'].some(k => cat.includes(k));
+              })
+              .slice(0, 4)
+              .map((product, index) => (
+                <div
+                  key={product.id}
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))}
+          </div>
+
+          <div className="text-center">
+            <Link
+              to="/products"
+              className="group inline-flex items-center gap-2 px-8 py-4 bg-white border-2 border-purple-100 text-purple-600 rounded-lg font-semibold text-lg hover:bg-purple-50 transition-all shadow-sm hover:shadow-md hover:scale-105 transform"
+            >
+              Shop All Products
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>

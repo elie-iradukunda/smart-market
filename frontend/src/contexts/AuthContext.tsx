@@ -19,15 +19,31 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(() => {
-        const savedUser = sessionStorage.getItem('currentUser')
-        return savedUser ? JSON.parse(savedUser) : null
+        // Check localStorage (primary source for apiClient compatibility)
+        const savedUser = localStorage.getItem('auth_user')
+        if (savedUser) {
+            try {
+                const parsed = JSON.parse(savedUser)
+                // Normalize name -> fullName if missing (handles data from apiClient login)
+                if (parsed.name && !parsed.fullName) {
+                    parsed.fullName = parsed.name
+                }
+                return parsed
+            } catch (e) {
+                return null
+            }
+        }
+        return null
     })
 
     useEffect(() => {
         if (user) {
-            sessionStorage.setItem('currentUser', JSON.stringify(user))
+            localStorage.setItem('auth_user', JSON.stringify(user))
+            // Ensure token is also synced if present in user object
+            // (Login sets it explicitly, but good to be safe)
         } else {
-            sessionStorage.removeItem('currentUser')
+            localStorage.removeItem('auth_user')
+            localStorage.removeItem('auth_token')
         }
     }, [user])
 
@@ -55,7 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     token: data.token
                 }
                 setUser(userWithToken)
-                sessionStorage.setItem('token', data.token)
+                localStorage.setItem('auth_token', data.token)
+                localStorage.setItem('auth_user', JSON.stringify(userWithToken))
                 return true
             }
             return false
@@ -84,7 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     token: data.token
                 }
                 setUser(userWithToken)
-                sessionStorage.setItem('token', data.token)
+                localStorage.setItem('auth_token', data.token)
+                localStorage.setItem('auth_user', JSON.stringify(userWithToken))
                 return true
             }
             return false
@@ -96,10 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const logout = () => {
         setUser(null)
-        sessionStorage.removeItem('token')
-        sessionStorage.removeItem('currentUser')
         localStorage.removeItem('auth_token')
         localStorage.removeItem('auth_user')
+        sessionStorage.clear() // Clear legacy session
     }
 
     return (

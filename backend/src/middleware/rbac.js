@@ -35,6 +35,29 @@ const rbacMiddleware = async (req, res, next) => {
       return next();
     }
 
+    // Allow Clients (Role 4) and Customers (Role 13) to view their own resources
+    // The Controller ensures they only see their own data
+    if ((user.role_id === 4 || user.role_id === 13)) {
+        // Derive resource to check if it matches allowed list
+        let pathToCheck = req.path;
+         if (!pathToCheck || pathToCheck === '/') {
+            const originalPath = req.originalUrl.split('?')[0];
+            pathToCheck = originalPath.replace(/^\/api/, '') || '/';
+        }
+        if (pathToCheck.startsWith('/api/')) {
+             pathToCheck = pathToCheck.replace('/api', '');
+        }
+        const parts = pathToCheck.split('/').filter(Boolean);
+        let resource = parts[0] || '';
+        if (resource.endsWith('s') && resource.length > 1) resource = resource.slice(0, -1);
+        
+        const action = methodToAction[req.method] || '';
+
+        if (action === 'view' && ['order', 'quote', 'file', 'invoice'].includes(resource)) {
+            return next();
+        }
+    }
+
     // Derive a simple permission code from the URL and method
     // In Express, when a router is mounted at '/api' and route is '/orders',
     // req.path = '/orders' (relative to mount), req.originalUrl = '/api/orders' (full)

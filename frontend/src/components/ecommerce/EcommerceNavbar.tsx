@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ShoppingCart, User, LogOut, Package, Menu, X } from 'lucide-react'
+import { ShoppingCart, User, LogOut, Package, Menu, X, LayoutDashboard } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -45,12 +45,21 @@ export default function EcommerceNavbar() {
                         </Link>
                         <Link
                             to="/products"
-                            className={`font-medium transition-colors ${isActive('/products')
+                            className={`font-medium transition-colors ${isActive('/products') && !location.search.includes('view=designs')
                                 ? 'text-blue-600'
                                 : 'text-gray-700 hover:text-blue-600'
                                 }`}
                         >
                             Products
+                        </Link>
+                        <Link
+                            to="/products?view=designs"
+                            className={`font-medium transition-colors ${location.search.includes('view=designs')
+                                ? 'text-blue-600'
+                                : 'text-gray-700 hover:text-blue-600'
+                                }`}
+                        >
+                            Designs
                         </Link>
                         <Link
                             to="/about"
@@ -104,16 +113,16 @@ export default function EcommerceNavbar() {
                         {isAuthenticated ? (
                             <div className="flex items-center space-x-3">
                                 <Link
-                                    to="/shop/orders"
+                                    to="/client"
                                     className="hidden sm:flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors"
                                 >
-                                    <Package className="w-4 h-4" />
-                                    <span className="font-medium">My Orders</span>
+                                    <LayoutDashboard className="w-4 h-4" />
+                                    <span className="font-medium">My Dashboard</span>
                                 </Link>
                                 <div className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg">
                                     <User className="w-4 h-4 text-gray-700" />
                                     <span className="font-medium text-gray-700 hidden sm:inline">
-                                        {user?.fullName.split(' ')[0]}
+                                        {(user?.fullName || (user as any)?.name || 'User').split(' ')[0]}
                                     </span>
                                 </div>
                                 <button
@@ -205,11 +214,11 @@ export default function EcommerceNavbar() {
                             {isAuthenticated ? (
                                 <>
                                     <Link
-                                        to="/shop/orders"
+                                        to="/client"
                                         onClick={() => setMobileMenuOpen(false)}
                                         className="block px-4 py-2 font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors"
                                     >
-                                        My Orders
+                                        My Dashboard
                                     </Link>
                                     <div className="border-t border-gray-200 my-2"></div>
                                     <div className="px-4 py-2 text-sm text-gray-600">

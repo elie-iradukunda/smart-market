@@ -55,15 +55,19 @@ export default function ShopLoginPage() {
                     }
 
                     const dashboardPath = dashboardPaths[data.user.role_id] || '/dashboard/owner'
-                    toast.success('Login successful! Redirecting to your dashboard...')
+                    toast.success('Login successful! Redirecting...')
+
+                    // Check for redirect param (e.g. from Cart checkout)
+                    const redirect = searchParams.get('redirect');
+
                     // Use window.location.href for full page reload to properly initialize business app
-                    window.location.href = dashboardPath
+                    window.location.href = redirect || dashboardPath
                 } else {
                     // Customer user - use the AuthContext login function
                     const success = await login(email, password)
                     if (success) {
                         toast.success('Login successful!')
-                        const redirect = searchParams.get('redirect') || '/'
+                        const redirect = searchParams.get('redirect') || '/client'
                         navigate(redirect)
                     } else {
                         setError('Invalid email or password')
@@ -208,8 +212,8 @@ export default function ShopLoginPage() {
 
                 {/* Back to Home */}
                 <div className="text-center mt-6">
-                    <Link 
-                        to="/" 
+                    <Link
+                        to="/"
                         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium group"
                     >
                         <span className="group-hover:-translate-x-1 transition-transform">←</span>

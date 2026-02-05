@@ -25,6 +25,7 @@ import productRoutes from './routes/products.js';
 import productImageUploadRoutes from './routes/productImageUpload.js';
 import ecommerceOrdersRoutes from './routes/ecommerceOrders.js';
 import adsRoutes from './routes/ads.js';
+import designRoutes from './routes/designs.js';
 
 import './jobs/scheduler.js';
 
@@ -52,6 +53,11 @@ if (process.env.NODE_ENV === 'production') {
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
+
+// Serve static files from public/uploads directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Debug middleware for 400 errors
 app.use((req, res, next) => {
@@ -424,6 +430,7 @@ app.use('/api/ecommerce/orders', ecommerceOrdersRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/upload', productImageUploadRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api', designRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', customerRoutes);
 app.use('/api', leadsRoutes);

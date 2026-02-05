@@ -45,8 +45,11 @@ export default function OrderDetailPage() {
         if (!isMounted) return
         setOrder(data)
 
-        // Fetch work orders for this order
-        if (token) {
+        // Fetch work orders for this order (Only for Staff - Exclude Clients/Customers)
+        const currentUser = getAuthUser();
+        const isClient = [4, 13].includes(Number(currentUser?.role_id));
+
+        if (token && !isClient) {
           try {
             const woRes = await fetch(`${API_BASE}/work-orders?order_id=${id}`, {
               headers: { 'Authorization': `Bearer ${token}` }

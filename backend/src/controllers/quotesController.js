@@ -89,14 +89,33 @@ export const createQuote = async (req, res) => {
 
 export const getQuotes = async (req, res) => {
   try {
+    let whereClause = '';
+    const params = [];
+
+    // If user is a customer (Role 13) or Client (Role 4), filter by their email
+    if (req.user && (req.user.role_id === 13 || req.user.role_id === 4)) {
+      // Find customer IDs associated with this user's email
+      const [customers] = await pool.execute('SELECT id FROM customers WHERE email = ?', [req.user.email]);
+      
+      if (customers.length === 0) {
+        return res.json([]); // No customer record found for this user
+      }
+
+      const customerIds = customers.map(c => c.id).join(',');
+      whereClause = `WHERE q.customer_id IN (${customerIds})`;
+    }
+
     const [quotes] = await pool.execute(`
       SELECT q.*, c.name as customer_name 
       FROM quotes q 
       LEFT JOIN customers c ON q.customer_id = c.id 
+      ${whereClause}
       ORDER BY q.created_at DESC
-    `);
+    `, params);
+
     res.json(quotes);
   } catch (error) {
+    console.error('Get quotes error:', error);
     res.status(500).json({ error: 'Failed to fetch quotes' });
   }
 };
@@ -113,6 +132,16 @@ export const getQuote = async (req, res) => {
     
     if (quote.length === 0) {
       return res.status(404).json({ error: 'Quote not found' });
+    }
+
+    // Security check: Ensure Customers (Role 13) and Clients (Role 4) only access their own quotes
+    if (req.user && (req.user.role_id === 13 || req.user.role_id === 4)) {
+      const [userCustomers] = await pool.execute('SELECT id FROM customers WHERE email = ?', [req.user.email]);
+      const allowedCustomerIds = userCustomers.map(c => c.id);
+      
+      if (!allowedCustomerIds.includes(quote[0].customer_id)) {
+        return res.status(403).json({ error: 'Access denied to this quote' });
+      }
     }
     
     res.json(quote[0]);

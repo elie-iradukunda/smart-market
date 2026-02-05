@@ -46,7 +46,9 @@ const PERMISSIONS = {
   REPORT_VIEW: 'report.view',
   AI_VIEW: 'ai.view',
   FILE_UPLOAD: 'file.upload',
-  FILE_VIEW: 'file.view'
+  FILE_VIEW: 'file.view',
+  DESIGN_MANAGE: 'design.manage',
+  DESIGN_VIEW: 'design.view'
 };
 
 // Route to permission mapping (paths without /api prefix)
@@ -198,6 +200,14 @@ const ROUTE_PERMISSIONS = {
   'POST /upload/artwork': [PERMISSIONS.FILE_UPLOAD],
   'GET /files/:id': [PERMISSIONS.FILE_VIEW],
   
+  // Design Studio
+  'GET /designs': [PERMISSIONS.DESIGN_VIEW],
+  'GET /designs/:id': [PERMISSIONS.DESIGN_VIEW],
+  'POST /designs': [PERMISSIONS.DESIGN_MANAGE],
+  'PUT /designs/:id': [PERMISSIONS.DESIGN_MANAGE],
+  'PUT /designs/:id/approve': [PERMISSIONS.DESIGN_MANAGE],
+  'DELETE /designs/:id': [PERMISSIONS.DESIGN_MANAGE],
+  
   // Payment routes (mounted at /payments)
   'GET /': [PERMISSIONS.PAYMENT_VIEW],
   'POST /lanari': [PERMISSIONS.PAYMENT_CREATE],
@@ -220,7 +230,9 @@ const ROLE_PERMISSIONS = {
     PERMISSIONS.MATERIAL_VIEW,
     PERMISSIONS.POS_CREATE,
     PERMISSIONS.REPORT_VIEW,
-    PERMISSIONS.FILE_VIEW
+    PERMISSIONS.FILE_VIEW,
+    PERMISSIONS.DESIGN_VIEW,
+    PERMISSIONS.DESIGN_MANAGE
   ],
   [ROLES.CLIENT]: [
     PERMISSIONS.CUSTOMER_VIEW,

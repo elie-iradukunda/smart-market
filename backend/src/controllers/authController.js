@@ -57,8 +57,8 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await pool.execute(
-      'INSERT INTO users (name, email, phone, password_hash, role_id,role) VALUES (?, ?, ?, ?, ?,?)',
-      [name, email, phone || null, hashedPassword, roleId,role||null]
+      'INSERT INTO users (name, email, phone, password_hash, role_id) VALUES (?, ?, ?, ?, ?)',
+      [name, email, phone || null, hashedPassword, roleId]
     );
 
     const token = jwt.sign({ userId: result.insertId }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
@@ -70,13 +70,16 @@ export const register = async (req, res) => {
         id: result.insertId,
         name,
         email,
-        role_id: roleId,
-
-        role:user.role
+        role_id: roleId
       }
     });
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY' || error.errno === 1062) {
+        if (error.sqlMessage.includes('email')) {
+            return res.status(409).json({ error: 'Email already exists' });
+        } else if (error.sqlMessage.includes('phone')) {
+            return res.status(409).json({ error: 'Phone number already exists' });
+        }
       return res.status(409).json({ error: 'Email or phone already exists' });
     }
     console.error('Registration error:', error);

@@ -28,6 +28,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             return <StaffDashboardLayout>{children}</StaffDashboardLayout>;
         case 4: // Client (customer)
             return <ClientDashboardLayout>{children}</ClientDashboardLayout>;
+        case 13: // Customer (E-commerce)
+            return <ClientDashboardLayout>{children}</ClientDashboardLayout>;
         default:
             // Fallback to Admin layout for unknown roles
             return <AdminDashboardLayout>{children}</AdminDashboardLayout>;

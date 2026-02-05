@@ -63,6 +63,8 @@ import FilesPage from '../pages/FilesPage';
 import InventoryDashboard from '@/pages/InventoryDashboard';
 import ReceptionDashboard from '@/pages/ReceptionDashboard';
 import MyTasksPage from '../pages/Staff/MyTasksPage';
+import DesignStudioPage from '../pages/Design/DesignStudioPage';
+import DesignManagementPage from '../pages/Design/DesignManagementPage';
 
 export const routes = [
   // Main dashboard routes for 4 consolidated roles
@@ -100,6 +102,9 @@ export const routes = [
   { path: '/dashboard/admin/inventory/materials', element: <MaterialsPage /> },
   { path: '/dashboard/admin/inventory/materials/:sku', element: <MaterialDetailPage /> },
   { path: '/dashboard/admin/ai/overview', element: <AiOverviewPage /> },
+  { path: '/dashboard/admin/design/hub', element: <DesignManagementPage /> },
+  { path: '/dashboard/admin/design/studio', element: <DesignStudioPage /> },
+  { path: '/dashboard/admin/design/studio/:id', element: <DesignStudioPage /> },
 
   // SALES nested routes (role_id: 2)
   { path: '/dashboard/sales/crm/leads', element: <LeadsPage /> },
@@ -146,6 +151,9 @@ export const routes = [
   { path: '/dashboard/staff/communications/conversations/:id', element: <ConversationDetailPage /> },
   { path: '/dashboard/staff/pos/terminal', element: <POSTerminalPage /> },
   { path: '/dashboard/staff/pos/sales-history', element: <PosSalesHistoryPage /> },
+  { path: '/dashboard/staff/design/hub', element: <DesignManagementPage /> },
+  { path: '/dashboard/staff/design/studio', element: <DesignStudioPage /> },
+  { path: '/dashboard/staff/design/studio/:id', element: <DesignStudioPage /> },
 
   // CLIENT nested routes (role_id: 4)
   { path: '/client/orders', element: <OrdersPage /> },

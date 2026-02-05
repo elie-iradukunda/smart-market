@@ -72,15 +72,13 @@ export default function ClientDashboard() {
                                     Welcome back, <span className="text-indigo-200">{user?.name?.split(' ')[0] || 'Friend'}</span>!
                                 </h1>
                                 <p className="max-w-xl text-lg text-indigo-100 leading-relaxed font-medium">
-                                    Track your active orders, review project quotes, and manage your design files all in one place.
+                                    Track your active orders and manage your purchases all in one place.
                                 </p>
                                 <div className="flex gap-3 pt-2">
                                     <Link to="/client/orders" className="bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all shadow-xl shadow-indigo-900/20">
                                         My Orders
                                     </Link>
-                                    <Link to="/communications/inbox" className="bg-indigo-500 text-white border border-indigo-400 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-indigo-400 transition-all">
-                                        Contact Support
-                                    </Link>
+                                    {/* Contact Support removed */}
                                 </div>
                             </div>
 
@@ -94,17 +92,19 @@ export default function ClientDashboard() {
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest">Active Requests</p>
-                                    <p className="text-4xl font-black text-white">{stats.activeOrders + stats.pendingQuotes}</p>
+                                    <p className="text-4xl font-black text-white">{stats.activeOrders + (![4, 13].includes(Number(user?.role_id)) ? stats.pendingQuotes : 0)}</p>
                                 </div>
                                 <div className="mt-6 flex gap-2">
                                     <div className="flex-1 rounded-xl bg-white/10 p-3">
                                         <p className="text-[10px] font-bold text-indigo-200 uppercase">Orders</p>
                                         <p className="text-xl font-black text-white">{stats.activeOrders}</p>
                                     </div>
-                                    <div className="flex-1 rounded-xl bg-white/10 p-3">
-                                        <p className="text-[10px] font-bold text-indigo-200 uppercase">Quotes</p>
-                                        <p className="text-xl font-black text-white">{stats.pendingQuotes}</p>
-                                    </div>
+                                    {![4, 13].includes(Number(user?.role_id)) && (
+                                        <div className="flex-1 rounded-xl bg-white/10 p-3">
+                                            <p className="text-[10px] font-bold text-indigo-200 uppercase">Quotes</p>
+                                            <p className="text-xl font-black text-white">{stats.pendingQuotes}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -142,7 +142,7 @@ export default function ClientDashboard() {
                                                 <div className="flex items-center gap-8">
                                                     <div className="hidden sm:block text-right">
                                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Total</p>
-                                                        <p className="font-black text-slate-900 font-mono">RF {Number(order.total).toLocaleString()}</p>
+                                                        <p className="font-black text-slate-900 font-mono">RF {Number(order.total || order.total_amount).toLocaleString()}</p>
                                                     </div>
                                                     <span className={`rounded-xl px-4 py-1.5 text-[10px] font-black uppercase tracking-widest ${order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700' :
                                                         order.status === 'processing' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
@@ -159,25 +159,40 @@ export default function ClientDashboard() {
                                         <div className="p-20 text-center flex flex-col items-center">
                                             <CircleEllipsis size={48} className="text-slate-200 mb-4" />
                                             <p className="text-slate-500 font-medium">No orders found.</p>
-                                            <Link to="/" className="text-indigo-600 font-bold text-sm mt-2">Browse the shop →</Link>
+                                            <Link to="/products" className="text-indigo-600 font-bold text-sm mt-2">Browse the shop →</Link>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Quick Quote Widget */}
-                            <div className="rounded-[2.5rem] bg-indigo-950 p-8 text-white relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 blur-3xl opacity-20 transition-transform group-hover:scale-125">
-                                    <div className="h-64 w-64 rounded-full bg-white"></div>
+                            {/* Quick Action Widget: Quote or Shop */}
+                            {![4, 13].includes(Number(user?.role_id)) ? (
+                                <div className="rounded-[2.5rem] bg-indigo-950 p-8 text-white relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 blur-3xl opacity-20 transition-transform group-hover:scale-125">
+                                        <div className="h-64 w-64 rounded-full bg-white"></div>
+                                    </div>
+                                    <div className="relative">
+                                        <h3 className="text-2xl font-black mb-2">Need a Custom Quote?</h3>
+                                        <p className="text-indigo-200 max-w-md mb-6">Tell us about your next project and our design team will get back to you with a professional estimate within 24 hours.</p>
+                                        <Link to="/communications/inbox" className="inline-flex items-center gap-2 bg-white text-indigo-900 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-50 transition-all">
+                                            <MessageSquare size={16} /> Start a Conversation
+                                        </Link>
+                                    </div>
                                 </div>
-                                <div className="relative">
-                                    <h3 className="text-2xl font-black mb-2">Need a Custom Quote?</h3>
-                                    <p className="text-indigo-200 max-w-md mb-6">Tell us about your next project and our design team will get back to you with a professional estimate within 24 hours.</p>
-                                    <Link to="/communications/inbox" className="inline-flex items-center gap-2 bg-white text-indigo-900 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-50 transition-all">
-                                        <MessageSquare size={16} /> Start a Conversation
-                                    </Link>
+                            ) : (
+                                <div className="rounded-[2.5rem] bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 blur-3xl opacity-20 transition-transform group-hover:scale-125">
+                                        <div className="h-64 w-64 rounded-full bg-white"></div>
+                                    </div>
+                                    <div className="relative">
+                                        <h3 className="text-2xl font-black mb-2">Ready to Shop?</h3>
+                                        <p className="text-blue-100 max-w-md mb-6">Explore our catalog of premium products and design services.</p>
+                                        <Link to="/products" className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-50 transition-all">
+                                            <ShoppingCart size={16} /> Shop Now
+                                        </Link>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Sidebar Actions */}
@@ -192,15 +207,24 @@ export default function ClientDashboard() {
                                         { label: 'Project Files', path: '/client/files', icon: Files, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                                         { label: 'Active Quotes', path: '/client/quotes', icon: ShoppingCart, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                                         { label: 'Support Inbox', path: '/communications/inbox', icon: MessageSquare, color: 'text-amber-600', bg: 'bg-amber-50' },
-                                    ].map((item, i) => (
-                                        <Link key={i} to={item.path} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-50 bg-white hover:border-indigo-100 hover:shadow-md transition-all group">
-                                            <div className={`h-10 w-10 rounded-xl ${item.bg} ${item.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                                <item.icon size={18} />
-                                            </div>
-                                            <span className="font-bold text-slate-700">{item.label}</span>
-                                            <ArrowRight className="ml-auto text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" size={14} />
-                                        </Link>
-                                    ))}
+                                    ].filter(item => {
+                                        // Hide 'Active Quotes', 'Project Files', and 'Support Inbox' for Customer (13) and Client (4)
+                                        if ([4, 13].includes(Number(user?.role_id))) {
+                                            if (item.label === 'Active Quotes') return false;
+                                            if (item.label === 'Project Files') return false;
+                                            if (item.label === 'Support Inbox') return false;
+                                        }
+                                        return true;
+                                    })
+                                        .map((item, i) => (
+                                            <Link key={i} to={item.path} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-50 bg-white hover:border-indigo-100 hover:shadow-md transition-all group">
+                                                <div className={`h-10 w-10 rounded-xl ${item.bg} ${item.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                                    <item.icon size={18} />
+                                                </div>
+                                                <span className="font-bold text-slate-700">{item.label}</span>
+                                                <ArrowRight className="ml-auto text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" size={14} />
+                                            </Link>
+                                        ))}
                                 </div>
                             </div>
 

@@ -28,6 +28,16 @@ export interface Supplier extends SupplierMaterial {
 }
 
 const API_BASE = 'http://localhost:3000/api'
+const BACKEND_URL = 'http://localhost:3000'
+
+// Helper function to get full image URL
+export function getImageUrl(path: string | null | undefined): string {
+  if (!path) return 'https://via.placeholder.com/400x300?text=No+Image'
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  // Remove leading slash if present to avoid double slashes
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  return `${BACKEND_URL}${cleanPath}`
+}
 
 // ============================================================================
 // BOM Templates API
@@ -2471,5 +2481,100 @@ export async function uploadProductImage(file: File) {
   if (!res.ok) {
     throw new Error(data.message || data.error || 'Failed to upload image')
   }
+  return data
+}
+
+// Design Studio APIs
+export async function createDesign(payload: any) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/designs`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.message || data.error || 'Failed to create design')
+  return data
+}
+
+export async function fetchDesigns() {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/designs`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+
+  const data = await res.json().catch(() => ([]))
+  if (!res.ok) throw new Error(data.message || 'Failed to fetch designs')
+  return data
+}
+
+export async function fetchDesign(id: string | number) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/designs/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.message || 'Failed to fetch design')
+  return data
+}
+
+export async function updateDesign(id: string | number, payload: any) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/designs/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.message || 'Failed to update design')
+  return data
+}
+
+export async function approveDesign(id: string | number, price?: number, publishAsProduct?: boolean) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/designs/${id}/approve`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ price, publishAsProduct })
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.message || 'Failed to approve design')
+  return data
+}
+
+export async function deleteDesign(id: string | number) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/designs/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` }
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.message || 'Failed to delete design')
   return data
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import ProductCard from '@/components/ecommerce/ProductCard'
 import { fetchProducts } from '@/data/products'
 import { Product } from '@/contexts/CartContext'
@@ -9,6 +10,8 @@ export default function ProductsPage() {
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedCategory, setSelectedCategory] = useState<string>('All')
+    const [searchParams] = useSearchParams()
+    const view = searchParams.get('view')
 
     useEffect(() => {
         loadProducts()
@@ -32,7 +35,17 @@ export default function ProductsPage() {
         const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             product.description.toLowerCase().includes(searchQuery.toLowerCase())
         const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
-        return matchesSearch && matchesCategory
+
+        const cat = (product.category || '').toLowerCase()
+        const isDesign = ['design', 'print', 'banner', 'sign', 'card', 'flyer', 'poster', 'sticker', 'shirt', 'brand'].some(k => cat.includes(k))
+
+        // Filter based on view
+        if (view === 'designs') {
+            return matchesSearch && matchesCategory && isDesign
+        } else {
+            // Default view: Show only Retail Products (exclude designs)
+            return matchesSearch && matchesCategory && !isDesign
+        }
     })
 
     return (
@@ -41,10 +54,12 @@ export default function ProductsPage() {
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                        Professional Design Services
+                        {view === 'designs' ? 'Professional Design Services' : 'Our Shop Catalog'}
                     </h1>
                     <p className="text-xl text-blue-100 max-w-2xl">
-                        Explore our range of creative services tailored to elevate your brand identity
+                        {view === 'designs'
+                            ? 'Explore our range of creative services tailored to elevate your brand identity'
+                            : 'Browse our high-quality collection of products available for immediate purchase'}
                     </p>
                 </div>
             </div>

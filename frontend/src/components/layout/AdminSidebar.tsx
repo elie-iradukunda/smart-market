@@ -18,7 +18,8 @@ import {
     Factory,
     Package,
     Receipt,
-    Monitor
+    Monitor,
+    Palette
 } from 'lucide-react'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
 
@@ -69,6 +70,11 @@ const sidebarItems = [
         ]
     },
     {
+        label: 'Design & Creative',
+        path: '/dashboard/admin/design/hub',
+        icon: Palette,
+    },
+    {
         label: 'Marketing',
         path: '/dashboard/sales/marketing/campaigns',
         icon: Monitor,
@@ -117,13 +123,14 @@ const AdminSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
                 className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
                 {/* Brand Logo */}
+                {/* Brand Logo */}
                 <div className="flex h-20 shrink-0 items-center px-6">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg shadow-slate-200">
-                            <Lock size={20} />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-100">
+                            <Package size={20} />
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-lg font-bold text-slate-900 leading-tight">SmartMarket</span>
+                            <span className="text-lg font-bold text-slate-900 leading-tight">TOP Design</span>
                             <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Admin Portal</span>
                         </div>
                     </div>

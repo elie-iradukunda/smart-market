@@ -2,11 +2,13 @@
 import React from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
+import { useCart } from '@/contexts/CartContext'
 import {
     Menu,
     User,
     LogOut,
-    Bell
+    Bell,
+    ShoppingCart
 } from 'lucide-react'
 
 interface ClientTopNavProps {
@@ -16,10 +18,12 @@ interface ClientTopNavProps {
 export default function ClientTopNav({ onMenuClick }: ClientTopNavProps) {
     const navigate = useNavigate()
     const user = getAuthUser()
+    const { getCartCount } = useCart()
+    const cartCount = getCartCount()
 
     const handleLogout = () => {
         clearAuth()
-        navigate('/login')
+        navigate('/shop/login')
     }
 
     return (
@@ -48,6 +52,19 @@ export default function ClientTopNav({ onMenuClick }: ClientTopNavProps) {
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-4 shrink-0">
+                    <Link
+                        to="/cart"
+                        className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors"
+                        title="View Cart"
+                    >
+                        <ShoppingCart size={20} />
+                        {cartCount > 0 && (
+                            <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-white animate-bounce-short">
+                                {cartCount}
+                            </span>
+                        )}
+                    </Link>
+
                     <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
                         <Bell size={20} />
                     </button>

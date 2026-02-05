@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { fetchProducts, createProduct, updateProduct, uploadProductImage } from '@/api/apiClient'
-import { Plus, Edit, Package, Upload, X, Megaphone } from 'lucide-react'
+import { fetchProducts, createProduct, updateProduct } from '@/api/apiClient'
+import { Plus, Edit, Package, Megaphone } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import ProductFormModal from '@/components/ecommerce/ProductFormModal'
 
 // Helper to get full image URL
 const getImageUrl = (path: string) => {
@@ -100,18 +101,6 @@ export default function ProductsPage() {
     const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
     const navigate = useNavigate()
 
-    const [imagePreview, setImagePreview] = useState<string>('')
-
-    // New product form state
-    const [newProduct, setNewProduct] = useState({
-        name: '',
-        description: '',
-        price: '',
-        category: '',
-        stock_quantity: '',
-        image: ''
-    })
-
     useEffect(() => {
         loadProducts()
     }, [])
@@ -128,68 +117,19 @@ export default function ProductsPage() {
         }
     }
 
-    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
-            try {
-                // Create preview
-                const reader = new FileReader()
-                reader.onloadend = () => {
-                    setImagePreview(reader.result as string)
-                }
-                reader.readAsDataURL(file)
-
-                // Upload to server
-                const response = await uploadProductImage(file)
-                // Store the server URL
-                setNewProduct({ ...newProduct, image: response.imageUrl })
-            } catch (error: any) {
-                alert('Failed to upload image: ' + error.message)
-            }
-        }
-    }
-
-    const removeImage = () => {
-        setImagePreview('')
-        setNewProduct({ ...newProduct, image: '' })
-    }
-
     const handleEdit = (product: any) => {
         setSelectedProductId(product.id)
-        setNewProduct({
-            name: product.name,
-            description: product.description || '',
-            price: product.price,
-            category: product.category || '',
-            stock_quantity: product.stock_quantity,
-            image: product.image || ''
-        })
-        if (product.image) {
-            setImagePreview(getImageUrl(product.image))
-        } else {
-            setImagePreview('')
-        }
         setShowAddModal(true)
     }
 
-    const handleCreateOrUpdate = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleCreateOrUpdate = async (productData: any) => {
         try {
-            const productData = {
-                ...newProduct,
-                price: Number(newProduct.price),
-                stock_quantity: Number(newProduct.stock_quantity)
-            }
-
             if (selectedProductId) {
                 await updateProduct(selectedProductId, productData)
             } else {
                 await createProduct(productData)
             }
-
             setShowAddModal(false)
-            setNewProduct({ name: '', description: '', price: '', category: '', stock_quantity: '', image: '' })
-            setImagePreview('')
             setSelectedProductId(null)
             loadProducts()
         } catch (err: any) {
@@ -211,8 +151,6 @@ export default function ProductsPage() {
 
     const handleCloseModal = () => {
         setShowAddModal(false)
-        setNewProduct({ name: '', description: '', price: '', category: '', stock_quantity: '', image: '' })
-        setImagePreview('')
         setSelectedProductId(null)
     }
 
@@ -227,8 +165,6 @@ export default function ProductsPage() {
                     <button
                         onClick={() => {
                             setSelectedProductId(null)
-                            setNewProduct({ name: '', description: '', price: '', category: '', stock_quantity: '', image: '' })
-                            setImagePreview('')
                             setShowAddModal(true)
                         }}
                         className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
@@ -270,127 +206,15 @@ export default function ProductsPage() {
                     </table>
                 </div>
 
-                {/* Add/Edit Product Modal */}
-                {showAddModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-                            <h2 className="text-xl font-bold text-gray-900 mb-4">{selectedProductId ? 'Edit Product' : 'Add New Product'}</h2>
-                            <form onSubmit={handleCreateOrUpdate} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={newProduct.name}
-                                        onChange={e => setNewProduct({ ...newProduct, name: e.target.value })}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Description</label>
-                                    <textarea
-                                        value={newProduct.description}
-                                        onChange={e => setNewProduct({ ...newProduct, description: e.target.value })}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                        rows={3}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Price</label>
-                                        <input
-                                            type="number"
-                                            required
-                                            min="0"
-                                            step="0.01"
-                                            value={newProduct.price}
-                                            onChange={e => setNewProduct({ ...newProduct, price: e.target.value })}
-                                            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Stock</label>
-                                        <input
-                                            type="number"
-                                            required
-                                            min="0"
-                                            value={newProduct.stock_quantity}
-                                            onChange={e => setNewProduct({ ...newProduct, stock_quantity: e.target.value })}
-                                            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Category</label>
-                                    <input
-                                        type="text"
-                                        value={newProduct.category}
-                                        onChange={e => setNewProduct({ ...newProduct, category: e.target.value })}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                    />
-                                </div>
-
-                                {/* Image Upload */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
-
-                                    {imagePreview ? (
-                                        <div className="relative">
-                                            <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
-                                            <button
-                                                type="button"
-                                                onClick={removeImage}
-                                                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-colors">
-                                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                    <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                                                    <p className="text-sm text-gray-500">Click to upload image</p>
-                                                    <p className="text-xs text-gray-400">PNG, JPG up to 10MB</p>
-                                                </div>
-                                                <input
-                                                    type="file"
-                                                    className="hidden"
-                                                    accept="image/*"
-                                                    onChange={handleImageChange}
-                                                />
-                                            </label>
-                                            <div className="text-center text-sm text-gray-500">or</div>
-                                            <input
-                                                type="text"
-                                                value={newProduct.image}
-                                                onChange={e => setNewProduct({ ...newProduct, image: e.target.value })}
-                                                placeholder="Paste image URL"
-                                                className="block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="flex justify-end gap-3 mt-6">
-                                    <button
-                                        type="button"
-                                        onClick={handleCloseModal}
-                                        className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-                                    >
-                                        {selectedProductId ? 'Update Product' : 'Create Product'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                {/* Product Form Modal */}
+                <ProductFormModal
+                    isOpen={showAddModal}
+                    onClose={handleCloseModal}
+                    onSubmit={handleCreateOrUpdate}
+                    initialData={selectedProductId ? products.find(p => p.id === selectedProductId) : undefined}
+                    title={selectedProductId ? 'Edit Product' : 'Create New Product'}
+                    subtitle={selectedProductId ? 'Update existing product details' : 'Add a new item to your catalog'}
+                />
             </div>
         </DashboardLayout>
     )

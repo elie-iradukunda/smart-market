@@ -50,7 +50,7 @@ const ClientSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
 
     const handleLogout = () => {
         clearAuth()
-        navigate('/login')
+        navigate('/shop/login')
     }
 
     return (
@@ -66,21 +66,30 @@ const ClientSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                 className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
                 {/* Brand Logo */}
+                {/* Brand Logo */}
                 <div className="flex h-20 shrink-0 items-center px-6">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-100">
-                            <User size={20} />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-100">
+                            <Package size={20} />
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-lg font-bold text-slate-900 leading-tight">SmartMarket</span>
-                            <span className="text-[10px] font-medium text-indigo-600 uppercase tracking-wider">Client Portal</span>
+                            <span className="text-lg font-bold text-slate-900 leading-tight">TOP Design</span>
+                            <span className="text-[10px] font-medium text-blue-600 uppercase tracking-wider">Client Portal</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Navigation */}
                 <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1.5 scrollbar-hide">
-                    {sidebarItems.map((item) => (
+                    {sidebarItems.filter(item => {
+                        // Hide Quotes and Files for Standard Customers (Role 13) and Clients (Role 4)
+                        const roleId = Number(user?.role_id);
+                        if (roleId === 13 || roleId === 4) {
+                            if (item.label === 'My Quotes') return false;
+                            if (item.label === 'My Files') return false;
+                        }
+                        return true;
+                    }).map((item) => (
                         <div key={item.label} className="mb-1">
                             <Link
                                 to={item.path!}
@@ -95,6 +104,17 @@ const ClientSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                             </Link>
                         </div>
                     ))}
+
+                    {/* Add Start Order Link for Customers */}
+                    <div className="mb-1">
+                        <Link
+                            to="/products"
+                            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                        >
+                            <ShoppingCart size={18} className="text-slate-500" />
+                            <span>New Order</span>
+                        </Link>
+                    </div>
                 </nav>
 
                 {/* Footer / User Profile */}

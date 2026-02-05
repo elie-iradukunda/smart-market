@@ -59,7 +59,7 @@ export default function ShopRegisterPage() {
 
         if (success) {
             toast.success('Registration successful! Welcome aboard!')
-            navigate('/')
+            navigate('/client')
         } else {
             setError('Email already exists. Please use a different email.')
         }
@@ -70,7 +70,7 @@ export default function ShopRegisterPage() {
     const getPasswordStrength = () => {
         const password = formData.password
         if (!password) return { strength: 0, text: '', color: '' }
-        
+
         let strength = 0
         if (password.length >= 6) strength++
         if (password.length >= 8) strength++
@@ -237,11 +237,10 @@ export default function ShopRegisterPage() {
                                         {[0, 1, 2, 3, 4].map((level) => (
                                             <div
                                                 key={level}
-                                                className={`h-1.5 flex-1 rounded-full transition-all ${
-                                                    level <= passwordStrength.strength
+                                                className={`h-1.5 flex-1 rounded-full transition-all ${level <= passwordStrength.strength
                                                         ? passwordStrength.color
                                                         : 'bg-gray-200'
-                                                }`}
+                                                    }`}
                                             />
                                         ))}
                                     </div>
@@ -333,8 +332,8 @@ export default function ShopRegisterPage() {
 
                 {/* Back to Home */}
                 <div className="text-center mt-6">
-                    <Link 
-                        to="/" 
+                    <Link
+                        to="/"
                         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium group"
                     >
                         <span className="group-hover:-translate-x-1 transition-transform">←</span>

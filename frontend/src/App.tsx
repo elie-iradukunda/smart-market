@@ -3,7 +3,7 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
 import HomePage from './pages/HomePage'
-import LoginPage from './pages/LoginPage'
+// import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
@@ -73,8 +73,8 @@ function App() {
               }
             />
 
-            {/* Legacy Routes */}
-            <Route path="/login" element={<LoginPage />} />
+            {/* Legacy Routes - Consolidated Login */}
+            <Route path="/login" element={<ShopLoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />

@@ -76,8 +76,10 @@ export default function OrdersPage() {
 
     const loadData = async () => {
       try {
-        const isStaff = user?.role_id !== 1 && user?.role_id !== 2 // Admin=1, Owner=2
-        console.log('Role Check:', user?.role_id, 'isStaff:', isStaff);
+        // Check if user is staff (not Admin/Owner AND not Client/Customer)
+        const isClient = [4, 13].includes(Number(user?.role_id));
+        const isStaff = ![1, 2].includes(Number(user?.role_id)) && !isClient;
+        console.log('Role Check:', user?.role_id, 'isStaff:', isStaff, 'isClient:', isClient);
 
         const [allOrders, workOrdersResult] = await Promise.all([
           fetchOrders(),

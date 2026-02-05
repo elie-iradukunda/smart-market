@@ -270,6 +270,22 @@ export const updateQuote = async (req, res) => {
 
 export const getOrders = async (req, res) => {
   try {
+    let whereClause = '';
+    const params = [];
+
+    // If user is a customer (Role 13) or Client (Role 4), filter by their email
+    if (req.user && (req.user.role_id === 13 || req.user.role_id === 4)) {
+      // Find customer IDs associated with this user's email
+      const [customers] = await pool.execute('SELECT id FROM customers WHERE email = ?', [req.user.email]);
+      
+      if (customers.length === 0) {
+        return res.json([]); // No customer record found for this user
+      }
+
+      const customerIds = customers.map(c => c.id).join(',');
+      whereClause = `WHERE o.customer_id IN (${customerIds})`;
+    }
+
     const [orders] = await pool.execute(`
       SELECT o.*, c.name as customer_name, q.total_amount,
              i.id as invoice_id, i.status as invoice_status
@@ -277,11 +293,13 @@ export const getOrders = async (req, res) => {
       JOIN customers c ON o.customer_id = c.id 
       LEFT JOIN quotes q ON o.quote_id = q.id
       LEFT JOIN invoices i ON i.order_id = o.id
+      ${whereClause}
       ORDER BY o.created_at DESC
-    `);
+    `, params);
 
     res.json(orders);
   } catch (error) {
+    console.error('Get orders error:', error);
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 };
@@ -299,6 +317,16 @@ export const getOrder = async (req, res) => {
 
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Security check: Ensure Customers (Role 13) and Clients (Role 4) only access their own orders
+    if (req.user && (req.user.role_id === 13 || req.user.role_id === 4)) {
+      const [userCustomers] = await pool.execute('SELECT id FROM customers WHERE email = ?', [req.user.email]);
+      const allowedCustomerIds = userCustomers.map(c => c.id);
+      
+      if (!allowedCustomerIds.includes(rows[0].customer_id)) {
+        return res.status(403).json({ error: 'Access denied to this order' });
+      }
     }
 
     res.json(rows[0]);

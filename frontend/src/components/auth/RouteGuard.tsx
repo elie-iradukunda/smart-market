@@ -7,7 +7,8 @@ const getDashboardPath = (roleId: number) => {
         case 1: return '/dashboard/admin'; // Admin
         case 2: return '/dashboard/sales'; // Sales
         case 3: return '/dashboard/staff'; // Staff
-        case 4: return '/client';           // Client
+        case 4: return '/client';           // Client (Controller?)
+        case 13: return '/client';          // Customer (E-commerce)
         default: return '/login';
     }
 };
