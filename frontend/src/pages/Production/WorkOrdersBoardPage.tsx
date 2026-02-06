@@ -1,81 +1,88 @@
 // @ts-nocheck
-import React, { useEffect, useState, useMemo } from 'react'
-// Retaining original external imports as requested:
-import { useNavigate } from 'react-router-dom'
-import { fetchWorkOrders } from '../../api/apiClient'
-import { getAuthUser } from '@/utils/apiClient'
-import DashboardLayout from '@/components/layout/DashboardLayout'
+import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { fetchWorkOrders } from '../../api/apiClient';
+import { getAuthUser } from '@/utils/apiClient';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
-// Importing Lucide icons for the visual design
-import { PlusCircle, Search, AlertTriangle, Loader2, UserPlus } from 'lucide-react'
-import AssignWorkerModal from '@/components/orders/AssignWorkerModal'
+import { 
+    PlusCircle, 
+    Search, 
+    AlertTriangle, 
+    Loader2, 
+    UserPlus, 
+    Eye, 
+    X, 
+    FileText, 
+    CheckCircle, 
+    Clock 
+} from 'lucide-react';
+import AssignWorkerModal from '@/components/orders/AssignWorkerModal';
 
 export default function WorkOrdersBoardPage() {
-    const [workOrders, setWorkOrders] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
-    const [searchTerm, setSearchTerm] = useState('')
-    const [currentUser, setCurrentUser] = useState<any | null>(null)
-    const [myTasksOnly, setMyTasksOnly] = useState(false)
-    const [showAssignModal, setShowAssignModal] = useState(false)
-    const [selectedWorkOrder, setSelectedWorkOrder] = useState<any | null>(null)
+    const [workOrders, setWorkOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentUser, setCurrentUser] = useState(null);
+    const [myTasksOnly, setMyTasksOnly] = useState(false);
+    const [showAssignModal, setShowAssignModal] = useState(false);
+    const [showQuoteModal, setShowQuoteModal] = useState(false);
+    const [selectedWorkOrder, setSelectedWorkOrder] = useState(null);
 
-    // NOTE: useNavigate is retained from the original imports
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
-    // --- DATA FETCHING LOGIC ---
     useEffect(() => {
-        let isMounted = true
-        setLoading(true)
-        setError(null)
+        let isMounted = true;
+        setLoading(true);
+        setError(null);
 
-        // Load current user from auth storage so we can show per-user tasks
-        const user = getAuthUser()
+        const user = getAuthUser();
         if (user && isMounted) {
-            setCurrentUser(user)
+            setCurrentUser(user);
         }
 
         fetchWorkOrders()
             .then((data) => {
-                if (!isMounted) return
-                // Ensure data is an array before setting state
-                setWorkOrders(Array.isArray(data) ? data : [])
+                if (!isMounted) return;
+                setWorkOrders(Array.isArray(data) ? data : []);
             })
             .catch((err) => {
-                if (!isMounted) return
-                setError(err.message || 'Failed to load work orders')
+                if (!isMounted) return;
+                setError(err.message || 'Failed to load work orders');
             })
             .finally(() => {
-                if (!isMounted) return
-                setLoading(false)
-            })
+                if (isMounted) setLoading(false);
+            });
 
         return () => {
-            isMounted = false
-        }
-    }, [])
+            isMounted = false;
+        };
+    }, []);
 
-    // Handler to open assign modal
-    const handleAssignClick = (workOrder: any, e: React.MouseEvent) => {
-        e.stopPropagation() // Prevent row click navigation
-        setSelectedWorkOrder(workOrder)
-        setShowAssignModal(true)
-    }
+    const handleAssignClick = (workOrder, e) => {
+        e.stopPropagation();
+        setSelectedWorkOrder(workOrder);
+        setShowAssignModal(true);
+    };
 
-    // Handler after successful assignment
+    const handleViewQuoteClick = (workOrder, e) => {
+        e.stopPropagation();
+        setSelectedWorkOrder(workOrder);
+        setShowQuoteModal(true);
+    };
+
     const handleAssignmentComplete = async () => {
-        setShowAssignModal(false)
-        setSelectedWorkOrder(null)
-        // Refresh work orders
+        setShowAssignModal(false);
+        setSelectedWorkOrder(null);
         try {
-            const data = await fetchWorkOrders()
-            setWorkOrders(Array.isArray(data) ? data : [])
+            const data = await fetchWorkOrders();
+            setWorkOrders(Array.isArray(data) ? data : []);
         } catch (err) {
-            console.error('Failed to refresh work orders:', err)
+            console.error('Failed to refresh work orders:', err);
         }
-    }
+    };
 
-    // Helper function to color the stage tag (using Tailwind classes)
     const getStageColor = (stage) => {
         switch ((stage || '').toLowerCase()) {
             case 'design':
@@ -89,158 +96,134 @@ export default function WorkOrdersBoardPage() {
             case 'ready':
                 return 'bg-teal-100 text-teal-800 border-teal-200 capitalize';
             case 'delivered':
-            case 'complete': // Legacy support
+            case 'complete':
                 return 'bg-green-100 text-green-800 border-green-200 capitalize';
             default:
                 return 'bg-gray-100 text-gray-600 border-gray-200 capitalize';
         }
     };
 
-    // Work orders assigned to the current user (used for "My tasks" notification)
     const myAssignedWorkOrders = useMemo(() => {
-        if (!currentUser) return []
-        const userId = currentUser.id
-        const userName = (currentUser.name || '').toLowerCase()
-        const userEmail = (currentUser.email || '').toLowerCase()
+        if (!currentUser) return [];
+        const userId = currentUser.id;
+        const userName = (currentUser.name || '').toLowerCase();
+        const userEmail = (currentUser.email || '').toLowerCase();
 
-        return workOrders.filter((wo: any) => {
-            // Try multiple common shapes: assigned_to, technician_id, or technician name/email string
+        return workOrders.filter((wo) => {
             if (wo.assigned_to === userId || wo.assigned_to_id === userId || wo.technician_id === userId) {
-                return true
+                return true;
             }
             if (typeof wo.technician === 'string') {
-                const tech = wo.technician.toLowerCase()
-                if (userName && tech.includes(userName)) return true
-                if (userEmail && tech.includes(userEmail)) return true
+                const tech = wo.technician.toLowerCase();
+                if (userName && tech.includes(userName)) return true;
+                if (userEmail && tech.includes(userEmail)) return true;
             }
-            return false
-        })
-    }, [workOrders, currentUser])
+            return false;
+        });
+    }, [workOrders, currentUser]);
 
-    // Base list depending on whether "My tasks" filter is on
     const visibleBaseList = useMemo(() => {
         if (myTasksOnly && currentUser) {
-            return myAssignedWorkOrders
+            return myAssignedWorkOrders;
         }
-        return workOrders
-    }, [myTasksOnly, currentUser, myAssignedWorkOrders, workOrders])
+        return workOrders;
+    }, [myTasksOnly, currentUser, myAssignedWorkOrders, workOrders]);
 
-    // Filtered list derived from the search term
     const filteredWorkOrders = useMemo(() => {
-        if (!searchTerm) return visibleBaseList
-        const lowerCaseSearch = searchTerm.toLowerCase()
+        if (!searchTerm) return visibleBaseList;
+        const lowerCaseSearch = searchTerm.toLowerCase();
 
-        return visibleBaseList.filter((wo: any) =>
-            // Check customer/job name
+        return visibleBaseList.filter((wo) =>
             (wo.customer || wo.customer_name || '').toLowerCase().includes(lowerCaseSearch) ||
-            // Check technician name (if available)
             (wo.technician || 'Unassigned').toLowerCase().includes(lowerCaseSearch) ||
-            // Check order ID
             (String(wo.id) || '').toLowerCase().includes(lowerCaseSearch)
-        )
-    }, [visibleBaseList, searchTerm])
+        );
+    }, [visibleBaseList, searchTerm]);
 
-    // Calculate total active jobs (non-Complete)
-    const totalActiveJobs = workOrders.filter((wo: any) => wo.status !== 'Complete').length
-    const myTasksCount = myAssignedWorkOrders.length
-    const isAdmin = currentUser?.role_id === 1 || currentUser?.role_id === 2
+    const totalActiveJobs = workOrders.filter((wo) => wo.status !== 'Complete').length;
+    const myTasksCount = myAssignedWorkOrders.length;
+    const isAdmin = currentUser?.role_id === 1 || currentUser?.role_id === 2;
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-4 py-8 sm:px-6 lg:px-8 font-sans">
-                <div className="mx-auto max-w-7xl space-y-8">
+            <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8 font-sans">
+                <div className="mx-auto max-w-7xl space-y-6">
 
-                    {/* Header Card - Clean and focused */}
-                    <div className="rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-8 shadow-xl">
-                        <p className="text-sm font-semibold uppercase tracking-wider text-green-700">Production Management</p>
-                        <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
-                            Job <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Work Orders</span>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+                            Work Orders
                         </h1>
-                        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
-                            <p className="text-gray-600">
-                                Total Active Jobs:
-                                <span className="font-bold text-gray-800 ml-1">{totalActiveJobs}</span>
-                            </p>
+                        <div className="flex items-center gap-3">
                             {currentUser && (
                                 <button
                                     type="button"
-                                    className={`inline-flex items-center rounded-full px-4 py-1.5 text-xs font-semibold border transition ${myTasksOnly
+                                    className={`inline-flex items-center rounded-lg px-4 py-2 text-xs font-bold border transition ${myTasksOnly
                                         ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                                        : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                                         }`}
                                     onClick={() => setMyTasksOnly((prev) => !prev)}
                                 >
-                                    <span className="mr-1">My tasks</span>
-                                    <span className="inline-flex items-center justify-center rounded-full bg-white/80 text-blue-700 px-2 py-0.5 text-[10px] font-bold">
-                                        {myTasksCount}
-                                    </span>
+                                    My tasks ({myTasksCount})
                                 </button>
                             )}
                             <button
-                                className="rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition duration-150 flex items-center"
-                                onClick={() => navigate('/production/new-order')} // Placeholder navigation
+                                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800 transition duration-150 flex items-center"
+                                onClick={() => navigate('/production/new-order')}
                             >
-                                <PlusCircle className="h-4 w-4 mr-1" aria-hidden="true" />
-                                New Work Order
+                                <PlusCircle className="h-4 w-4 mr-1" />
+                                New Order
                             </button>
                         </div>
                     </div>
 
-                    {/* Work Orders Table Card - Main content area */}
-                    <div className="mt-8 rounded-3xl border border-gray-100 bg-white/95 backdrop-blur-xl p-6 shadow-xl">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5">
-                            <p className="text-lg font-semibold text-gray-900">Active Production Schedule</p>
-
-                            {/* Search Input */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                             <div className="relative w-full sm:max-w-sm">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <input
                                     type="text"
-                                    placeholder="Search by job, customer, or technician"
+                                    placeholder="Search jobs..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-sm text-gray-800 placeholder-gray-400 
-                                                    focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition duration-150"
+                                    className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none transition duration-150"
                                 />
+                            </div>
+                            <div className="text-sm font-bold text-slate-500">
+                                Total Active: {totalActiveJobs}
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto -mx-2 sm:mx-0">
-                            {/* Table Layout - Using border-spacing for visual separation of rows */}
-                            <table className="min-w-full text-left text-sm border-separate border-spacing-y-2">
-                                <thead className="text-xs bg-gray-50/80 sticky top-0 z-10">
-                                    <tr>
-                                        <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider rounded-tl-lg">ID</th>
-                                        <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider">Customer / Job Name</th>
-                                        <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider">Stage</th>
-                                        <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider">Technician</th>
-                                        <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider text-right">Priority</th>
-                                        {isAdmin && <th className="px-6 py-3 font-semibold text-gray-600 uppercase tracking-wider text-center rounded-tr-lg">Actions</th>}
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full text-left text-sm border-collapse">
+                                <thead>
+                                    <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <th className="px-6 py-3">ID</th>
+                                        <th className="px-6 py-3">Customer</th>
+                                        <th className="px-6 py-3">Stage</th>
+                                        <th className="px-6 py-3">Technician</th>
+                                        <th className="px-6 py-3 text-right">Priority</th>
+                                        <th className="px-6 py-3 text-center">Actions</th>
                                     </tr>
                                 </thead>
 
-                                {error && (
+                                {error ? (
                                     <tbody>
                                         <tr>
-                                            <td colSpan={isAdmin ? 6 : 5} className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
-                                                <AlertTriangle className="h-4 w-4 inline mr-2" />
+                                            <td colSpan={6} className="p-4 text-sm text-red-600 bg-red-50 text-center font-bold">
                                                 Error: {error}
                                             </td>
                                         </tr>
                                     </tbody>
-                                )}
-
-                                {loading ? (
+                                ) : loading ? (
                                     <tbody>
                                         <tr>
-                                            <td colSpan={isAdmin ? 6 : 5} className="p-8 text-center text-sm text-gray-500">
-                                                <Loader2 className="h-5 w-5 animate-spin inline mr-2 text-blue-500" />
-                                                Loading work orders...
+                                            <td colSpan={6} className="p-8 text-center text-slate-400 font-bold italic">
+                                                Loading...
                                             </td>
                                         </tr>
                                     </tbody>
                                 ) : (
-                                    <tbody className="">
+                                    <tbody className="divide-y divide-slate-50">
                                         {filteredWorkOrders.map((wo, index) => {
                                             const isAssignedToMe = Number(wo.assigned_to) === Number(currentUser?.id);
                                             const canClick = isAdmin || isAssignedToMe;
@@ -249,52 +232,48 @@ export default function WorkOrdersBoardPage() {
                                                 <tr
                                                     key={wo.id || index}
                                                     onClick={canClick ? () => navigate(`/orders/${wo.order_id || wo.order_number}`) : undefined}
-                                                    // Row styling with elevation and hover effect
-                                                    className={`bg-white rounded-xl shadow-md transition duration-200 ${canClick ? 'hover:shadow-lg hover:ring-2 hover:ring-blue-500/50 cursor-pointer' : ''}`}
+                                                    className={`transition-all hover:bg-slate-50 ${canClick ? 'cursor-pointer' : ''}`}
                                                 >
-                                                    <td className="px-6 py-4 text-gray-500 font-mono text-xs rounded-l-xl">
+                                                    <td className="px-6 py-4 text-slate-500 font-mono text-xs font-bold">
                                                         {wo.id}
                                                     </td>
-                                                    <td className="px-6 py-4 text-gray-800 font-medium truncate">
+                                                    <td className="px-6 py-4 text-slate-900 font-bold">
                                                         {wo.customer || wo.customer_name || `Order #${wo.id}`}
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        {/* Stage Tag */}
-                                                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border ${getStageColor(wo.order_status || wo.stage || wo.status)}`}>
+                                                        <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold border uppercase tracking-tighter ${getStageColor(wo.order_status || wo.stage || wo.status)}`}>
                                                             {wo.order_status || wo.stage || wo.status || 'Pending'}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 text-gray-600">
+                                                    <td className="px-6 py-4 text-slate-700 font-medium">
                                                         {wo.assigned_user_name || wo.technician || '—'}
                                                     </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <span className={`text-xs font-semibold ${wo.priority === 'High' ? 'text-red-600' : wo.priority === 'Medium' ? 'text-amber-600' : 'text-green-600'}`}>
+                                                    <td className="px-6 py-4 text-right font-bold">
+                                                        <span className={wo.priority === 'High' ? 'text-red-600' : wo.priority === 'Medium' ? 'text-amber-600' : 'text-green-600'}>
                                                             {wo.priority || 'Low'}
                                                         </span>
                                                     </td>
-                                                    {isAdmin && (
-                                                        <td className="px-6 py-4 text-center rounded-r-xl">
+                                                    <td className="px-6 py-4 text-center space-x-2">
+                                                        <button
+                                                            onClick={(e) => handleViewQuoteClick(wo, e)}
+                                                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+                                                        >
+                                                            <Eye size={14} />
+                                                            View
+                                                        </button>
+                                                        {isAdmin && (
                                                             <button
                                                                 onClick={(e) => handleAssignClick(wo, e)}
-                                                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md"
-                                                                title="Assign to worker"
+                                                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-all shadow-sm"
                                                             >
                                                                 <UserPlus size={14} />
                                                                 Assign
                                                             </button>
-                                                        </td>
-                                                    )}
+                                                        )}
+                                                    </td>
                                                 </tr>
                                             );
                                         })}
-                                        {filteredWorkOrders.length === 0 && !loading && !error && (
-                                            <tr>
-                                                <td colSpan={6} className="p-8 text-center text-sm text-gray-500">
-                                                    <AlertTriangle className="h-5 w-5 inline text-amber-500 mr-2" />
-                                                    No work orders found matching your search criteria.
-                                                </td>
-                                            </tr>
-                                        )}
                                     </tbody>
                                 )}
                             </table>
@@ -303,7 +282,6 @@ export default function WorkOrdersBoardPage() {
                 </div>
             </div>
 
-            {/* Assign Worker Modal */}
             {showAssignModal && selectedWorkOrder && (
                 <AssignWorkerModal
                     orderId={selectedWorkOrder.id}
@@ -315,6 +293,39 @@ export default function WorkOrdersBoardPage() {
                     onAssigned={handleAssignmentComplete}
                 />
             )}
+
+            {showQuoteModal && selectedWorkOrder && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+                    <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl">
+                        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                            <h2 className="text-lg font-bold text-slate-900">Reference: #{selectedWorkOrder.id}</h2>
+                            <button onClick={() => setShowQuoteModal(false)} className="text-slate-400 hover:text-slate-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="p-8 space-y-6">
+                            <div className="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-xl border border-slate-100">
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Customer</p>
+                                    <p className="text-sm font-bold text-slate-900">{selectedWorkOrder.customer || selectedWorkOrder.customer_name}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Stage</p>
+                                    <p className="text-sm font-bold text-slate-900 uppercase">{selectedWorkOrder.order_status || selectedWorkOrder.stage}</p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setShowQuoteModal(false)}
+                                className="w-full rounded-lg border border-slate-200 bg-white py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
-    )
+    );
 }

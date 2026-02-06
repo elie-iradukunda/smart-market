@@ -105,8 +105,6 @@ export const routes = [
   { path: '/dashboard/admin/design/hub', element: <DesignManagementPage /> },
   { path: '/dashboard/admin/design/studio', element: <DesignStudioPage /> },
   { path: '/dashboard/admin/design/studio/:id', element: <DesignStudioPage /> },
-
-  // SALES nested routes (role_id: 2)
   { path: '/dashboard/sales/crm/leads', element: <LeadsPage /> },
   { path: '/dashboard/sales/crm/leads/:id', element: <LeadDetailPage /> },
   { path: '/dashboard/sales/crm/customers', element: <CustomersPage /> },

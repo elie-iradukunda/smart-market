@@ -1,86 +1,80 @@
 // @ts-nocheck
-import React, { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-
-// WARNING: This import is causing a compilation error in this isolated environment
-// because it cannot resolve the path '../../api/apiClient'.
-// It is left here as requested.
-import { fetchQuotes, createQuote, approveQuote, fetchCustomers, fetchLead, fetchLeads } from '../../api/apiClient'
-
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { getAuthUser } from '@/utils/apiClient'
-
-// Import necessary icons
-import { Search, Loader2, DollarSign, Users, CheckCircle, Clock, XCircle, FileText, User } from 'lucide-react'
-
-// =========================================================================
-// API Fallback/Check
-// We declare a safe function to prevent runtime errors if fetchQuotes is undefined
-// due to the failed import resolution in this environment.
-// When fetchQuotes is available (in your project), this safe check is ignored.
-// =========================================================================
-const safeFetchQuotes = typeof fetchQuotes === 'function'
-  ? fetchQuotes
-  : () => {
-    console.warn("Using placeholder function: fetchQuotes is not defined.");
-    // Return an empty array promise if the function is missing, to prevent crashes
-    return new Promise(resolve => resolve([]));
-  };
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { 
+  fetchQuotes, 
+  createQuote, 
+  approveQuote, 
+  fetchCustomers, 
+  fetchLead, 
+  fetchLeads 
+} from '../../api/apiClient';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { getAuthUser } from '@/utils/apiClient';
+import { 
+  Search, 
+  Loader2, 
+  DollarSign, 
+  Users, 
+  CheckCircle, 
+  Clock, 
+  XCircle, 
+  FileText, 
+  User,
+  ArrowRight
+} from 'lucide-react';
 
 export default function QuotesPage() {
-  const [quotes, setQuotes] = useState([])
-  const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [selectedQuote, setSelectedQuote] = useState<any | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  const [customers, setCustomers] = useState<any[]>([])
-  const [saving, setSaving] = useState(false)
-  const [approving, setApproving] = useState(false)
+  const [quotes, setQuotes] = useState([]);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [customers, setCustomers] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [approving, setApproving] = useState(false);
 
   const [newQuote, setNewQuote] = useState({
     customerId: '',
     description: '',
     unitPrice: '',
     quantity: '',
-  })
+  });
 
-  // Optional: prefill quote items from an existing lead's requested materials
-  const [leadIdForQuote, setLeadIdForQuote] = useState('')
-  const [availableLeads, setAvailableLeads] = useState<any[]>([])
-  const [leadItemsForQuote, setLeadItemsForQuote] = useState<any[]>([])
-  const [loadingLeadForQuote, setLoadingLeadForQuote] = useState(false)
-  const [leadLoadError, setLeadLoadError] = useState<string | null>(null)
+  const [leadIdForQuote, setLeadIdForQuote] = useState('');
+  const [availableLeads, setAvailableLeads] = useState([]);
+  const [leadItemsForQuote, setLeadItemsForQuote] = useState([]);
+  const [loadingLeadForQuote, setLoadingLeadForQuote] = useState(false);
+  const [leadLoadError, setLeadLoadError] = useState(null);
 
-  // Helper to get status tag styling
   const getStatusTag = (status) => {
     const s = status ? status.toLowerCase() : '';
     switch (s) {
       case 'accepted':
       case 'approved':
         return (
-          <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800 border border-green-200">
+          <span className="inline-flex items-center rounded-lg bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 border border-emerald-100 uppercase tracking-tighter">
             <CheckCircle className="h-3 w-3 mr-1" /> Accepted
           </span>
         );
       case 'pending':
       case 'sent':
         return (
-          <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 border border-amber-200">
+          <span className="inline-flex items-center rounded-lg bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700 border border-amber-100 uppercase tracking-tighter">
             <Clock className="h-3 w-3 mr-1" /> Pending
           </span>
         );
       case 'rejected':
       case 'cancelled':
         return (
-          <span className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800 border border-red-200">
+          <span className="inline-flex items-center rounded-lg bg-red-50 px-2.5 py-1 text-[10px] font-bold text-red-700 border border-red-100 uppercase tracking-tighter">
             <XCircle className="h-3 w-3 mr-1" /> Rejected
           </span>
         );
-      case 'draft':
       default:
         return (
-          <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 border border-gray-200">
+          <span className="inline-flex items-center rounded-lg bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600 border border-slate-200 uppercase tracking-tighter">
             <FileText className="h-3 w-3 mr-1" /> Draft
           </span>
         );
@@ -88,540 +82,374 @@ export default function QuotesPage() {
   };
 
   useEffect(() => {
-    let isMounted = true
-    setLoading(true)
-    setError(null)
-    setSuccess(null)
+    let isMounted = true;
+    setLoading(true);
+    
+    const loadInitialData = async () => {
+      try {
+        const [quotesData, customersData, leadsData] = await Promise.all([
+          fetchQuotes(),
+          fetchCustomers(),
+          fetchLeads()
+        ]);
 
-    // Load quotes
-    fetchQuotes()
-      .then((data) => {
-        if (!isMounted) return
-        const formattedData = Array.isArray(data) ? data.map(q => ({
+        if (!isMounted) return;
+
+        const formattedQuotes = Array.isArray(quotesData) ? quotesData.map(q => ({
           ...q,
           value: q.total_amount || q.total,
           customerName: q.customer_name
-        })) : []
-        setQuotes(formattedData)
-      })
-      .catch((err) => {
-        if (!isMounted) return
-        const errorMessage = typeof err === 'object' && err !== null && err.message ? err.message : 'Failed to load quotes. Check API connectivity.';
-        setError(errorMessage)
-      })
-      .finally(() => {
-        if (!isMounted) return
-        setLoading(false)
-      })
+        })) : [];
 
-    // Load customers for new quote form
-    fetchCustomers()
-      .then((data) => {
-        if (!isMounted) return
-        setCustomers(Array.isArray(data) ? data : [])
-      })
-      .catch(() => {
-        // ignore customer load error in this view
-      })
+        setQuotes(formattedQuotes);
+        setCustomers(Array.isArray(customersData) ? customersData : []);
+        setAvailableLeads(Array.isArray(leadsData) ? leadsData : (leadsData?.leads || []));
+      } catch (err) {
+        if (!isMounted) return;
+        setError(err.message || 'Data synchronization failed.');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
 
-    // Load recent leads so we can select them by customer name when prefilling quote items
-    fetchLeads()
-      .then((data) => {
-        if (!isMounted) return
-        const leadsData = Array.isArray(data) ? data : (data?.leads || [])
-        setAvailableLeads(leadsData)
-      })
-      .catch(() => {
-        // ignore lead load error in this view
-      })
+    loadInitialData();
+    return () => { isMounted = false; };
+  }, []);
 
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  // Auto-load lead if leadId present in URL
-  const location = useLocation()
-  const hasAutoLoaded = React.useRef(false)
+  const location = useLocation();
+  const hasAutoLoaded = React.useRef(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const qLeadId = params.get('leadId')
-
+    const params = new URLSearchParams(location.search);
+    const qLeadId = params.get('leadId');
     if (qLeadId && availableLeads.length > 0 && !hasAutoLoaded.current) {
-      setLeadIdForQuote(qLeadId)
-      hasAutoLoaded.current = true
+      setLeadIdForQuote(qLeadId);
+      hasAutoLoaded.current = true;
     }
-  }, [location.search, availableLeads])
+  }, [location.search, availableLeads]);
 
   useEffect(() => {
     if (leadIdForQuote && availableLeads.length > 0) {
-      handleLoadFromLead()
+      handleLoadFromLead();
     }
-  }, [leadIdForQuote, availableLeads])
-
-  const refreshQuotes = async () => {
-    setLoading(true)
-    try {
-      const data = await fetchQuotes()
-      const formattedData = Array.isArray(data) ? data.map(q => ({
-        ...q,
-        value: q.total_amount || q.total,
-        customerName: q.customer_name
-      })) : []
-      setQuotes(formattedData)
-      if (selectedQuote) {
-        const updated = formattedData.find((q) => q.id === selectedQuote.id)
-        setSelectedQuote(updated || null)
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to refresh quotes')
-      setSuccess(null)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [leadIdForQuote, availableLeads]);
 
   const handleLoadFromLead = async () => {
-    if (!leadIdForQuote) return
-
-    setLeadLoadError(null)
-    setLoadingLeadForQuote(true)
+    if (!leadIdForQuote) return;
+    setLeadLoadError(null);
+    setLoadingLeadForQuote(true);
     try {
-      // leadIdForQuote already contains the numeric backend ID selected from dropdown
-      const lead = await fetchLead(leadIdForQuote)
-
-      // Preselect customer on quote form
+      const lead = await fetchLead(leadIdForQuote);
       if (lead.customer_id) {
-        setNewQuote((prev) => ({ ...prev, customerId: String(lead.customer_id) }))
+        setNewQuote(prev => ({ ...prev, customerId: String(lead.customer_id) }));
       }
-
-      const items = Array.isArray(lead.items)
-        ? lead.items.map((it: any) => ({
-          material_id: it.material_id,
-          description: it.description || it.material_name || `Item ${it.id}`,
-          quantity: Number(it.quantity || 0) || 0,
-          unitPrice: '',
-        }))
-        : []
-
-      setLeadItemsForQuote(items)
-    } catch (err: any) {
-      setLeadLoadError(err.message || 'Failed to load materials from lead')
-      setLeadItemsForQuote([])
+      const items = Array.isArray(lead.items) ? lead.items.map(it => ({
+        material_id: it.material_id,
+        description: it.description || it.material_name || `Item ${it.id}`,
+        quantity: Number(it.quantity || 0) || 0,
+        unitPrice: '',
+      })) : [];
+      setLeadItemsForQuote(items);
+    } catch (err) {
+      setLeadLoadError(err.message || 'Failed to load lead materials.');
     } finally {
-      setLoadingLeadForQuote(false)
+      setLoadingLeadForQuote(false);
     }
-  }
+  };
 
-  const handleCreateQuote = async (e: React.FormEvent) => {
-    e.preventDefault()
-    // Quotes must come from a lead so that materials are linked to stock.
+  const handleCreateQuote = async (e) => {
+    if (e) e.preventDefault();
     if (!newQuote.customerId || leadItemsForQuote.length === 0) {
-      setError('Please load items from a lead before creating a quote.')
-      return
+      setError('Missing customer selection or lead items.');
+      return;
     }
-    setSaving(true)
-    setError(null)
-    setSuccess(null)
+    setSaving(true);
+    setError(null);
     try {
-      // Always use items loaded from lead: user only entered unit prices
       const itemsPayload = leadItemsForQuote
-        .map((row) => ({
-          material_id: row.material_id || row.materialId || null,
-          description: row.description || 'Quoted item',
+        .map(row => ({
+          material_id: row.material_id || null,
+          description: row.description,
           unit_price: Number(row.unitPrice || 0),
-          quantity: Number(row.quantity || 0) || 0,
+          quantity: Number(row.quantity || 0),
         }))
-        .filter((row) => (row.material_id || row.description) && row.quantity > 0)
+        .filter(row => row.quantity > 0);
 
-      if (itemsPayload.length === 0) {
-        setError('Loaded lead has no valid items. Please check the lead items.')
-        setSaving(false)
-        return
-      }
-
-      const payload = {
+      await createQuote({
         customer_id: Number(newQuote.customerId),
         items: itemsPayload,
-      }
-      await createQuote(payload)
-      setNewQuote({ customerId: '', description: '', unitPrice: '', quantity: '' })
-      setLeadIdForQuote('')
-      setLeadItemsForQuote([])
-      await refreshQuotes()
-    } catch (err: any) {
-      setError(err.message || 'Failed to create quote')
+      });
+
+      setNewQuote({ customerId: '', description: '', unitPrice: '', quantity: '' });
+      setLeadIdForQuote('');
+      setLeadItemsForQuote([]);
+      const data = await fetchQuotes();
+      setQuotes(Array.isArray(data) ? data.map(q => ({ ...q, value: q.total_amount || q.total, customerName: q.customer_name })) : []);
+      setSuccess('Quote generated successfully.');
+    } catch (err) {
+      setError(err.message || 'Quote creation failed.');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleApproveQuote = async () => {
-    if (!selectedQuote) return
-    setApproving(true)
-    setError(null)
-    setSuccess(null)
+    if (!selectedQuote) return;
+    setApproving(true);
+    setError(null);
     try {
-      await approveQuote(selectedQuote.id)
-      await refreshQuotes()
-      setSuccess('Quote approved and order created successfully.')
-    } catch (err: any) {
-      setError(err.message || 'Failed to approve quote')
+      await approveQuote(selectedQuote.id);
+      const data = await fetchQuotes();
+      const formatted = Array.isArray(data) ? data.map(q => ({ ...q, value: q.total_amount || q.total, customerName: q.customer_name })) : [];
+      setQuotes(formatted);
+      setSelectedQuote(formatted.find(q => q.id === selectedQuote.id) || null);
+      setSuccess('Quote approved. Order is now active.');
+    } catch (err) {
+      setError(err.message || 'Approval failed.');
     } finally {
-      setApproving(false)
+      setApproving(false);
     }
-  }
+  };
 
-  const filteredQuotes = quotes.filter((q) => {
-    const term = (search || '').toLowerCase()
-    if (!term) return true
-
-    // Search across ID and Customer Name
-    return (
-      String(q.id).toLowerCase().includes(term) ||
-      (q.customerName || '').toLowerCase().includes(term)
-    )
-  })
-
-  const user = getAuthUser()
+  const filteredQuotes = quotes.filter(q => {
+    const term = search.toLowerCase();
+    return String(q.id).toLowerCase().includes(term) || (q.customerName || '').toLowerCase().includes(term);
+  });
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="space-y-6 lg:space-y-8">
-
-            {/* Header Card */}
-            <div className="rounded-3xl bg-gradient-to-r from-[#043b84] via-[#0555b0] to-[#0fb3ff] p-7 sm:p-8 shadow-2xl border border-blue-500/40">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-100 flex items-center">
-                <DollarSign className="h-4 w-4 mr-2 text-cyan-200" /> CRM Module
-              </p>
-              <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white">
-                Customer Quotes
-              </h1>
-              <p className="mt-3 text-sm sm:text-base text-blue-100/90 max-w-2xl">
-                Manage, search, and track the financial proposals sent to clients for products and services.
-              </p>
+      <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Customer Quotes</h1>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search quote ID or customer..."
+                className="w-full md:w-80 rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none transition-all shadow-sm"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
+          </div>
 
-            {/* Main Table + Detail Grid */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-7 shadow-xl">
-
-              <div className="flex flex-col gap-4 mb-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <p className="text-lg sm:text-xl font-semibold text-slate-900 flex items-center">
-                    <Users className="h-5 w-5 mr-2 text-indigo-500" /> All Quotes ({filteredQuotes.length})
-                  </p>
-                  <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search by quote ID or customer"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="w-full rounded-full border border-slate-300 bg-white pl-10 pr-4 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition"
-                    />
-                  </div>
-                </div>
-
-                {/* New Quote form: now always based on a lead so materials are linked to stock */}
-                <form onSubmit={handleCreateQuote} className="flex flex-wrap gap-2 items-center rounded-2xl bg-indigo-50/70 border border-indigo-200 px-3 py-3 text-xs sm:text-sm">
-                  <span className="font-semibold text-indigo-900 mr-2 flex items-center gap-1.5">
-                    <User size={14} />
-                    Customer:
-                  </span>
-
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap items-center gap-4 mb-6">
+              <div className="flex-1 min-w-[240px]">
+                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Select Customer</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                   <select
                     value={newQuote.customerId}
                     onChange={(e) => setNewQuote({ ...newQuote, customerId: e.target.value })}
-                    className="flex-1 min-w-[150px] rounded-xl border border-indigo-100 bg-white px-4 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-400/20 focus:border-indigo-400 transition-all shadow-sm"
-                    required
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none transition-all"
                   >
-                    <option value="">Choose a customer profile...</option>
-                    {customers.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} {c.company ? `(${c.company})` : ''}
-                      </option>
+                    <option value="">Select a client...</option>
+                    {customers.map(c => (
+                      <option key={c.id} value={c.id}>{c.name} {c.company ? `— ${c.company}` : ''}</option>
                     ))}
                   </select>
-                </form>
-
-                {/* Load materials from an existing lead (required for quote creation) */}
-                <div className="mt-2 rounded-2xl border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-[11px] text-slate-800 flex flex-col gap-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-indigo-900">Or load items from lead:</span>
-                    <select
-                      value={leadIdForQuote}
-                      onChange={(e) => setLeadIdForQuote(e.target.value)}
-                      className="min-w-[180px] rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                    >
-                      <option value="">Select lead by customer</option>
-                      {availableLeads.map((lead: any) => (
-                        <option key={lead.id} value={String(lead.id).replace(/^L-?/i, '')}>
-                          {lead.name} ({lead.channel})
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={handleLoadFromLead}
-                      disabled={loadingLeadForQuote || !leadIdForQuote}
-                      className="inline-flex items-center rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-indigo-700 shadow-sm hover:bg-white disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {loadingLeadForQuote ? 'Loading…' : 'Load from Lead'}
-                    </button>
-                  </div>
-                  {leadLoadError && (
-                    <p className="mt-1 rounded-md bg-red-50 px-2 py-1 text-[10px] text-red-700 border border-red-200">{leadLoadError}</p>
-                  )}
-                  {leadItemsForQuote.length > 0 && (
-                    <div className="mt-4 space-y-4">
-                      <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 shadow-sm">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-sm font-bold text-[#043b84] flex items-center gap-2">
-                            <div className="bg-indigo-600 p-1 rounded-lg">
-                              <DollarSign size={16} className="text-white" />
-                            </div>
-                            Line Items & Pricing
-                          </h4>
-                          <span className="text-[10px] font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-full border border-indigo-100 uppercase tracking-wider shadow-sm">
-                            Ready to Price
-                          </span>
-                        </div>
-
-                        <div className="space-y-3">
-                          {leadItemsForQuote.map((row, index) => (
-                            <div
-                              key={index}
-                              className="grid gap-4 md:grid-cols-[2fr,120px,180px,120px] items-end bg-white p-4 rounded-2xl border border-indigo-50 shadow-sm hover:shadow-md transition-shadow"
-                            >
-                              <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">Product Description</label>
-                                <input
-                                  type="text"
-                                  className="w-full rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2 text-xs text-slate-700 focus:ring-2 focus:ring-indigo-400/20 focus:border-indigo-400 transition-all font-medium"
-                                  value={row.description}
-                                  onChange={(e) => {
-                                    const next = [...leadItemsForQuote]
-                                    next[index] = { ...next[index], description: e.target.value }
-                                    setLeadItemsForQuote(next)
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">Quantity</label>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  className="w-full rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2 text-xs text-slate-700 focus:ring-2 focus:ring-indigo-400/20 focus:border-indigo-400 transition-all font-medium text-center"
-                                  value={row.quantity}
-                                  onChange={(e) => {
-                                    const next = [...leadItemsForQuote]
-                                    next[index] = { ...next[index], quantity: e.target.value }
-                                    setLeadItemsForQuote(next)
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <label className="text-[10px] font-bold text-indigo-600 uppercase mb-1.5 block px-1 flex items-center gap-1">
-                                  Price per Unit <span className="text-[8px] opacity-60">(RWF)</span>
-                                </label>
-                                <div className="relative">
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    className="w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 text-xs text-indigo-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold placeholder:font-normal placeholder:text-slate-300"
-                                    placeholder="Enter price..."
-                                    value={row.unitPrice}
-                                    onChange={(e) => {
-                                      const next = [...leadItemsForQuote]
-                                      next[index] = { ...next[index], unitPrice: e.target.value }
-                                      setLeadItemsForQuote(next)
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                              <div className="text-right px-1">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Item Total</label>
-                                <p className="text-sm font-black text-[#043b84]">
-                                  {row.unitPrice && row.quantity ? `RF ${(Number(row.unitPrice) * Number(row.quantity)).toLocaleString()}` : '0'}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Final Quote Summary & Action */}
-                        <div className="mt-6 pt-6 border-t border-indigo-100/60 flex flex-col sm:flex-row items-center justify-between gap-6">
-                          <div className="max-w-md">
-                            <h5 className="text-xs font-bold text-slate-700 mb-1">Confirmation</h5>
-                            <p className="text-[10px] text-slate-500 leading-relaxed italic">
-                              Review your prices and quantities. Clicking "Generate Official Quote" will save this to the database and email the customer directly.
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-6">
-                            <div className="text-right">
-                              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-indigo-500 mb-0.5">Grand Total Quote</p>
-                              <p className="text-2xl font-black text-indigo-900 leading-none">
-                                RF {leadItemsForQuote.reduce((sum, item) => sum + (Number(item.unitPrice || 0) * Number(item.quantity || 0)), 0).toLocaleString()}
-                              </p>
-                            </div>
-
-                            <button
-                              type="submit"
-                              onClick={handleCreateQuote}
-                              disabled={saving || !newQuote.customerId}
-                              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-8 py-4 text-sm font-bold text-white shadow-xl shadow-indigo-200 hover:scale-[1.02] hover:shadow-indigo-300 active:scale-[0.98] transition-all disabled:opacity-60 disabled:grayscale disabled:cursor-not-allowed"
-                            >
-                              {saving ? (
-                                <>
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                  Saving...
-                                </>
-                              ) : (
-                                <>
-                                  <FileText size={18} />
-                                  Generate Official Quote
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
 
-              {/* Error Message */}
-              {error && (
-                <div className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700 border border-red-200 flex items-center">
-                  <XCircle className="h-5 w-5 mr-2" />
-                  <p className="font-medium">API Error:</p>
-                  <p className="ml-1">{error}</p>
-                </div>
-              )}
-
-              {/* Success Message after approve */}
-              {success && !error && (
-                <div className="mb-3 flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 text-xs sm:text-sm text-emerald-800 border border-emerald-200">
-                  <span>{success}</span>
-                  <Link
-                    to="/orders"
-                    className="inline-flex items-center rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-500"
+              <div className="flex-1 min-w-[240px]">
+                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Source Lead Items</label>
+                <div className="flex gap-2">
+                  <select
+                    value={leadIdForQuote}
+                    onChange={(e) => setLeadIdForQuote(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none transition-all"
                   >
-                    View Orders
-                  </Link>
+                    <option value="">Select lead source...</option>
+                    {availableLeads.map(lead => (
+                      <option key={lead.id} value={String(lead.id).replace(/^L-?/i, '')}>{lead.name} ({lead.channel})</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleLoadFromLead}
+                    disabled={loadingLeadForQuote || !leadIdForQuote}
+                    className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-50 transition-all whitespace-nowrap"
+                  >
+                    {loadingLeadForQuote ? 'Syncing...' : 'Load Items'}
+                  </button>
                 </div>
-              )}
-              {/* Loading State */}
-              {loading ? (
-                <div className="flex justify-center items-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-indigo-500 mr-2" />
-                  <p className="text-sm sm:text-base text-slate-500">Loading quotes data from API...</p>
-                </div>
-              ) : (
-                <div className="grid gap-6 lg:grid-cols-[2fr,1.2fr] items-start">
-                  {/* Quotes table */}
-                  <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-                    <table className="min-w-full divide-y divide-slate-200 text-sm">
-                      <thead className="bg-indigo-50/90 border-b border-indigo-200">
-                        <tr>
-                          <th className="px-4 py-3 text-left font-semibold text-indigo-700 uppercase tracking-wider text-xs">Quote ID</th>
-                          <th className="px-4 py-3 text-left font-semibold text-indigo-700 uppercase tracking-wider text-xs">Customer</th>
-                          <th className="px-4 py-3 text-right font-semibold text-indigo-700 uppercase tracking-wider text-xs">Value</th>
-                          <th className="px-4 py-3 text-left font-semibold text-indigo-700 uppercase tracking-wider text-xs">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-slate-100">
-                        {filteredQuotes.map((q) => (
-                          <tr
-                            key={q.id}
-                            className="hover:bg-blue-50/60 transition duration-150 cursor-pointer"
-                            onClick={() => setSelectedQuote(q)}
-                          >
-                            <td className="px-4 py-3 font-medium text-slate-900">{q.id}</td>
-                            <td className="px-4 py-3 text-slate-800">{q.customerName}</td>
-                            <td className="px-4 py-3 text-right font-semibold text-indigo-700">{q.value ? `RF ${q.value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : 'N/A'}</td>
-                            <td className="px-4 py-3">
-                              {getStatusTag(q.status)}
-                            </td>
-                          </tr>
-                        ))}
-                        {filteredQuotes.length === 0 && !loading && (
-                          <tr>
-                            <td colSpan={4} className="px-4 py-8 text-center text-sm text-slate-500">
-                              {search ? `No quotes found matching "${search}".` : "No quotes available. Check your API endpoint."}
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+              </div>
+            </div>
+
+            {leadItemsForQuote.length > 0 && (
+              <div className="mb-8 rounded-2xl border border-blue-100 bg-blue-50/30 p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-blue-900 flex items-center gap-2">
+                    <DollarSign size={16} /> Item Pricing Configuration
+                  </h3>
+                  <div className="text-right">
+                    <p className="text-[9px] font-bold text-blue-500 uppercase tracking-widest">Estimated Total</p>
+                    <p className="text-xl font-bold text-blue-900">
+                      RWF {leadItemsForQuote.reduce((sum, item) => sum + (Number(item.unitPrice || 0) * Number(item.quantity || 0)), 0).toLocaleString()}
+                    </p>
                   </div>
+                </div>
 
-                  {/* Side detail panel */}
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5 shadow-inner min-h-[220px]">
-                    {!selectedQuote ? (
-                      <div className="h-full flex flex-col items-center justify-center text-center text-sm text-slate-500">
-                        <p className="font-semibold text-slate-600 mb-1">Select a quote to preview</p>
-                        <p className="text-xs max-w-xs">
-                          Click any row on the left to see key details, status and owner information here.
+                <div className="space-y-3">
+                  {leadItemsForQuote.map((row, index) => (
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-[2fr,100px,150px,120px] gap-4 items-end bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                      <div>
+                        <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">Description</label>
+                        <input
+                          type="text"
+                          className="w-full rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 text-xs font-medium"
+                          value={row.description}
+                          onChange={(e) => {
+                            const next = [...leadItemsForQuote];
+                            next[index] = { ...next[index], description: e.target.value };
+                            setLeadItemsForQuote(next);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">Qty</label>
+                        <input
+                          type="number"
+                          className="w-full rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 text-xs font-medium text-center"
+                          value={row.quantity}
+                          onChange={(e) => {
+                            const next = [...leadItemsForQuote];
+                            next[index] = { ...next[index], quantity: e.target.value };
+                            setLeadItemsForQuote(next);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-blue-600 uppercase mb-1 block">Unit Price (RWF)</label>
+                        <input
+                          type="number"
+                          className="w-full rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-bold text-blue-900 focus:ring-2 focus:ring-blue-100 outline-none"
+                          value={row.unitPrice}
+                          onChange={(e) => {
+                            const next = [...leadItemsForQuote];
+                            next[index] = { ...next[index], unitPrice: e.target.value };
+                            setLeadItemsForQuote(next);
+                          }}
+                        />
+                      </div>
+                      <div className="text-right">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">Subtotal</label>
+                        <p className="text-sm font-bold text-slate-900">
+                          {(Number(row.unitPrice || 0) * Number(row.quantity || 0)).toLocaleString()}
                         </p>
                       </div>
-                    ) : (
-                      <div className="space-y-3">
+                    </div>
+                  ))}
+                </div>
 
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Quote preview</p>
-                        <h2 className="text-lg font-bold text-slate-900">Quote {selectedQuote.id}</h2>
-                        <p className="text-sm text-slate-600">
-                          {selectedQuote.customerName || 'Unknown customer'}
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={handleCreateQuote}
+                    disabled={saving || !newQuote.customerId}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-100 transition-all"
+                  >
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText size={18} />}
+                    Generate & Send Quote
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(error || success) && (
+              <div className={`mb-6 p-4 rounded-xl border text-sm font-medium flex items-center justify-between ${error ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}>
+                <div className="flex items-center gap-2">
+                  {error ? <XCircle size={18} /> : <CheckCircle size={18} />}
+                  {error || success}
+                </div>
+                {success && !error && (
+                  <Link to="/orders" className="text-xs font-bold underline flex items-center gap-1">
+                    View Orders <ArrowRight size={12} />
+                  </Link>
+                )}
+              </div>
+            )}
+
+            <div className="grid lg:grid-cols-[1fr,350px] gap-8">
+              <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50/50 border-b border-slate-100">
+                      <th className="px-6 py-4 text-left font-bold text-slate-500 uppercase text-[10px] tracking-wider">ID</th>
+                      <th className="px-6 py-4 text-left font-bold text-slate-500 uppercase text-[10px] tracking-wider">Customer</th>
+                      <th className="px-6 py-4 text-right font-bold text-slate-500 uppercase text-[10px] tracking-wider">Value (RWF)</th>
+                      <th className="px-6 py-4 text-center font-bold text-slate-500 uppercase text-[10px] tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-slate-400 font-medium italic">Synchronizing with server...</td>
+                      </tr>
+                    ) : filteredQuotes.map(q => (
+                      <tr 
+                        key={q.id} 
+                        onClick={() => setSelectedQuote(q)}
+                        className={`cursor-pointer transition-all hover:bg-blue-50/50 ${selectedQuote?.id === q.id ? 'bg-blue-50/80 ring-1 ring-inset ring-blue-100' : ''}`}
+                      >
+                        <td className="px-6 py-4 font-bold text-slate-900">{q.id}</td>
+                        <td className="px-6 py-4 font-medium text-slate-700">{q.customerName}</td>
+                        <td className="px-6 py-4 text-right font-bold text-blue-600">
+                          {q.value ? q.value.toLocaleString() : '0'}
+                        </td>
+                        <td className="px-6 py-4 text-center">{getStatusTag(q.status)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-6">
+                {!selectedQuote ? (
+                  <div className="flex h-full flex-col items-center justify-center text-center opacity-60">
+                    <FileText size={48} className="mb-4 text-slate-300" />
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Select a Quote</p>
+                    <p className="mt-1 text-xs text-slate-500">Preview financial details and approvals.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div>
+                      <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Quote Reference</p>
+                      <h2 className="text-2xl font-bold text-slate-900 mt-1">#{selectedQuote.id}</h2>
+                      <p className="text-sm font-medium text-slate-500">{selectedQuote.customerName}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="rounded-xl bg-white p-3 border border-slate-200 shadow-sm">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">Total Value</p>
+                        <p className="text-sm font-bold text-slate-900 mt-1">
+                          {selectedQuote.value ? `RWF ${selectedQuote.value.toLocaleString()}` : 'N/A'}
                         </p>
-
-                        <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm mt-2">
-
-                          <div className="rounded-lg bg-white px-3 py-2 border border-slate-200">
-                            <p className="text-slate-500">Value</p>
-                            <p className="mt-1 text-sm font-semibold text-slate-900">
-                              {selectedQuote.value
-                                ? `RF ${selectedQuote.value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-                                : 'N/A'}
-                            </p>
-                          </div>
-                          <div className="rounded-lg bg-white px-3 py-2 border border-slate-200">
-                            <p className="text-slate-500">Status</p>
-                            <div className="mt-1">
-                              {getStatusTag(selectedQuote.status)}
-                            </div>
-                          </div>
-                          <div className="rounded-lg bg-white px-3 py-2 border border-slate-200">
-                            <p className="text-slate-500">Quote ID</p>
-                            <p className="mt-1 text-sm font-mono text-slate-900">{selectedQuote.id}</p>
-                          </div>
-                        </div>
-
-                        {/* Approve quote → create order */}
-                        {selectedQuote.status !== 'approved' && (
-                          <button
-                            type="button"
-                            onClick={handleApproveQuote}
-                            disabled={approving}
-                            className="mt-3 inline-flex items-center rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
-                          >
-                            {approving ? 'Approving…' : 'Approve quote → Create order'}
-                          </button>
-                        )}
                       </div>
+                      <div className="rounded-xl bg-white p-3 border border-slate-200 shadow-sm">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">Current Status</p>
+                        <div className="mt-1">{getStatusTag(selectedQuote.status)}</div>
+                      </div>
+                    </div>
+
+                    {selectedQuote.status !== 'approved' && (
+                      <button
+                        onClick={handleApproveQuote}
+                        disabled={approving}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
+                      >
+                        {approving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle size={18} />}
+                        Approve & Create Order
+                      </button>
                     )}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

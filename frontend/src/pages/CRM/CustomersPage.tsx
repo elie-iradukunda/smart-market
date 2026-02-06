@@ -1,111 +1,162 @@
 // @ts-nocheck
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { fetchCustomers } from '@/api/apiClient'
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { fetchCustomers } from '@/api/apiClient';
+import { User, Phone, Mail, Globe, Eye, Search } from 'lucide-react';
 
 export default function CustomersPage() {
-  const navigate = useNavigate()
-  const [customers, setCustomers] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    let isMounted = true
-    setLoading(true)
-    setError(null)
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
 
     fetchCustomers()
       .then((data) => {
-        if (!isMounted) return
-        setCustomers(data || [])
+        if (!isMounted) return;
+        setCustomers(data || []);
       })
       .catch((err) => {
-        if (!isMounted) return
-        setError(err.message || 'Failed to load customers')
+        if (!isMounted) return;
+        setError(err.message || 'Failed to load customers');
       })
       .finally(() => {
-        if (!isMounted) return
-        setLoading(false)
-      })
+        if (!isMounted) return;
+        setLoading(false);
+      });
 
     return () => {
-      isMounted = false
-    }
-  }, [])
+      isMounted = false;
+    };
+  }, []);
 
-  const handleView = (id: number | string) => {
-    navigate(`/crm/customers/${id}`)
-  }
+  const handleView = (id) => {
+    navigate(`/crm/customers/${id}`);
+  };
+
+  const filteredCustomers = customers.filter(customer =>
+    customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.company?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl space-y-8">
-          {/* Header card */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">CRM</p>
-            <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
-              Customer <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Directory</span>
+      <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+              Customer Directory
             </h1>
-            <p className="mt-3 text-base text-gray-600 max-w-xl">
-              View all customers in the system and drill into AI-powered insights for each profile.
-            </p>
+            
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search customers..."
+                className="w-full md:w-80 rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none transition-all shadow-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
 
-          {/* Customers table */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">All customers</h2>
-            </div>
-
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             {error && (
-              <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 font-medium border border-red-200">{error}</p>
+              <div className="m-6 rounded-xl bg-red-50 p-4 text-sm text-red-700 border border-red-100 flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-red-500" />
+                {error}
+              </div>
             )}
 
-            {loading ? (
-              <p className="text-sm text-gray-500 py-4">Loading customers...</p>
-            ) : customers.length === 0 ? (
-              <p className="text-sm text-gray-500 py-4">No customers found.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-indigo-50/80 border-b border-indigo-200">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100">
+                    <th className="px-6 py-4 font-semibold text-slate-500 uppercase tracking-wider text-xs">Customer Profile</th>
+                    <th className="px-6 py-4 font-semibold text-slate-500 uppercase tracking-wider text-xs">Contact Details</th>
+                    <th className="px-6 py-4 font-semibold text-slate-500 uppercase tracking-wider text-xs">Source</th>
+                    <th className="px-6 py-4 font-semibold text-slate-500 uppercase tracking-wider text-xs text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {loading ? (
                     <tr>
-                      <th className="px-4 py-2 font-semibold text-indigo-700 uppercase tracking-wider text-xs">ID</th>
-                      <th className="px-4 py-2 font-semibold text-indigo-700 uppercase tracking-wider text-xs">Name</th>
-                      <th className="px-4 py-2 font-semibold text-indigo-700 uppercase tracking-wider text-xs">Phone</th>
-                      <th className="px-4 py-2 font-semibold text-indigo-700 uppercase tracking-wider text-xs">Email</th>
-                      <th className="px-4 py-2 font-semibold text-indigo-700 uppercase tracking-wider text-xs">Source</th>
-                      <th className="px-4 py-2 font-semibold text-indigo-700 uppercase tracking-wider text-xs">Actions</th>
+                      <td colSpan={4} className="px-6 py-12 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-r-transparent" />
+                          <p className="text-slate-400 font-medium">Loading data...</p>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {customers.map((c: any) => (
-                      <tr key={c.id} className="hover:bg-slate-50/80">
-                        <td className="px-4 py-2 text-xs text-slate-500">{c.id}</td>
-                        <td className="px-4 py-2 text-sm font-medium text-slate-900">{c.name}</td>
-                        <td className="px-4 py-2 text-sm text-slate-700">{c.phone || '-'}</td>
-                        <td className="px-4 py-2 text-sm text-slate-700">{c.email || '-'}</td>
-                        <td className="px-4 py-2 text-xs text-slate-500 uppercase tracking-wide">{c.source || '-'}</td>
-                        <td className="px-4 py-2">
+                  ) : filteredCustomers.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                        No customer records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCustomers.map((c) => (
+                      <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm border border-slate-200">
+                              {c.name?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-slate-900">{c.name}</div>
+                              <div className="text-xs text-slate-400">ID: {c.id}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <Mail size={14} className="text-slate-400" />
+                              <span>{c.email || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <Phone size={14} className="text-slate-400" />
+                              <span>{c.phone || 'N/A'}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500 border border-slate-200 uppercase">
+                            <Globe size={10} />
+                            {c.source || 'Direct'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 text-right">
                           <button
                             type="button"
                             onClick={() => handleView(c.id)}
-                            className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
                           >
-                            View details
+                            <Eye size={14} />
+                            View Details
                           </button>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="p-4 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center">
+              Total Records: {filteredCustomers.length}
+            </div>
           </div>
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

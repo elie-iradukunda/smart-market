@@ -1,13 +1,9 @@
 // @ts-nocheck
-import React, { useEffect, useState } from 'react'
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { fetchCampaigns } from '../../api/apiClient'
-import CampaignWizard from '@/components/marketing/CampaignWizard'
-import MarketingTopNav from '@/components/layout/MarketingTopNav'
-import OwnerTopNav from '@/components/layout/OwnerTopNav'
-import OwnerSideNav from '@/components/layout/OwnerSideNav'
-import MarketingSidebar from '@/components/layout/MarketingSidebar'
-import { getAuthUser } from '@/utils/apiClient'
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { fetchCampaigns, createCampaign } from '../../api/apiClient';
+import CampaignWizard from '@/components/marketing/CampaignWizard';
+import { getAuthUser } from '@/utils/apiClient';
 import {
   Facebook,
   Instagram,
@@ -22,52 +18,40 @@ import {
   AlertCircle,
   Settings,
   Key,
-  MessageSquare,
   Send,
   Zap
-} from 'lucide-react'
-import { createCampaign } from '@/api/apiClient'
-import { toast } from 'react-toastify'
-import DashboardLayout from '@/components/layout/DashboardLayout'
+} from 'lucide-react';
+import { toast } from 'react-toastify';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
+/**
+ * CampaignsPage Component.
+ * Manages the display, creation, and social media integration for marketing campaigns.
+ */
 function CampaignsPage() {
-  const [campaigns, setCampaigns] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [showForm, setShowForm] = useState(false)
-  const [showApiSettings, setShowApiSettings] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [searchParams] = useSearchParams()
-
-  useEffect(() => {
-    const template = searchParams.get('template')
-    const productId = searchParams.get('productId')
-
-    if (template || productId) {
-      setShowForm(true)
-    }
-  }, [searchParams])
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [showApiSettings, setShowApiSettings] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const [connectedChannels, setConnectedChannels] = useState({
     facebook: true,
     instagram: false,
     twitter: true,
     linkedin: false
-  })
+  });
 
   const [apiKeys, setApiKeys] = useState({
     facebook: { appId: '', appSecret: '', accessToken: '' },
     instagram: { appId: '', appSecret: '', accessToken: '' },
     twitter: { apiKey: '', apiSecret: '', accessToken: '', accessTokenSecret: '' },
     linkedin: { clientId: '', clientSecret: '', accessToken: '' }
-  })
+  });
 
-  const user = getAuthUser()
-  const isOwner = user?.role_id === 1
-
-  // Quick post state
   const [quickPost, setQuickPost] = useState({
     message: '',
     selectedPlatforms: {
@@ -76,116 +60,124 @@ function CampaignsPage() {
       twitter: true,
       linkedin: false
     }
-  })
-  const [isPosting, setIsPosting] = useState(false)
+  });
+  const [isPosting, setIsPosting] = useState(false);
+
+  const user = getAuthUser();
+  const isOwner = user?.role_id === 1;
+
+  useEffect(() => {
+    const template = searchParams.get('template');
+    const productId = searchParams.get('productId');
+
+    if (template || productId) {
+      setShowForm(true);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const load = () => {
+      setLoading(true);
+      setError(null);
+
+      fetchCampaigns()
+        .then((data) => {
+          if (!isMounted) return;
+          setCampaigns(data || []);
+        })
+        .catch((err) => {
+          if (!isMounted) return;
+          setError(err.message || 'Failed to load campaigns.');
+        })
+        .finally(() => {
+          if (!isMounted) return;
+          setLoading(false);
+        });
+    };
+
+    load();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleQuickPost = async () => {
     if (!quickPost.message.trim()) {
-      toast.warn('Please enter a message to post')
-      return
+      toast.warn('Please enter a message to post.');
+      return;
     }
 
     const platforms = Object.entries(quickPost.selectedPlatforms)
       .filter(([key, selected]) => selected && connectedChannels[key])
-      .map(([key]) => key)
+      .map(([key]) => key);
 
     if (platforms.length === 0) {
-      toast.warn('Please select at least one connected platform')
-      return
+      toast.warn('Please select at least one connected platform.');
+      return;
     }
 
-    setIsPosting(true)
+    setIsPosting(true);
     try {
-      // 1. Create a "Quick Social" campaign record
       await createCampaign({
         name: `Quick Post: ${quickPost.message.substring(0, 20)}...`,
         channel: 'Social Media',
         budget: 0,
         message: quickPost.message
-      })
+      });
 
-      // 2. Simulate social posting
-      toast.info(`Posting to ${platforms.join(', ')}...`)
+      toast.info(`Posting to ${platforms.join(', ')}...`);
 
       setTimeout(() => {
-        toast.success('Successfully posted to social media!')
-        setQuickPost(prev => ({ ...prev, message: '' }))
-        setIsPosting(false)
-        // Refresh list
-        fetchCampaigns().then(setCampaigns).catch(() => { })
-      }, 1500)
+        toast.success('Successfully posted to social media!');
+        setQuickPost(prev => ({ ...prev, message: '' }));
+        setIsPosting(false);
+        fetchCampaigns().then(setCampaigns).catch(() => { });
+      }, 1500);
 
     } catch (err) {
-      toast.error(err.message || 'Failed to post')
-      setIsPosting(false)
+      toast.error(err.message || 'Failed to post.');
+      setIsPosting(false);
     }
-  }
-
-  useEffect(() => {
-    let isMounted = true
-
-    const load = () => {
-      setLoading(true)
-      setError(null)
-
-      fetchCampaigns()
-        .then((data) => {
-          if (!isMounted) return
-          setCampaigns(data || [])
-        })
-        .catch((err) => {
-          if (!isMounted) return
-          setError(err.message || 'Failed to load campaigns')
-        })
-        .finally(() => {
-          if (!isMounted) return
-          setLoading(false)
-        })
-    }
-
-    load()
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  };
 
   const toggleConnection = (channel) => {
-    const hasApiKey = apiKeys[channel]?.accessToken || apiKeys[channel]?.apiKey
+    const hasApiKey = apiKeys[channel]?.accessToken || apiKeys[channel]?.apiKey;
 
     if (!hasApiKey && !connectedChannels[channel]) {
-      toast.warn(`Please configure API credentials for ${channel} first`)
-      setShowApiSettings(true)
-      return
+      toast.warn(`Please configure API credentials for ${channel} first.`);
+      setShowApiSettings(true);
+      return;
     }
 
-    const newValue = !connectedChannels[channel]
-    setConnectedChannels(prev => ({ ...prev, [channel]: newValue }))
+    const newValue = !connectedChannels[channel];
+    setConnectedChannels(prev => ({ ...prev, [channel]: newValue }));
 
-    // Show toast after state update
     if (newValue) {
-      toast.success(`Connected to ${channel.charAt(0).toUpperCase() + channel.slice(1)}`)
+      toast.success(`Connected to ${channel.charAt(0).toUpperCase() + channel.slice(1)}.`);
     } else {
-      toast.info(`Disconnected from ${channel.charAt(0).toUpperCase() + channel.slice(1)}`)
+      toast.info(`Disconnected from ${channel.charAt(0).toUpperCase() + channel.slice(1)}.`);
     }
-  }
+  };
 
   const handlePublish = (e, campaign) => {
-    e.stopPropagation()
+    e.stopPropagation();
     const activeChannels = Object.entries(connectedChannels)
       .filter(([_, isConnected]) => isConnected)
-      .map(([channel]) => channel.charAt(0).toUpperCase() + channel.slice(1))
+      .map(([channel]) => channel.charAt(0).toUpperCase() + channel.slice(1));
 
     if (activeChannels.length === 0) {
-      toast.warn('Please connect at least one social media channel first.')
-      return
+      toast.warn('Please connect at least one social media channel first.');
+      return;
     }
 
-    toast.success(`Publishing "${campaign.name}" to ${activeChannels.join(', ')}...`)
+    toast.success(`Publishing "${campaign.name}" to ${activeChannels.join(', ')}...`);
     setTimeout(() => {
-      toast.success('Campaign published successfully!')
-    }, 1500)
-  }
+      toast.success('Campaign published successfully!');
+    }, 1500);
+  };
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -202,9 +194,7 @@ function CampaignsPage() {
 
   return (
     <DashboardLayout>
-
-      <main className=" mx-auto space-y-8">
-
+      <main className="mx-auto space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
@@ -224,7 +214,6 @@ function CampaignsPage() {
           </button>
         </div>
 
-        {/* Quick Social Post Section */}
         <section className="bg-white rounded-2xl border-2 border-indigo-100 shadow-sm overflow-hidden">
           <div className="p-4 bg-indigo-50/50 border-b border-indigo-100 flex items-center gap-2">
             <Zap className="w-5 h-5 text-indigo-600" />
@@ -241,7 +230,7 @@ function CampaignsPage() {
                   className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none text-sm"
                 />
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-xs text-gray-400">{quickPost.message.length} characters</span>
+                  <span className="text-xs text-gray-400">{quickPost.message.length} characters.</span>
                   <div className="flex gap-4">
                     {[
                       { key: 'facebook', icon: Facebook, color: 'text-blue-600' },
@@ -257,7 +246,7 @@ function CampaignsPage() {
                         }))}
                         disabled={!connectedChannels[p.key]}
                         className={`transition-all ${quickPost.selectedPlatforms[p.key] && connectedChannels[p.key] ? p.color : 'text-gray-300 opacity-50'} ${!connectedChannels[p.key] ? 'cursor-not-allowed' : 'hover:scale-110'}`}
-                        title={connectedChannels[p.key] ? `Post to ${p.key}` : `${p.key} not connected`}
+                        title={connectedChannels[p.key] ? `Post to ${p.key}.` : `${p.key} not connected.`}
                       >
                         <p.icon className="w-5 h-5" />
                       </button>
@@ -283,7 +272,6 @@ function CampaignsPage() {
           </div>
         </section>
 
-        {/* Social Media Connections Hub */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -322,7 +310,6 @@ function CampaignsPage() {
                   </p>
                 </div>
 
-                {/* Facebook API */}
                 <div className="p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-center gap-2 mb-3">
                     <Facebook className="w-5 h-5 text-blue-600" />
@@ -362,7 +349,6 @@ function CampaignsPage() {
                   </div>
                 </div>
 
-                {/* Twitter API */}
                 <div className="p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-center gap-2 mb-3">
                     <Twitter className="w-5 h-5 text-gray-800" />
@@ -394,8 +380,8 @@ function CampaignsPage() {
 
                 <button
                   onClick={() => {
-                    toast.success('API credentials saved successfully!')
-                    setShowApiSettings(false)
+                    toast.success('API credentials saved successfully!');
+                    setShowApiSettings(false);
                   }}
                   className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors"
                 >
@@ -406,7 +392,6 @@ function CampaignsPage() {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Facebook */}
             <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.facebook ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
               <div className="flex items-center justify-between mb-3">
                 <div className={`p-2 rounded-lg ${connectedChannels.facebook ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
@@ -415,7 +400,7 @@ function CampaignsPage() {
                 <div className={`w-2 h-2 rounded-full ${connectedChannels.facebook ? 'bg-green-500' : 'bg-gray-300'}`} />
               </div>
               <h3 className="font-semibold text-gray-900">Facebook</h3>
-              <p className="text-xs text-gray-500 mb-3">{connectedChannels.facebook ? 'Connected' : 'Not connected'}</p>
+              <p className="text-xs text-gray-500 mb-3">{connectedChannels.facebook ? 'Connected.' : 'Not connected.'}</p>
               <button
                 onClick={() => toggleConnection('facebook')}
                 className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.facebook ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
@@ -424,7 +409,6 @@ function CampaignsPage() {
               </button>
             </div>
 
-            {/* Instagram */}
             <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.instagram ? 'bg-pink-50 border-pink-200' : 'bg-white border-gray-200'}`}>
               <div className="flex items-center justify-between mb-3">
                 <div className={`p-2 rounded-lg ${connectedChannels.instagram ? 'bg-pink-100 text-pink-600' : 'bg-gray-100 text-gray-500'}`}>
@@ -433,7 +417,7 @@ function CampaignsPage() {
                 <div className={`w-2 h-2 rounded-full ${connectedChannels.instagram ? 'bg-green-500' : 'bg-gray-300'}`} />
               </div>
               <h3 className="font-semibold text-gray-900">Instagram</h3>
-              <p className="text-xs text-gray-500 mb-3">{connectedChannels.instagram ? 'Connected' : 'Not connected'}</p>
+              <p className="text-xs text-gray-500 mb-3">{connectedChannels.instagram ? 'Connected.' : 'Not connected.'}</p>
               <button
                 onClick={() => toggleConnection('instagram')}
                 className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.instagram ? 'bg-white border-pink-200 text-pink-700 hover:bg-pink-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
@@ -442,7 +426,6 @@ function CampaignsPage() {
               </button>
             </div>
 
-            {/* Twitter / X */}
             <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.twitter ? 'bg-gray-100 border-gray-300' : 'bg-white border-gray-200'}`}>
               <div className="flex items-center justify-between mb-3">
                 <div className={`p-2 rounded-lg ${connectedChannels.twitter ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 text-gray-500'}`}>
@@ -451,7 +434,7 @@ function CampaignsPage() {
                 <div className={`w-2 h-2 rounded-full ${connectedChannels.twitter ? 'bg-green-500' : 'bg-gray-300'}`} />
               </div>
               <h3 className="font-semibold text-gray-900">X (Twitter)</h3>
-              <p className="text-xs text-gray-500 mb-3">{connectedChannels.twitter ? 'Connected' : 'Not connected'}</p>
+              <p className="text-xs text-gray-500 mb-3">{connectedChannels.twitter ? 'Connected.' : 'Not connected.'}</p>
               <button
                 onClick={() => toggleConnection('twitter')}
                 className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.twitter ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
@@ -460,7 +443,6 @@ function CampaignsPage() {
               </button>
             </div>
 
-            {/* LinkedIn */}
             <div className={`p-4 rounded-2xl border transition-all ${connectedChannels.linkedin ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
               <div className="flex items-center justify-between mb-3">
                 <div className={`p-2 rounded-lg ${connectedChannels.linkedin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -469,7 +451,7 @@ function CampaignsPage() {
                 <div className={`w-2 h-2 rounded-full ${connectedChannels.linkedin ? 'bg-green-500' : 'bg-gray-300'}`} />
               </div>
               <h3 className="font-semibold text-gray-900">LinkedIn</h3>
-              <p className="text-xs text-gray-500 mb-3">{connectedChannels.linkedin ? 'Connected' : 'Not connected'}</p>
+              <p className="text-xs text-gray-500 mb-3">{connectedChannels.linkedin ? 'Connected.' : 'Not connected.'}</p>
               <button
                 onClick={() => toggleConnection('linkedin')}
                 className={`w-full py-1.5 text-xs font-medium rounded-lg border transition-colors ${connectedChannels.linkedin ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50' : 'bg-gray-900 text-white border-gray-900 hover:bg-gray-800'}`}
@@ -486,20 +468,19 @@ function CampaignsPage() {
             initialTemplate={searchParams.get('template')}
             initialProductId={searchParams.get('productId')}
             onClose={() => {
-              setShowForm(false)
-              navigate(location.pathname, { replace: true })
+              setShowForm(false);
+              navigate(location.pathname, { replace: true });
             }}
             onSuccess={() => {
               fetchCampaigns()
                 .then(data => setCampaigns(data || []))
-                .catch(() => { })
-              setShowForm(false)
-              navigate(location.pathname, { replace: true })
+                .catch(() => { });
+              setShowForm(false);
+              navigate(location.pathname, { replace: true });
             }}
           />
         )}
 
-        {/* Campaigns List */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-lg font-bold text-gray-900">Active Campaigns</h2>
@@ -576,7 +557,7 @@ function CampaignsPage() {
                           <button
                             onClick={(e) => handlePublish(e, cmp)}
                             className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                            title="Publish to Social Media"
+                            title="Publish to Social Media."
                           >
                             <Share2 className="w-4 h-4" />
                           </button>
@@ -593,9 +574,8 @@ function CampaignsPage() {
           </div>
         </div>
       </main>
-
     </DashboardLayout>
-  )
+  );
 }
 
-export default CampaignsPage
+export default CampaignsPage;
