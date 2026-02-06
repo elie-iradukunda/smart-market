@@ -59,23 +59,12 @@ export default function OperationsReportsPage() {
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen bg-gradient-to-br from-amber-50/30 via-white to-orange-50/30 px-4 py-8 sm:px-6 lg:px-8">
+            <div className="min-h-screen bg-white px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-7xl space-y-8">
 
                     {/* Header */}
-                    <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-xl">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
-                                <BarChart3 size={20} />
-                            </div>
-                            <p className="text-sm font-semibold uppercase tracking-wider text-amber-700">Analytics</p>
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-                            Operations <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">Dashboard</span>
-                        </h1>
-                        <p className="mt-4 text-base text-gray-600 max-w-2xl">
-                            Monitor orders, work orders, and production performance in real-time.
-                        </p>
+                    <div className="rounded-3xl border border-gray-200 bg-white ">
+                        <h3 className='text-2xl text-slate-800 font-semibold'>Operations Reports</h3>
                     </div>
 
                     {/* Error message */}
@@ -87,55 +76,67 @@ export default function OperationsReportsPage() {
 
                     {/* KPI Cards */}
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Total Orders</p>
-                                <Package size={20} className="text-amber-500" />
+                                <div className="p-2 bg-amber-50 rounded-lg">
+                                    <Package size={20} className="text-amber-500" />
+                                </div>
                             </div>
                             <p className="text-3xl font-bold text-gray-900">{stats.totalOrders}</p>
                             <p className="mt-1 text-xs text-gray-500">All customer orders</p>
                         </div>
 
-                        <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="rounded-2xl border border-blue-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Processing</p>
-                                <Clock size={20} className="text-blue-500" />
+                                <div className="p-2 bg-blue-50 rounded-lg">
+                                    <Clock size={20} className="text-blue-500" />
+                                </div>
                             </div>
                             <p className="text-3xl font-bold text-gray-900">{stats.processingOrders}</p>
                             <p className="mt-1 text-xs text-gray-500">Orders in production</p>
                         </div>
 
-                        <div className="rounded-2xl border border-green-100 bg-gradient-to-br from-green-50 to-white p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-green-700">Completed</p>
-                                <CheckCircle2 size={20} className="text-green-500" />
+                                <div className="p-2 bg-green-50 rounded-lg">
+                                    <CheckCircle2 size={20} className="text-green-500" />
+                                </div>
                             </div>
                             <p className="text-3xl font-bold text-gray-900">{stats.completedOrders}</p>
                             <p className="mt-1 text-xs text-gray-500">Successfully delivered</p>
                         </div>
 
-                        <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="rounded-2xl border border-purple-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">Work Orders</p>
-                                <Wrench size={20} className="text-purple-500" />
+                                <div className="p-2 bg-purple-50 rounded-lg">
+                                    <Wrench size={20} className="text-purple-500" />
+                                </div>
                             </div>
                             <p className="text-3xl font-bold text-gray-900">{stats.totalWorkOrders}</p>
                             <p className="mt-1 text-xs text-gray-500">Production jobs</p>
                         </div>
 
-                        <div className="rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 to-white p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="rounded-2xl border border-orange-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-orange-700">Active Jobs</p>
-                                <TrendingUp size={20} className="text-orange-500" />
+                                <div className="p-2 bg-orange-50 rounded-lg">
+                                    <TrendingUp size={20} className="text-orange-500" />
+                                </div>
                             </div>
                             <p className="text-3xl font-bold text-gray-900">{stats.activeWorkOrders}</p>
                             <p className="mt-1 text-xs text-gray-500">Currently in progress</p>
                         </div>
 
-                        <div className="rounded-2xl border border-gray-100 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">Pending</p>
-                                <Clock size={20} className="text-gray-500" />
+                                <div className="p-2 bg-gray-50 rounded-lg">
+                                    <Clock size={20} className="text-gray-500" />
+                                </div>
                             </div>
                             <p className="text-3xl font-bold text-gray-900">{stats.pendingOrders}</p>
                             <p className="mt-1 text-xs text-gray-500">Awaiting processing</p>
@@ -143,14 +144,14 @@ export default function OperationsReportsPage() {
                     </div>
 
                     {/* Recent Orders Table */}
-                    <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-xl">
+                    <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
                         <div className="flex items-center justify-between mb-5">
                             <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
                             {loading && <span className="text-xs text-gray-500">Loading…</span>}
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-100 text-sm">
-                                <thead className="bg-gray-50/50">
+                            <table className="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Order #</th>
                                         <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Customer</th>
@@ -158,9 +159,9 @@ export default function OperationsReportsPage() {
                                         <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Total</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100 bg-white">
+                                <tbody className="divide-y divide-gray-200 bg-white">
                                     {orders.slice(0, 10).map((order) => (
-                                        <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <tr key={order.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-3 whitespace-nowrap text-gray-500 font-mono text-xs">#{order.id}</td>
                                             <td className="px-6 py-3 whitespace-nowrap text-gray-900 font-medium">{order.customer || 'N/A'}</td>
                                             <td className="px-6 py-3 whitespace-nowrap">
@@ -191,13 +192,13 @@ export default function OperationsReportsPage() {
                     </div>
 
                     {/* Recent Work Orders Table */}
-                    <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-xl">
+                    <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
                         <div className="flex items-center justify-between mb-5">
                             <h2 className="text-lg font-semibold text-gray-900">Recent Work Orders</h2>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-100 text-sm">
-                                <thead className="bg-gray-50/50">
+                            <table className="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">WO #</th>
                                         <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Customer/Job</th>
@@ -205,11 +206,11 @@ export default function OperationsReportsPage() {
                                         <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Technician</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100 bg-white">
+                                <tbody className="divide-y divide-gray-200 bg-white">
                                     {workOrders.slice(0, 10).map((wo) => {
                                         const currentStage = (wo.order_status || wo.stage || wo.status || 'Pending').toLowerCase();
                                         return (
-                                            <tr key={wo.id} className="hover:bg-gray-50/50 transition-colors">
+                                            <tr key={wo.id} className="hover:bg-gray-50 transition-colors">
                                                 <td className="px-6 py-3 whitespace-nowrap text-gray-500 font-mono text-xs">#{wo.id}</td>
                                                 <td className="px-6 py-3 whitespace-nowrap text-gray-900 font-medium">{wo.customer_name || wo.customer || 'N/A'}</td>
                                                 <td className="px-6 py-3 whitespace-nowrap">
