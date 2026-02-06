@@ -3,10 +3,6 @@ import React from 'react';
 import { getAuthUser } from '@/utils/apiClient';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
-/**
- * SystemSettingsPage Component.
- * Provides a clean, flat interface for managing global system configurations.
- */
 export default function SystemSettingsPage() {
   const user = getAuthUser();
 
