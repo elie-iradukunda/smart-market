@@ -16,11 +16,11 @@ const StaffDashboardLayout: React.FC<StaffDashboardLayoutProps> = ({ children })
             <div className="flex flex-1">
                 <StaffSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-                <main className="flex-1 ml-64 pb-20 md:pb-0">
+                <main className="flex-1  pb-20 md:pb-0">
                     <StaffTopNav onMenuClick={() => setIsSidebarOpen(true)} />
 
                     <div className="p-4 sm:p-6 lg:p-8">
-                        {children}
+                       {children}
                     </div>
                 </main>
             </div>

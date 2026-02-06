@@ -27,7 +27,6 @@ export default function StaffTopNav({ onMenuClick }: StaffTopNavProps) {
 
   const utilLinks = [
     { to: "/dashboard/staff/communications/inbox", label: "Messages", icon: Mail },
-    { to: "/account/change-password", label: "Settings", icon: Settings },
   ];
 
   return (
