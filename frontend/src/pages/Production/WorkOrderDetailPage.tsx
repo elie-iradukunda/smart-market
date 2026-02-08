@@ -1,19 +1,22 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Tag, User, Calendar, CheckCircle, Loader2, AlertTriangle, Save, Clock, Package, ArrowLeft, FileText } from 'lucide-react'
+import { Tag, User, Calendar, CheckCircle, Loader2, AlertTriangle, Save, Clock, Package, ArrowLeft, FileText, Mail, Phone, MapPin } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { formatCurrency } from '@/utils/formatters'
+import { getAuthUser } from '@/utils/apiClient'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
 const getAuthToken = () => {
-  return localStorage.getItem('token')
+  return localStorage.getItem('auth_token')
 }
 
 export default function WorkOrderDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const currentUser = getAuthUser()
+  const isAdmin = currentUser?.role_id === 1 || currentUser?.role_id === 2
   const [workOrder, setWorkOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -35,7 +38,7 @@ export default function WorkOrderDetailPage() {
     }
 
     // Fetch work order details
-    fetch(`${API_BASE}/production/work-orders/${id}`, {
+    fetch(`${API_BASE}/work-orders/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -43,6 +46,7 @@ export default function WorkOrderDetailPage() {
       .then(res => res.json())
       .then((data) => {
         if (!isMounted) return
+        console.log('Work Order Fetched:', data)
         setWorkOrder(data)
 
         // If this order has a quote, load the quote items
@@ -85,6 +89,56 @@ export default function WorkOrderDetailPage() {
     }
   }, [id])
 
+  const stages = ['Design', 'Print', 'Finish', 'Ready', 'Delivered']
+  const stageStatusCodes = ['design', 'print', 'finish', 'ready', 'delivered']
+
+  const handleAdvanceStage = async () => {
+    if (!workOrder) return
+    const statusCode = (workOrder.order_status || '').toLowerCase()
+    const currentStageIndex = Math.max(stageStatusCodes.indexOf(statusCode), 0)
+
+    if (currentStageIndex >= stageStatusCodes.length - 1) return
+
+    const nextStatus = stageStatusCodes[currentStageIndex + 1]
+    setSaving(true)
+    setError(null)
+
+    const token = getAuthToken()
+    try {
+      // Use order_number (e.g. CD-1) to ensure backend identifies Custom Design orders correctly
+      const orderIdToUpdate = workOrder.order_number || workOrder.order_id || workOrder.custom_design_order_id
+      if (!orderIdToUpdate) {
+        throw new Error('No order ID found')
+      }
+
+      const res = await fetch(`${API_BASE}/orders/${orderIdToUpdate}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: nextStatus }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        console.error('Backend error response:', data)
+        if (data.debug) {
+          console.error('Debug info:', data.debug)
+        }
+        throw new Error(data.error || data.message || 'Failed to update status')
+      }
+
+      setWorkOrder({ ...workOrder, order_status: nextStatus, stage: nextStatus })
+      setActionMessage(`Status updated to ${nextStatus}`)
+    } catch (err: any) {
+      console.error('Update status error:', err)
+      setError(err.message || 'Failed to update status')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleMarkComplete = async () => {
     if (!id || saving) return
     setSaving(true)
@@ -93,7 +147,13 @@ export default function WorkOrderDetailPage() {
 
     const token = getAuthToken()
     try {
-      const res = await fetch(`${API_BASE}/production/orders/${workOrder.order_id}/status`, {
+      // If it's a custom design, use order_number (e.g. CD-1)
+      // If it's a standard order, use order_id from database
+      const orderIdToUpdate = workOrder.is_custom_design
+        ? workOrder.order_number
+        : (workOrder.order_id || workOrder.id);
+
+      const res = await fetch(`${API_BASE}/orders/${orderIdToUpdate}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -177,9 +237,38 @@ export default function WorkOrderDetailPage() {
               {workOrder.order_status || 'Pending'}
             </span>
           </h1>
-          <p className="mt-3 text-lg font-medium text-gray-800">
-            Customer: {workOrder.customer_name || 'Unknown'}
-          </p>
+          <div className="mt-4 bg-gray-50/50 p-4 rounded-xl border border-gray-100 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-purple-100 p-2 rounded-lg">
+                <User className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Customer</p>
+                <p className="text-lg font-bold text-gray-900">{workOrder.customer_name || 'Unknown'}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+              {workOrder.customer_email && (
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
+                  <Mail className="w-4 h-4 text-purple-400" />
+                  {workOrder.customer_email}
+                </div>
+              )}
+              {workOrder.customer_phone && (
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
+                  <Phone className="w-4 h-4 text-purple-400" />
+                  {workOrder.customer_phone}
+                </div>
+              )}
+              {workOrder.customer_address && (
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
+                  <MapPin className="w-4 h-4 text-purple-400" />
+                  {workOrder.customer_address}
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Key Info Grid */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -211,6 +300,196 @@ export default function WorkOrderDetailPage() {
             </div>
           </div>
 
+          {/* Production Timeline */}
+          <div className="mt-6 bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-lg font-bold text-gray-900 flex items-center">
+                <Clock className="h-5 w-5 mr-2 text-purple-600" />
+                Production Timeline
+              </p>
+              {(() => {
+                const statusCode = (workOrder.stage || workOrder.order_status || '').toLowerCase()
+                const currentStageIndex = Math.max(stageStatusCodes.indexOf(statusCode), 0)
+                const isAtReady = statusCode === 'ready'
+                const isCompleted = currentStageIndex >= stages.length - 1
+
+                // Permission check: Admin or Assigned Staff
+                const isAssigned = workOrder.assigned_to && Number(workOrder.assigned_to) === Number(currentUser?.id)
+                const hasPermission = isAdmin || isAssigned
+
+                const canAdvance = isCompleted ? false : (isAtReady ? isAdmin : hasPermission)
+
+                return (
+                  <button
+                    type="button"
+                    onClick={handleAdvanceStage}
+                    disabled={!canAdvance || saving}
+                    className={`inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${canAdvance ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-400'}`}
+                    title={!hasPermission ? 'Only assigned staff or admin can update status' : (isAtReady && !isAdmin ? 'Only admin can mark as Delivered' : '')}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      isCompleted ? 'Completed' : isAtReady ? 'Mark as Delivered' : 'Mark Next Step Done'
+                    )}
+                  </button>
+                )
+              })()}
+            </div>
+
+            {actionMessage && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {actionMessage}
+              </div>
+            )}
+
+            <ol className="relative border-l border-purple-200 space-y-8 ml-3">
+              {stages.map((stage, index) => {
+                const statusCode = (workOrder.order_status || '').toLowerCase()
+                const currentStageIndex = Math.max(stageStatusCodes.indexOf(statusCode), 0)
+                const isCompleted = index < currentStageIndex
+                const isActive = index === currentStageIndex
+
+                return (
+                  <li key={stage} className={`ml-6 ${isCompleted ? 'opacity-100' : isActive ? 'opacity-100' : 'opacity-60'}`}>
+                    <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white ${isCompleted ? 'bg-green-500' : isActive ? 'bg-purple-600 animate-pulse' : 'bg-gray-300'}`}>
+                      {isCompleted && <CheckCircle className="w-3 h-3 text-white" />}
+                    </span>
+                    <h3 className={`font-semibold ${isCompleted ? 'text-gray-700' : isActive ? 'text-purple-600 text-lg' : 'text-gray-400'}`}>
+                      {stage}
+                      {isActive && <span className="ml-2 text-xs font-normal bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">CURRENT</span>}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">{isCompleted ? 'Completed' : isActive ? 'In progress' : 'Upcoming'}</p>
+                  </li>
+                )
+              })}
+            </ol>
+          </div>
+
+          {/* Job Instructions / Custom Design Details */}
+          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-purple-600" />
+                Job Instructions
+              </h3>
+            </div>
+            <div className="p-6">
+              {workOrder.is_custom_design ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-purple-50 p-3 rounded-2xl border border-purple-100 text-center">
+                      <p className="text-[10px] text-purple-600 font-bold uppercase mb-1">Product</p>
+                      <p className="text-sm font-bold text-gray-900 capitalize">{workOrder.product_type}</p>
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100 text-center">
+                      <p className="text-[10px] text-blue-600 font-bold uppercase mb-1">Dimensions</p>
+                      <p className="text-sm font-bold text-gray-900">{workOrder.width}m × {workOrder.height}m</p>
+                    </div>
+                    <div className="bg-amber-50 p-3 rounded-2xl border border-amber-100 text-center">
+                      <p className="text-[10px] text-amber-600 font-bold uppercase mb-1">Quantity</p>
+                      <p className="text-sm font-bold text-gray-900">{workOrder.custom_quantity || 1}</p>
+                    </div>
+                    <div className="bg-indigo-50 p-3 rounded-2xl border border-indigo-100 text-center">
+                      <p className="text-[10px] text-indigo-600 font-bold uppercase mb-1">Spec</p>
+                      <p className="text-[10px] font-bold text-gray-900">
+                        {workOrder.paper_type || 'Std'}<br />
+                        {workOrder.finish_type || 'No'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Detailed Design Specs */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Typography & Content */}
+                    <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase mb-3 tracking-wider">Typography & Content</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <span className="text-xs text-gray-500 block mb-1">Text Content</span>
+                          <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                            <p className="text-sm font-medium text-gray-900 whitespace-pre-wrap">{workOrder.text_content || 'No specific text content provided'}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <div>
+                            <span className="text-xs text-gray-500 block mb-1">Font Style</span>
+                            <p className="text-sm font-bold text-gray-900">{workOrder.font_style || 'Standard'}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500 block mb-1">Size</span>
+                            <p className="text-sm font-bold text-gray-900">{workOrder.font_size ? `${workOrder.font_size}px` : 'Standard'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Colors & Usage */}
+                    <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase mb-3 tracking-wider">Colors & Usage</h4>
+                      <div className="space-y-4">
+                        <div className="flex gap-6">
+                          <div>
+                            <span className="text-xs text-gray-500 block mb-1">Background</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg shadow-sm border border-gray-200" style={{ backgroundColor: workOrder.bg_color || '#ffffff' }}></div>
+                              <span className="text-xs font-mono font-medium">{workOrder.bg_color || 'N/A'}</span>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500 block mb-1">Text Color</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg shadow-sm border border-gray-200" style={{ backgroundColor: workOrder.text_color || '#000000' }}></div>
+                              <span className="text-xs font-mono font-medium">{workOrder.text_color || 'N/A'}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {workOrder.usage_description && (
+                          <div>
+                            <span className="text-xs text-gray-500 block mb-1">Usage Context</span>
+                            <p className="text-sm font-medium text-gray-900 italic">"{workOrder.usage_description}"</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-2">Requirements</p>
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {workOrder.requirements || 'No specific instructions provided.'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {workOrder.instructions ? (
+                    <p className="text-sm text-gray-600 italic">"{workOrder.instructions}"</p>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">No specific instructions provided.</p>
+                  )}
+
+                  {workOrder.items && workOrder.items.length > 0 && (
+                    <div className="pt-4 border-t border-gray-100">
+                      <p className="text-xs font-bold text-gray-400 uppercase mb-3 tracking-wider">Ordered Items</p>
+                      <div className="space-y-2">
+                        {workOrder.items.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
+                            <span className="text-sm font-medium text-gray-700">{item.description}</span>
+                            <span className="text-xs font-bold px-2 py-1 bg-white rounded-md border border-gray-200">Qty: {item.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
           {/* Action Message */}
           {actionMessage && (
             <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800">
@@ -219,28 +498,29 @@ export default function WorkOrderDetailPage() {
             </div>
           )}
 
-          {/* Mark Complete Button */}
-          {workOrder.order_status !== 'ready' && workOrder.order_status !== 'delivered' && (
-            <div className="mt-6">
-              <button
-                onClick={handleMarkComplete}
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-5 w-5" />
-                    Mark as Ready for Delivery
-                  </>
-                )}
-              </button>
-            </div>
-          )}
+          {/* Mark Complete Button (Admin or Assigned Staff) */}
+          {(isAdmin || (workOrder.assigned_to && Number(workOrder.assigned_to) === Number(currentUser?.id))) &&
+            workOrder.order_status !== 'ready' && workOrder.order_status !== 'delivered' && (
+              <div className="mt-6">
+                <button
+                  onClick={handleMarkComplete}
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-5 w-5" />
+                      Mark as Ready for Delivery
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
         </div>
 
         {/* Materials Section */}

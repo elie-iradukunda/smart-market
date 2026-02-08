@@ -1,0 +1,27 @@
+-- Create custom_design_orders table
+CREATE TABLE IF NOT EXISTS custom_design_orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_type VARCHAR(100) NOT NULL,
+    width DECIMAL(10, 2) NOT NULL,
+    height DECIMAL(10, 2) NOT NULL,
+    total_area DECIMAL(10, 2) NOT NULL,
+    bg_color VARCHAR(20),
+    text_color VARCHAR(20),
+    font_style VARCHAR(50),
+    font_size VARCHAR(10),
+    text_content TEXT,
+    design_description TEXT COMMENT 'Detailed description of the design requirements for the production team',
+    usage_description TEXT COMMENT 'How the customer plans to use the design',
+    customer_name VARCHAR(255) NOT NULL,
+    customer_phone VARCHAR(50) NOT NULL,
+    customer_email VARCHAR(255) NOT NULL,
+    customer_location VARCHAR(255),
+    estimated_price DECIMAL(10, 2) NOT NULL,
+    status ENUM('pending', 'approved', 'payment_pending', 'paid', 'in_production', 'completed', 'cancelled') DEFAULT 'pending',
+    payment_link TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_customer_email (customer_email),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

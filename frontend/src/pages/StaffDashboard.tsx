@@ -58,9 +58,9 @@ export default function StaffDashboard() {
     }, [])
 
     const cards = [
-        { label: 'Active Tasks', value: stats.activeWorkOrders, icon: ClipboardList, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-        { label: 'In Production', value: stats.ordersInProduction, icon: Factory, color: 'text-sky-600', bg: 'bg-sky-50' },
-        { label: 'Completed Today', value: stats.completedToday, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' }
+        { label: 'Active Tasks', value: stats.activeWorkOrders, icon: ClipboardList, color: 'text-indigo-600', bg: 'bg-indigo-50', link: '/dashboard/staff/tasks' },
+        { label: 'In Production', value: stats.ordersInProduction, icon: Factory, color: 'text-sky-600', bg: 'bg-sky-50', link: '/dashboard/staff/production/work-orders' },
+        { label: 'Completed Today', value: stats.completedToday, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', link: '/dashboard/staff/production/work-orders' }
     ]
 
     return (
@@ -99,7 +99,7 @@ export default function StaffDashboard() {
                     {/* Quick Stats Grid */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
                         {cards.map((card, i) => (
-                            <div key={i} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+                            <Link to={card.link} key={i} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 block">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">{card.label}</p>
@@ -116,7 +116,7 @@ export default function StaffDashboard() {
                                 <div className="mt-4 flex items-center gap-1 text-[10px] font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
                                     VIEW DETAILS <ArrowRight size={10} />
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
 

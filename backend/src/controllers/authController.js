@@ -47,12 +47,8 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: 'Name, email and password are required' });
     }
 
-    // Get customer role ID
-    const [roles] = await pool.execute('SELECT id FROM roles WHERE name = "customer"');
-    let roleId = null;
-    if (roles.length > 0) {
-      roleId = roles[0].id;
-    }
+    // Assign role_id 4 (client) to all new registrations
+    const roleId = 4;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 

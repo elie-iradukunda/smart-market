@@ -28,6 +28,9 @@ import CheckoutPage from './pages/Shop/CheckoutPage'
 import OrderTrackingPage from './pages/Shop/OrderTrackingPage'
 import MyOrdersPage from './pages/Shop/MyOrdersPage'
 
+// Design Pages
+import CustomDesignOrderPage from './pages/Design/CustomDesignOrderPage'
+
 // Contexts
 import { CartProvider } from './contexts/CartContext'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -85,6 +88,7 @@ function App() {
             <Route path="/privacy" element={<Layout><PrivacyPage /></Layout>} />
             <Route path="/terms" element={<Layout><TermsPage /></Layout>} />
             <Route path="/security" element={<Layout><SecurityPage /></Layout>} />
+            <Route path="/custom-design" element={<CustomDesignOrderPage />} />
             <Route path="/*" element={<LegacyBusinessApp />} />
           </Routes>
           <ToastContainer />

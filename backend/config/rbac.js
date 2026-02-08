@@ -211,8 +211,23 @@ const ROUTE_PERMISSIONS = {
   // Payment routes (mounted at /payments)
   'GET /': [PERMISSIONS.PAYMENT_VIEW],
   'POST /lanari': [PERMISSIONS.PAYMENT_CREATE],
-  'PUT /:payment_id/refund': [PERMISSIONS.PAYMENT_REFUND]
+  'PUT /:payment_id/refund': [PERMISSIONS.PAYMENT_REFUND],
+
+  // Custom Design Settings
+  'GET /custom-design/settings': [],
+  'GET /custom-design/settings/all': [PERMISSIONS.SETTINGS_MANAGE],
+  'POST /custom-design/settings': [PERMISSIONS.SETTINGS_MANAGE],
+  'PUT /custom-design/settings/:id': [PERMISSIONS.SETTINGS_MANAGE],
+  'DELETE /custom-design/settings/:id': [PERMISSIONS.SETTINGS_MANAGE],
+
+  // Custom Design Orders
+  'GET /custom-design/orders': [PERMISSIONS.DESIGN_VIEW],
+  'GET /custom-design/orders/user': [],
+  'GET /custom-design/orders/:id': [PERMISSIONS.DESIGN_VIEW],
+  'POST /custom-design/orders': [],
+  'PUT /custom-design/orders/:id/status': [PERMISSIONS.DESIGN_MANAGE]
 };
+
 
 // Role permission matrix - Updated for 4 consolidated roles
 // Role permission matrix - Updated for the 4 primary roles

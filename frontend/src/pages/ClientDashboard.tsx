@@ -12,10 +12,11 @@ import {
     CircleEllipsis,
     LayoutDashboard,
     ShoppingCart,
-    Bell
+    Bell,
+    Palette
 } from 'lucide-react'
 import { getAuthUser } from '@/utils/apiClient'
-import { fetchOrders, fetchQuotes } from '@/api/apiClient'
+import { fetchOrders, fetchQuotes, fetchUserCustomDesignOrders } from '@/api/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
 export default function ClientDashboard() {
@@ -23,6 +24,7 @@ export default function ClientDashboard() {
     const [stats, setStats] = useState({
         activeOrders: 0,
         pendingQuotes: 0,
+        customOrders: 0,
         recentOrders: []
     })
     const [loading, setLoading] = useState(true)
@@ -30,17 +32,20 @@ export default function ClientDashboard() {
     useEffect(() => {
         async function loadClientData() {
             try {
-                const [orders, quotes] = await Promise.allSettled([
+                const [orders, quotes, customOrders] = await Promise.allSettled([
                     fetchOrders(),
-                    fetchQuotes()
+                    fetchQuotes(),
+                    user?.email ? fetchUserCustomDesignOrders(user.email) : Promise.resolve([])
                 ])
 
                 const ordersData = orders.status === 'fulfilled' ? (orders.value || []) : []
                 const quotesData = quotes.status === 'fulfilled' ? (quotes.value || []) : []
+                const customOrdersData = customOrders.status === 'fulfilled' ? (customOrders.value || []) : []
 
                 setStats({
                     activeOrders: ordersData.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length,
                     pendingQuotes: quotesData.filter(q => q.status === 'pending' || q.status === 'draft').length,
+                    customOrders: customOrdersData.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length,
                     recentOrders: ordersData.slice(0, 5)
                 })
             } catch (err) {
@@ -50,7 +55,7 @@ export default function ClientDashboard() {
             }
         }
         loadClientData()
-    }, [])
+    }, [user?.email])
 
     return (
         <DashboardLayout>
@@ -78,7 +83,9 @@ export default function ClientDashboard() {
                                     <Link to="/client/orders" className="bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all shadow-xl shadow-indigo-900/20">
                                         My Orders
                                     </Link>
-                                    {/* Contact Support removed */}
+                                    <Link to="/client/custom-design-orders" className="bg-indigo-500/30 backdrop-blur-md text-white border border-white/20 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-indigo-500/50 transition-all">
+                                        Custom Designs
+                                    </Link>
                                 </div>
                             </div>
 
@@ -92,15 +99,19 @@ export default function ClientDashboard() {
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest">Active Requests</p>
-                                    <p className="text-4xl font-black text-white">{stats.activeOrders + (![4, 13].includes(Number(user?.role_id)) ? stats.pendingQuotes : 0)}</p>
+                                    <p className="text-4xl font-black text-white">{stats.activeOrders + stats.customOrders + (![4, 13].includes(Number(user?.role_id)) ? stats.pendingQuotes : 0)}</p>
                                 </div>
-                                <div className="mt-6 flex gap-2">
-                                    <div className="flex-1 rounded-xl bg-white/10 p-3">
-                                        <p className="text-[10px] font-bold text-indigo-200 uppercase">Orders</p>
+                                <div className="mt-6 gap-2 grid grid-cols-2">
+                                    <div className="rounded-xl bg-white/10 p-3">
+                                        <p className="text-[10px] font-bold text-indigo-200 uppercase">Shop Orders</p>
                                         <p className="text-xl font-black text-white">{stats.activeOrders}</p>
                                     </div>
+                                    <div className="rounded-xl bg-white/10 p-3">
+                                        <p className="text-[10px] font-bold text-indigo-200 uppercase">Custom Designs</p>
+                                        <p className="text-xl font-black text-white">{stats.customOrders}</p>
+                                    </div>
                                     {![4, 13].includes(Number(user?.role_id)) && (
-                                        <div className="flex-1 rounded-xl bg-white/10 p-3">
+                                        <div className="col-span-2 rounded-xl bg-white/10 p-3">
                                             <p className="text-[10px] font-bold text-indigo-200 uppercase">Quotes</p>
                                             <p className="text-xl font-black text-white">{stats.pendingQuotes}</p>
                                         </div>
@@ -198,12 +209,12 @@ export default function ClientDashboard() {
                         {/* Sidebar Actions */}
                         <div className="lg:col-span-4 space-y-8">
 
-                            {/* Client Quick Links */}
                             <div className="rounded-[2.5rem] border border-slate-200 bg-white p-8">
                                 <h4 className="text-lg font-black text-slate-900 mb-6">Quick Actions</h4>
                                 <div className="space-y-3">
                                     {[
                                         { label: 'My Invoices', path: '/client/orders', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
+                                        { label: 'Custom Design Orders', path: '/client/custom-design-orders', icon: Palette, color: 'text-purple-600', bg: 'bg-purple-50' },
                                         { label: 'Project Files', path: '/client/files', icon: Files, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                                         { label: 'Active Quotes', path: '/client/quotes', icon: ShoppingCart, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                                         { label: 'Support Inbox', path: '/communications/inbox', icon: MessageSquare, color: 'text-amber-600', bg: 'bg-amber-50' },

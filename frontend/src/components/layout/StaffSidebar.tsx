@@ -29,10 +29,15 @@ const sidebarItems = [
     badge: 'new'
   },
   {
-    label: 'Design Studio',
-    path: '/dashboard/staff/design/hub',
+    label: 'Custom Design',
     icon: Palette,
+    children: [
+      { label: 'View Orders', path: '/dashboard/staff/design/orders' },
+      { label: 'Place Order', path: '/dashboard/admin/design/order' },
+    ]
   },
+
+
   {
     label: 'Work Orders',
     path: '/dashboard/staff/production/work-orders',

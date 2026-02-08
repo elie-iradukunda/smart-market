@@ -229,18 +229,12 @@ export default function MyTasksPage() {
                                         {/* Right: Actions */}
                                         <div className="flex flex-col gap-2">
                                             <Link
-                                                to={`/dashboard/staff/orders/${task.id}`}
+                                                to={`/dashboard/staff/production/work-orders/${task.work_order_id}`}
                                                 className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all"
                                             >
                                                 View Details
                                                 <ArrowRight size={16} />
                                             </Link>
-                                            {task.status !== 'completed' && (
-                                                <button className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold text-sm hover:border-indigo-200 hover:text-indigo-600 transition-all">
-                                                    <Upload size={16} />
-                                                    Upload Work
-                                                </button>
-                                            )}
                                         </div>
                                     </div>
                                 </div>

@@ -2,26 +2,21 @@
 import React, { useState, useEffect } from 'react'
 import { User, X, Check, Loader2 } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { getAuthUser } from '@/utils/apiClient'
+import { updateCustomDesignOrderStatus } from '@/api/apiClient'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-
-interface AssignWorkerModalProps {
+interface CustomDesignAssignModalProps {
     orderId: number
-    currentAssignee?: {
-        id: number
-        name: string
-    }
+    currentAssigneeId?: number
     onClose: () => void
     onAssigned: () => void
 }
 
-export default function AssignWorkerModal({ orderId, currentAssignee, onClose, onAssigned }: AssignWorkerModalProps) {
+export default function CustomDesignAssignModal({ orderId, currentAssigneeId, onClose, onAssigned }: CustomDesignAssignModalProps) {
     const [workers, setWorkers] = useState([])
-    const [selectedWorker, setSelectedWorker] = useState(currentAssignee?.id || null)
+    const [selectedWorker, setSelectedWorker] = useState(currentAssigneeId || null)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
-    const [taskInstructions, setTaskInstructions] = useState<string>('')
+    const [productionStage, setProductionStage] = useState<string>('design')
 
     useEffect(() => {
         loadWorkers()
@@ -31,7 +26,7 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
         try {
             setLoading(true)
             const token = localStorage.getItem('auth_token')
-            const response = await fetch(`${API_BASE}/users`, {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:3000/api'}/auth/users`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -40,8 +35,11 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
             if (!response.ok) throw new Error('Failed to load workers')
 
             const data = await response.json()
-            // Filter for staff/technician roles (role_id: 3 is the primary consolidated staff role)
-            const staffMembers = data.filter((user: any) => user.role_id === 3)
+            // Filter for staff role (role_id: 3 or 5 or whatever is relevant)
+            // Looking at previous data, technician might be role_id 5 or role name 'Technician Officer'
+            const staffMembers = data.filter((user: any) =>
+                [1, 2, 3, 5, 7].includes(user.role_id) // Allow Admin, Technician, etc.
+            )
             setWorkers(staffMembers)
         } catch (err) {
             console.error('Failed to load workers:', err)
@@ -52,49 +50,34 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
 
     async function handleAssign() {
         if (!selectedWorker) {
-            toast.error('Please select a worker')
+            toast.error('Please select a staff member')
             return
         }
 
         try {
             setSubmitting(true)
-            const token = localStorage.getItem('auth_token')
-            // Production updates are handled by production routes
-            // Note: API_BASE is likely http://localhost:5000/api or similar from environment
-            const response = await fetch(`${API_BASE}/work-orders/${orderId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    assigned_to: selectedWorker,
-                    notes: taskInstructions
-                })
-            })
-
-            if (!response.ok) throw new Error('Failed to assign worker')
-
-            toast.success('Worker assigned successfully!')
+            // We pass 'in_production' as the status to ensure the order moves to production state
+            await updateCustomDesignOrderStatus(orderId, 'in_production', undefined, selectedWorker, productionStage)
+            toast.success('Staff assigned and production started!')
             onAssigned()
             onClose()
         } catch (err) {
-            console.error('Failed to assign worker:', err)
-            toast.error('Failed to assign worker')
+            console.error('Failed to assign staff:', err)
+            toast.error('Failed to assign staff')
         } finally {
             setSubmitting(false)
         }
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="relative w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h2 className="text-2xl font-black text-slate-900">Assign Worker</h2>
-                            <p className="text-sm text-slate-600">Select a team member for Order #{orderId}</p>
+                            <h2 className="text-2xl font-black text-slate-900">Assign Staff</h2>
+                            <p className="text-sm text-slate-600">Select a team member for Custom Design #{orderId}</p>
                         </div>
                         <button
                             onClick={onClose}
@@ -104,15 +87,21 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
                         </button>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Task Instructions / Notes</label>
-                        <textarea
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-400"
-                            rows={3}
-                            placeholder="Describe what needs to be done..."
-                            value={taskInstructions}
-                            onChange={(e) => setTaskInstructions(e.target.value)}
-                        />
+                    <div className="grid grid-cols-1 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Production Stage</label>
+                            <select
+                                value={productionStage}
+                                onChange={(e) => setProductionStage(e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+                            >
+                                <option value="design">Design</option>
+                                <option value="prepress">Pre-press</option>
+                                <option value="print">Printing</option>
+                                <option value="finishing">Finishing</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -127,7 +116,7 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
                         <p className="text-slate-600">No staff members available</p>
                     </div>
                 ) : (
-                    <div className="space-y-2 max-h-96 overflow-y-auto mb-6">
+                    <div className="space-y-2 max-h-60 overflow-y-auto mb-6 pr-2">
                         {workers.map(worker => (
                             <button
                                 key={worker.id}
@@ -174,7 +163,7 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
                                 Assigning...
                             </>
                         ) : (
-                            'Assign Worker'
+                            'Assign & Update'
                         )}
                     </button>
                 </div>

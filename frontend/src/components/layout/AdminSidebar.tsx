@@ -43,6 +43,15 @@ const sidebarItems = [
         ]
     },
     {
+        label: 'Custom Design',
+        icon: Palette,
+        children: [
+            { label: 'View Orders', path: '/dashboard/admin/design/orders' },
+            { label: 'Place Custom Order', path: '/dashboard/admin/design/order' },
+            { label: 'Pricing Settings', path: '/dashboard/admin/design/pricing' },
+        ]
+    },
+    {
         label: 'Finance',
         icon: Banknote,
         children: [
@@ -71,15 +80,11 @@ const sidebarItems = [
         ]
     },
     {
-        label: 'Design & Creative',
-        path: '/dashboard/admin/design/hub',
-        icon: Palette,
-    },
-    {
         label: 'Marketing',
         path: '/dashboard/sales/marketing/campaigns',
         icon: Monitor,
     },
+
     {
         label: 'Settings',
         path: '/dashboard/admin/system-settings',

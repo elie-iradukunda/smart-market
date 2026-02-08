@@ -2603,3 +2603,113 @@ export async function deleteDesign(id: string | number) {
   if (!res.ok) throw new Error(data.message || 'Failed to delete design')
   return data
 }
+
+// Custom Design Settings
+export async function fetchCustomDesignSettings() {
+  const res = await fetch(`${API_BASE}/custom-design/settings`)
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch custom design settings')
+  }
+  return res.json()
+}
+
+export async function fetchAllCustomDesignSettings() {
+  const token = getAuthToken()
+  const res = await fetch(`${API_BASE}/custom-design/settings/all`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch all custom design settings')
+  }
+  return res.json()
+}
+
+export async function updateCustomDesignSetting(id: number | string, payload: any) {
+  const token = getAuthToken()
+  const res = await fetch(`${API_BASE}/custom-design/settings/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.message || 'Failed to update setting')
+  }
+  return res.json()
+}
+
+export async function createCustomDesignSetting(payload: any) {
+  const token = getAuthToken()
+  const res = await fetch(`${API_BASE}/custom-design/settings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.message || 'Failed to create setting')
+  }
+  return res.json()
+}
+
+export async function deleteCustomDesignSetting(id: number | string) {
+  const token = getAuthToken()
+  const res = await fetch(`${API_BASE}/custom-design/settings/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.message || 'Failed to delete setting')
+  }
+  return res.json()
+}
+
+export async function fetchUserCustomDesignOrders(email: string) {
+  const token = getAuthToken()
+  const res = await fetch(`${API_BASE}/custom-design/orders/user?email=${encodeURIComponent(email)}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch custom design orders')
+  }
+  return res.json()
+}
+
+export async function fetchAllCustomDesignOrders() {
+  const token = getAuthToken()
+  const res = await fetch(`${API_BASE}/custom-design/orders`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch custom design orders')
+  }
+  return res.json()
+}
+
+export async function updateCustomDesignOrderStatus(id: number | string, status?: string, paymentLink?: string, assignedTo?: number | null, productionStage?: string) {
+  const token = getAuthToken()
+  const res = await fetch(`${API_BASE}/custom-design/orders/${id}/status`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ status, paymentLink, assignedTo, productionStage })
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to update order status')
+  }
+  return res.json()
+}

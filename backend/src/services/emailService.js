@@ -1444,6 +1444,49 @@ class EmailService {
     `;
     return this.sendEmail(to, subject, content);
   }
+
+  // Custom Design Status Update
+  async sendCustomDesignStatusUpdate(customerEmail, data) {
+    const subject = `Update on your Custom Design Order #${data.id} - ${COMPANY_NAME}`;
+    const content = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Order Update</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
+      <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 40px 20px; text-align: center; color: white;">
+          <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">ORDER UPDATE</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Order #${data.id}</p>
+        </div>
+        <div style="padding: 40px 30px;">
+          <p style="margin: 0 0 20px 0; font-size: 18px; color: #1e293b; font-weight: 700;">Hello ${data.customer_name},</p>
+          <p style="margin: 0 0 30px 0; font-size: 16px; color: #475569; line-height: 1.6;">Good news! The status of your custom design order has been updated to <strong style="color: #4f46e5; text-transform: uppercase;">${data.status.replace('_', ' ')}</strong>.</p>
+          
+          <div style="background-color: #f1f5f9; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
+            <p style="margin: 0 0 10px 0; font-size: 14px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">New Status</p>
+            <p style="margin: 0; font-size: 20px; color: #0f172a; font-weight: 800; text-transform: capitalize;">${data.status.replace('_', ' ')}</p>
+          </div>
+
+          <p style="margin: 0 0 20px 0; font-size: 16px; color: #475569; line-height: 1.6;">Our team is working hard to ensure your order meets our highest quality standards.</p>
+          
+          <div style="text-align: center; margin: 40px 0 20px 0;">
+            <a href="${process.env.FRONTEND_URL || 'https://smartmarket.rw'}/account/orders" style="background-color: #4f46e5; color: white; padding: 16px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; display: inline-block; transition: background-color 0.2s;">Track Your Order</a>
+          </div>
+        </div>
+        <div style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+          <p style="margin: 0; font-size: 14px; color: #64748b;">${COMPANY_NAME} • ${COMPANY_ADDRESS}</p>
+          <p style="margin: 10px 0 0 0; font-size: 12px; color: #94a3b8;">You're receiving this because you placed an order with us.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+    return this.sendEmail(customerEmail, subject, content);
+  }
 }
 
 export default new EmailService();

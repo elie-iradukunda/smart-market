@@ -8,6 +8,7 @@ const navigation = [
   { name: 'Features', href: '/#features' },
   { name: 'Modules', href: '/#modules' },
   { name: 'Integrations', href: '/#integrations' },
+  { name: 'Custom Order', href: '/custom-design' },
   { name: 'Pricing', href: '/pricing' },
   { name: 'About', href: '/about' },
   { name: 'Contact', href: '/contact' },

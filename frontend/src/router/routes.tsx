@@ -65,6 +65,11 @@ import ReceptionDashboard from '@/pages/ReceptionDashboard';
 import MyTasksPage from '../pages/Staff/MyTasksPage';
 import DesignStudioPage from '../pages/Design/DesignStudioPage';
 import DesignManagementPage from '../pages/Design/DesignManagementPage';
+import CustomDesignPricingPage from '../pages/Admin/CustomDesignPricingPage';
+import CustomDesignOrderPage from '../pages/Design/CustomDesignOrderPage';
+import ClientCustomDesignOrdersPage from '../pages/ClientCustomDesignOrdersPage';
+import AdminCustomDesignOrdersPage from '../pages/Admin/AdminCustomDesignOrdersPage';
+
 
 export const routes = [
   // Main dashboard routes for 4 consolidated roles
@@ -74,6 +79,8 @@ export const routes = [
   { path: '/dashboard/sales', element: <SalesDashboard /> },
   { path: '/dashboard/staff', element: <StaffDashboard /> },
   { path: '/client', element: <ClientDashboard /> },
+  { path: '/client/custom-design-orders', element: <ClientCustomDesignOrdersPage /> },
+
 
   // Files (available to many roles)
   { path: '/files', element: <FilesPage /> },
@@ -113,6 +120,10 @@ export const routes = [
   { path: '/dashboard/admin/design/hub', element: <DesignManagementPage /> },
   { path: '/dashboard/admin/design/studio', element: <DesignStudioPage /> },
   { path: '/dashboard/admin/design/studio/:id', element: <DesignStudioPage /> },
+  { path: '/dashboard/admin/design/pricing', element: <CustomDesignPricingPage /> },
+  { path: '/dashboard/admin/design/order', element: <CustomDesignOrderPage /> },
+  { path: '/dashboard/admin/design/orders', element: <AdminCustomDesignOrdersPage /> },
+
   { path: '/dashboard/sales/crm/leads', element: <LeadsPage /> },
   { path: '/dashboard/sales/crm/leads/:id', element: <LeadDetailPage /> },
   { path: '/dashboard/sales/crm/customers', element: <CustomersPage /> },
@@ -160,6 +171,7 @@ export const routes = [
   { path: '/dashboard/staff/design/hub', element: <DesignManagementPage /> },
   { path: '/dashboard/staff/design/studio', element: <DesignStudioPage /> },
   { path: '/dashboard/staff/design/studio/:id', element: <DesignStudioPage /> },
+  { path: '/dashboard/staff/design/orders', element: <AdminCustomDesignOrdersPage /> },
 
   // CLIENT nested routes (role_id: 4)
   { path: '/client/orders', element: <OrdersPage /> },
@@ -169,4 +181,5 @@ export const routes = [
 
   // Account (available to all authenticated users - outside dashboard hierarchy)
   { path: '/account/change-password', element: <ChangePasswordPage /> },
-]
+  { path: '/custom-order', element: <CustomDesignOrderPage /> },
+];

@@ -26,6 +26,10 @@ import productImageUploadRoutes from './routes/productImageUpload.js';
 import ecommerceOrdersRoutes from './routes/ecommerceOrders.js';
 import adsRoutes from './routes/ads.js';
 import designRoutes from './routes/designs.js';
+import customDesignSettingsRoutes from './routes/customDesignSettings.js';
+import customDesignOrdersRoutes from './routes/customDesignOrders.js';
+
+
 
 import './jobs/scheduler.js';
 
@@ -103,7 +107,8 @@ app.get('/api/campaigns/:id', async (req, res) => {
   }
 });
 
-// Direct work-orders route
+// Direct work-orders route (Commented out to allow productionRoutes to handle joined data)
+/*
 app.get('/api/work-orders/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -121,6 +126,7 @@ app.get('/api/work-orders/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch work order' });
   }
 });
+*/
 
 
 // Direct public contact form route (no authentication required)
@@ -431,7 +437,12 @@ app.use('/api/ecommerce/orders', ecommerceOrdersRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/upload', productImageUploadRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api', customDesignSettingsRoutes);
+app.use('/api', customDesignOrdersRoutes);
 app.use('/api', designRoutes);
+
+
+
 app.use('/api', orderRoutes);
 app.use('/api', customerRoutes);
 app.use('/api', leadsRoutes);

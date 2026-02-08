@@ -1,6 +1,5 @@
-import { Check, ArrowRight, ShoppingCart, Share2, Printer, Shirt, Image, PenTool, FileText, Megaphone, Palette, Scissors, Sparkles, Box, Zap, Globe } from 'lucide-react'
+import { Check, Printer, Shirt, PenTool, Megaphone, Zap, Scissors } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
 import { getImageUrl } from '@/api/apiClient'
 
 const CURRENCY = {
@@ -130,35 +129,14 @@ const plans = [
 ]
 
 export default function PricingPage() {
-  const [shareService, setShareService] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const handleOrder = (serviceId: string) => {
-    navigate(`/contact?service=${serviceId}`)
-  }
-
-  const handleShare = async (serviceId: string, serviceName: string) => {
-    const url = `${window.location.origin}/pricing#${serviceId}`
-    const text = `Check out ${serviceName} from TOP Design: ${url}`
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: serviceName,
-          text: text,
-          url: url,
-        })
-      } catch (err) {
-        console.log('Share cancelled')
-      }
+    const designServices = ['signage', 'banner-printing', 'vinyl-printing', 'large-format', 'garment-branding']
+    if (designServices.includes(serviceId)) {
+      navigate(`/custom-design?product=${serviceId}`)
     } else {
-      try {
-        await navigator.clipboard.writeText(url)
-        setShareService(serviceId)
-        setTimeout(() => setShareService(null), 2000)
-      } catch (err) {
-        alert(`Share this link: ${url}`)
-      }
+      navigate(`/contact?service=${serviceId}`)
     }
   }
 
@@ -267,7 +245,7 @@ export default function PricingPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {plans.map((plan, i) => (
+            {plans.map((plan) => (
               <div
                 key={plan.name}
                 className={`${plan.color} ${plan.textColor} p-12 rounded-[3.5rem] relative overflow-hidden group border border-white/10 shadow-2xl transition-all duration-500 hover:scale-[1.02]`}
@@ -307,8 +285,8 @@ export default function PricingPage() {
                   </ul>
 
                   <button className={`w-full py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl active:scale-95 ${plan.popular
-                      ? 'bg-white text-indigo-600 hover:bg-indigo-50'
-                      : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
+                    ? 'bg-white text-indigo-600 hover:bg-indigo-50'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
                     }`}>
                     {plan.price === 'Custom' ? 'Connect with Sales' : 'Initiate 14-Day Cycle'}
                   </button>

@@ -317,7 +317,46 @@ export const getOrders = async (req, res) => {
 
 export const getOrder = async (req, res) => {
   try {
-    const { id } = req.params;
+    let { id } = req.params;
+    let isCustomDesign = false;
+    let numericId = id;
+
+    if (id && id.toString().startsWith('CD-')) {
+      isCustomDesign = true;
+      numericId = id.split('-')[1];
+    }
+
+    if (isCustomDesign) {
+      const [rows] = await pool.execute(`
+        SELECT *, 
+               customer_name, 
+               customer_email, 
+               customer_phone,
+               estimated_price as total_amount,
+               estimated_price as balance,
+               'custom' as type
+        FROM custom_design_orders 
+        WHERE id = ?
+      `, [numericId]);
+
+      if (rows.length === 0) {
+        return res.status(404).json({ error: 'Custom design order not found' });
+      }
+
+      // Add a compatible structure for OrderDetailPage
+      const orderData = {
+        ...rows[0],
+        total_amount: rows[0].estimated_price,
+        balance: rows[0].estimated_price,
+        is_custom_design: true,
+        customer_name: rows[0].customer_name,
+        customer_email: rows[0].customer_email,
+        customer_phone: rows[0].customer_phone
+      };
+
+      return res.json(orderData);
+    }
+
     const [rows] = await pool.execute(`
       SELECT o.*, c.name as customer_name, q.total_amount 
       FROM orders o 
@@ -327,6 +366,12 @@ export const getOrder = async (req, res) => {
     `, [id]);
 
     if (rows.length === 0) {
+      // Fallback: Check if it's a numeric ID but actually a custom design
+      const [cdoRows] = await pool.execute('SELECT id FROM custom_design_orders WHERE id = ?', [id]);
+      if (cdoRows.length > 0) {
+         // Recursive call with prefix or just copy logic
+         return getOrder({ ...req, params: { id: `CD-${id}` } }, res);
+      }
       return res.status(404).json({ error: 'Order not found' });
     }
 
@@ -342,6 +387,7 @@ export const getOrder = async (req, res) => {
 
     res.json(rows[0]);
   } catch (error) {
+    console.error('Get order error:', error);
     res.status(500).json({ error: 'Failed to fetch order' });
   }
 };

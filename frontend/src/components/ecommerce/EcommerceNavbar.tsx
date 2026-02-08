@@ -32,6 +32,7 @@ export default function EcommerceNavbar() {
     const navLinks = [
         { name: 'Home', path: '/' },
         { name: 'Products', path: '/products' },
+        { name: 'Custom Order', path: '/custom-design' },
         { name: 'Designs', path: '/products?view=designs' },
         { name: 'About Us', path: '/about' },
         { name: 'Contact Us', path: '/contact' },

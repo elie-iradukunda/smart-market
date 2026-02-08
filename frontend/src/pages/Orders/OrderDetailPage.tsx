@@ -95,7 +95,7 @@ export default function OrderDetailPage() {
   const user = getAuthUser()
   const isAdmin = user?.role_id === 1 || user?.role_id === 2 // Admin or Owner
   const canMarkDelivered = isAdmin
-  const canProcessPayments = isAdmin || user?.role_id === 3 // Accountant (3)
+  const canProcessPayments = isAdmin
 
   const handleProcessPayment = async () => {
     if (!order) return
@@ -279,15 +279,20 @@ export default function OrderDetailPage() {
                   {(() => {
                     const isAtReady = order.status?.toLowerCase() === 'ready'
                     const isCompleted = currentStageIndex >= stages.length - 1
-                    const canAdvance = isCompleted ? false : (isAtReady ? canMarkDelivered : true)
+
+                    // Permission check: Admin or Assigned Staff
+                    const isAssigned = order.assigned_to && Number(order.assigned_to) === Number(user?.id)
+                    const hasPermission = isAdmin || isAssigned
+
+                    const canAdvance = isCompleted ? false : (isAtReady ? canMarkDelivered : hasPermission)
 
                     return (
                       <button
                         type="button"
                         onClick={handleAdvanceStage}
                         disabled={!canAdvance}
-                        className="inline-flex items-center rounded-full bg-purple-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={isAtReady && !canMarkDelivered ? 'Only Reception or Owner can mark as Delivered' : ''}
+                        className={`inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${canAdvance ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-400'}`}
+                        title={!hasPermission ? 'Only assigned staff or admin can update status' : (isAtReady && !canMarkDelivered ? 'Only Reception or Owner can mark as Delivered' : '')}
                       >
                         {isCompleted ? 'Completed' : isAtReady ? 'Mark as Delivered' : 'Mark Next Step Done'}
                       </button>
@@ -316,8 +321,47 @@ export default function OrderDetailPage() {
               </div>
 
 
+              {/* Custom Design Details Card */}
+              {order.is_custom_design && (
+                <div className="bg-white rounded-3xl shadow-lg p-6 border border-indigo-100 bg-gradient-to-br from-white to-indigo-50/30">
+                  <div className="flex items-center gap-2 mb-6 text-indigo-700">
+                    <div className="p-2 bg-indigo-100 rounded-lg">
+                      <Wrench className="h-5 w-5" />
+                    </div>
+                    <p className="text-lg font-bold">Custom Design Specifications</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Product Type</p>
+                      <p className="font-bold text-slate-900 text-lg capitalize">{order.product_type}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Dimensions</p>
+                      <p className="font-bold text-slate-900 text-lg">{order.width}m × {order.height}m</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Quantity</p>
+                      <p className="font-bold text-slate-900 text-lg">{order.quantity || 1}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Materials</p>
+                      <p className="font-bold text-slate-900 text-sm">
+                        {order.paper_type || 'Standard'} Paper<br />
+                        {order.finish_type || 'No'} Finish
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 p-4 bg-white/60 border border-indigo-100 rounded-2xl">
+                    <p className="text-[10px] text-indigo-400 font-bold uppercase mb-2">Requirements / Instructions</p>
+                    <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{order.requirements || 'No specific requirements provided.'}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Quote Items Card */}
-              {quoteItems.length > 0 && (
+              {quoteItems.length > 0 && !order.is_custom_design && (
                 <div className="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
                   <p className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                     <Package className="h-5 w-5 mr-2 text-purple-600" />

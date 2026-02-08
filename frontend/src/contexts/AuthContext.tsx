@@ -5,7 +5,9 @@ export interface User {
     fullName: string
     email: string
     phoneNumber: string
+    role_id?: number
 }
+
 
 interface AuthContextType {
     user: User | null

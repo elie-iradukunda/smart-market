@@ -11,8 +11,10 @@ import {
     Megaphone,
     Receipt,
     Wallet,
-    Briefcase
+    Briefcase,
+    Palette
 } from 'lucide-react'
+
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
 
 const sidebarItems = [
@@ -48,6 +50,13 @@ const sidebarItems = [
             { label: 'Ads', path: '/dashboard/sales/marketing/ads', icon: Megaphone },
         ]
     },
+    {
+        label: 'Custom Design',
+        path: '/dashboard/admin/design/order',
+        icon: Palette,
+    },
+
+
 ]
 
 const SalesSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen: boolean) => void }) => {

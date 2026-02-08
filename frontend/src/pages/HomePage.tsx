@@ -56,9 +56,13 @@ export default function HomePage() {
           <p className="text-xl text-slate-300 max-w-2xl mx-auto font-medium">
             From concept to execution, we redefine your brand identity across East Africa.
           </p>
-          <div className="flex justify-center gap-6">
+          <div className="flex flex-col sm:flex-row justify-center gap-6">
             <Link to="/products" className="px-10 py-5 bg-white text-slate-900 rounded-2xl font-black text-lg hover:scale-105 transition-transform shadow-2xl">
               Explore Portfolio
+            </Link>
+            <Link to="/custom-design" className="px-10 py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:scale-105 transition-transform shadow-2xl flex items-center justify-center gap-2">
+              Order Custom Design
+              <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
         </div>

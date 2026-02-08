@@ -58,6 +58,34 @@ const rbacMiddleware = async (req, res, next) => {
         }
     }
 
+    // Allow Staff (Role 3) to view and update work orders & orders (Controller enforces assignment check)
+    if (user.role_id === 3) {
+        console.log('RBAC: Staff user detected, checking permissions...');
+        const fullPath = (req.baseUrl || '') + (req.path || '');
+        console.log('RBAC: fullPath:', fullPath, 'originalUrl:', req.originalUrl, 'method:', req.method);
+        
+        if ((fullPath.includes('work-orders') || req.originalUrl.includes('work-orders')) && (req.method === 'GET' || req.method === 'PUT')) {
+             console.log('RBAC: Allowing work-orders access');
+             return next();
+        }
+         if ((fullPath.includes('orders') || req.originalUrl.includes('orders')) && (req.method === 'PUT' || req.method === 'GET')) {
+             console.log('RBAC: Allowing orders access');
+             return next();
+        }
+        // Explicitly allow status updates for orders
+        // Use regex on originalUrl to match /api/orders/:id/status
+        if (req.method === 'PUT' && /\/orders\/[\w-]+\/status/.test(req.originalUrl)) {
+             console.log('RBAC: Allowing status update');
+             return next();
+        }
+        // Also allow viewing quotes to see items details
+         if ((fullPath.includes('quotes') || req.originalUrl.includes('quotes')) && req.method === 'GET') {
+             console.log('RBAC: Allowing quotes access');
+             return next();
+        }
+        console.log('RBAC: No staff exception matched, continuing to permission check');
+    }
+
     // Derive a simple permission code from the URL and method
     // In Express, when a router is mounted at '/api' and route is '/orders',
     // req.path = '/orders' (relative to mount), req.originalUrl = '/api/orders' (full)
