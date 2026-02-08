@@ -4,26 +4,27 @@
 
 /* In your globals.css or tailwind.config.js extension */
 @theme {
-  --color-primary: #2563eb;
-  --color-primary-light: #3b82f6;
-  --color-primary-dark: #1d4ed8;
-  
-  --color-secondary: #7c3aed;
-  --color-secondary-light: #8b5cf6;
-  --color-secondary-dark: #6d28d9;
-  
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  
-  --color-text: #1f2937;
-  --color-text-light: #6b7280;
-  --color-text-dark: #111827;
-  
-  --color-background: #f8fafc;
-  --color-surface: #ffffff;
-  --color-border: #e2e8f0;
+    --color-primary: #2563eb;
+    --color-primary-light: #3b82f6;
+    --color-primary-dark: #1d4ed8;
+
+    --color-secondary: #7c3aed;
+    --color-secondary-light: #8b5cf6;
+    --color-secondary-dark: #6d28d9;
+
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+
+    --color-text: #1f2937;
+    --color-text-light: #6b7280;
+    --color-text-dark: #111827;
+
+    --color-background: #f8fafc;
+    --color-surface: #ffffff;
+    --color-border: #e2e8f0;
 }
+
 @layer base {
     html {
         scroll-behavior: smooth;
@@ -225,6 +226,21 @@
 
     .animate-sparkle {
         animation: sparkle 4s ease-in-out infinite;
+    }
+
+    /* Drift Animation for text */
+    @keyframes drift {
+        0% {
+            transform: translateX(-5%);
+        }
+
+        100% {
+            transform: translateX(5%);
+        }
+    }
+
+    .animate-drift {
+        animation: drift 15s ease-in-out infinite alternate;
     }
 
     /* Additional Delays */

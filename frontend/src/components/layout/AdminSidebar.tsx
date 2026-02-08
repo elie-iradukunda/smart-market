@@ -66,6 +66,7 @@ const sidebarItems = [
         children: [
             { label: 'Production', path: '/dashboard/admin/production/work-orders', icon: Factory },
             { label: 'Supplies', path: '/dashboard/admin/inventory/materials', icon: Package },
+            { label: 'Products', path: '/dashboard/admin/inventory/products', icon: ShoppingCart },
             { label: 'POS Terminal', path: '/dashboard/staff/pos/terminal', icon: Receipt },
         ]
     },

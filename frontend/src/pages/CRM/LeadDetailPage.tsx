@@ -58,9 +58,9 @@ export default function LeadDetailPage() {
     <DashboardLayout>
       <div className="min-h-screen bg-slate-50 pb-12">
         <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
-          
+
           {/* Top Navigation Row */}
-          <button 
+          <button
             onClick={() => navigate('/dashboard/sales/crm/leads')}
             className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors text-sm font-medium mb-2"
           >
@@ -101,7 +101,7 @@ export default function LeadDetailPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-3">
                   <button
                     onClick={() => navigate(`/dashboard/sales/crm/quotes?leadId=${lead.id}`)}
@@ -114,7 +114,7 @@ export default function LeadDetailPage() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
+
                 {/* Left Column: Contact & Metadata */}
                 <div className="lg:col-span-2 space-y-6">
                   <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -122,7 +122,7 @@ export default function LeadDetailPage() {
                       <User size={20} className="text-blue-600" />
                       Contact Profile
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
                       <div className="flex items-start gap-4">
                         <Building2 className="text-slate-400 mt-1" size={18} />
@@ -152,11 +152,12 @@ export default function LeadDetailPage() {
                         <MapPin className="text-slate-400 mt-1" size={18} />
                         <div>
                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Address</label>
-                          <p className="text-slate-900 font-medium text-lg leading-tight">{lead.customer_address || 'No address provided'}</p>
+                          <p className="text-slate-900 font-medium text-lg leading-tight">{lead.customer_address || lead.address || 'No address provided'}</p>
                         </div>
                       </div>
                     </div>
                   </div>
+
 
                   <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
@@ -204,37 +205,30 @@ export default function LeadDetailPage() {
                     <h3 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-widest">Internal Assignment</h3>
                     <div className="space-y-6">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase">Assigned Owner</label>
-                        <div className="flex items-center gap-3 mt-1">
-                          <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200">
-                            <User size={14} />
-                          </div>
-                          <span className="font-semibold text-slate-800">{lead.owner_name || 'Unassigned'}</span>
+
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Lead Created</label>
+                          <p className="mt-1 text-slate-800 font-medium">
+                            {lead.created_at ? new Date(lead.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}
+                          </p>
                         </div>
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase">Lead Created</label>
-                        <p className="mt-1 text-slate-800 font-medium">
-                          {lead.created_at ? new Date(lead.created_at).toLocaleString() : 'N/A'}
-                        </p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="rounded-3xl bg-blue-50 p-6 border border-blue-100">
                     <h4 className="text-blue-900 font-bold text-sm mb-2">Ready to proceed?</h4>
                     <p className="text-blue-700 text-xs leading-relaxed mb-4">
                       Converting this lead will transfer all contact details and requested items into a new Quote draft.
                     </p>
-                    <button 
-                       onClick={() => navigate(`/dashboard/sales/crm/quotes?leadId=${lead.id}`)}
-                       className="w-full py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition"
+                    <button
+                      onClick={() => navigate(`/dashboard/sales/crm/quotes?leadId=${lead.id}`)}
+                      className="w-full py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition"
                     >
                       Draft Quote Now
                     </button>
                   </div>
                 </div>
-
               </div>
             </>
           )}

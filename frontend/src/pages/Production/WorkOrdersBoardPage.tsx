@@ -5,17 +5,17 @@ import { fetchWorkOrders } from '../../api/apiClient';
 import { getAuthUser } from '@/utils/apiClient';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
-import { 
-    PlusCircle, 
-    Search, 
-    AlertTriangle, 
-    Loader2, 
-    UserPlus, 
-    Eye, 
-    X, 
-    FileText, 
-    CheckCircle, 
-    Clock 
+import {
+    PlusCircle,
+    Search,
+    AlertTriangle,
+    Loader2,
+    UserPlus,
+    Eye,
+    X,
+    FileText,
+    CheckCircle,
+    Clock
 } from 'lucide-react';
 import AssignWorkerModal from '@/components/orders/AssignWorkerModal';
 
@@ -166,13 +166,7 @@ export default function WorkOrdersBoardPage() {
                                     My tasks ({myTasksCount})
                                 </button>
                             )}
-                            <button
-                                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800 transition duration-150 flex items-center"
-                                onClick={() => navigate('/production/new-order')}
-                            >
-                                <PlusCircle className="h-4 w-4 mr-1" />
-                                New Order
-                            </button>
+
                         </div>
                     </div>
 
@@ -193,8 +187,8 @@ export default function WorkOrdersBoardPage() {
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full text-left text-sm border-collapse">
+                        <div className="overflow-x-auto scrollbar-thin">
+                            <table className="min-w-[800px] text-left text-sm border-collapse">
                                 <thead>
                                     <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                         <th className="px-6 py-3">ID</th>

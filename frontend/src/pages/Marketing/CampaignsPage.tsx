@@ -19,7 +19,12 @@ import {
   Settings,
   Key,
   Send,
-  Zap
+  Zap,
+  Image as ImageIcon,
+  PenTool,
+  Trash2,
+  X,
+  Check
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -52,6 +57,28 @@ function CampaignsPage() {
     linkedin: { clientId: '', clientSecret: '', accessToken: '' }
   });
 
+  // Load saved keys from localStorage on mount
+  useEffect(() => {
+    const savedKeys = localStorage.getItem('social_api_keys');
+    const savedChannels = localStorage.getItem('connected_channels');
+    if (savedKeys) {
+      setApiKeys(JSON.parse(savedKeys));
+    }
+    if (savedChannels) {
+      setConnectedChannels(JSON.parse(savedChannels));
+    }
+  }, []);
+
+  // Save keys to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('social_api_keys', JSON.stringify(apiKeys));
+  }, [apiKeys]);
+
+  // Save connected status
+  useEffect(() => {
+    localStorage.setItem('connected_channels', JSON.stringify(connectedChannels));
+  }, [connectedChannels]);
+
   const [quickPost, setQuickPost] = useState({
     message: '',
     selectedPlatforms: {
@@ -62,6 +89,25 @@ function CampaignsPage() {
     }
   });
   const [isPosting, setIsPosting] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<string[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (ev.target?.result) {
+          setMediaFiles(prev => [...prev, ev.target!.result as string]);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeMedia = (index: number) => {
+    setMediaFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   const user = getAuthUser();
   const isOwner = user?.role_id === 1;
@@ -214,60 +260,159 @@ function CampaignsPage() {
           </button>
         </div>
 
-        <section className="bg-white rounded-2xl border-2 border-indigo-100 shadow-sm overflow-hidden">
-          <div className="p-4 bg-indigo-50/50 border-b border-indigo-100 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-indigo-600" />
-            <h2 className="font-bold text-gray-900">Quick Social Post</h2>
+        <section className="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="px-8 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-200">
+                <PenTool className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Create Post</h2>
+                <p className="text-sm text-gray-500">Publish content to multiple channels</p>
+              </div>
+            </div>
+
+            <div className="flex bg-white p-1.5 rounded-xl border border-gray-200 shadow-sm">
+              {[
+                { key: 'facebook', icon: Facebook, color: 'text-blue-600', active: connectedChannels.facebook },
+                { key: 'instagram', icon: Instagram, color: 'text-pink-600', active: connectedChannels.instagram },
+                { key: 'twitter', icon: Twitter, color: 'text-gray-900', active: connectedChannels.twitter },
+                { key: 'linkedin', icon: Linkedin, color: 'text-blue-700', active: connectedChannels.linkedin }
+              ].map(p => (
+                <button
+                  key={p.key}
+                  onClick={() => setQuickPost(prev => ({
+                    ...prev,
+                    selectedPlatforms: { ...prev.selectedPlatforms, [p.key]: !prev.selectedPlatforms[p.key] }
+                  }))}
+                  disabled={!p.active}
+                  className={`p-2.5 rounded-lg transition-all relative ${quickPost.selectedPlatforms[p.key] && p.active ? 'bg-indigo-50' : 'hover:bg-gray-50'} ${!p.active ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  title={p.active ? `Post to ${p.key}` : `Connect ${p.key} to post`}
+                >
+                  <p.icon className={`w-5 h-5 ${quickPost.selectedPlatforms[p.key] && p.active ? p.color : 'text-gray-400'}`} />
+                  {quickPost.selectedPlatforms[p.key] && p.active && (
+                    <div className="absolute top-1 right-1 w-2 h-2 bg-indigo-500 rounded-full border-2 border-white"></div>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="p-5">
-            <div className="flex flex-col lg:flex-row gap-6">
-              <div className="flex-1">
-                <textarea
-                  value={quickPost.message}
-                  onChange={(e) => setQuickPost(prev => ({ ...prev, message: e.target.value }))}
-                  placeholder="What's on your mind? Type a message to post instantly to all connected social media..."
-                  rows={3}
-                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none text-sm"
-                />
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-xs text-gray-400">{quickPost.message.length} characters.</span>
-                  <div className="flex gap-4">
-                    {[
-                      { key: 'facebook', icon: Facebook, color: 'text-blue-600' },
-                      { key: 'instagram', icon: Instagram, color: 'text-pink-600' },
-                      { key: 'twitter', icon: Twitter, color: 'text-gray-900' },
-                      { key: 'linkedin', icon: Linkedin, color: 'text-blue-700' }
-                    ].map(p => (
-                      <button
-                        key={p.key}
-                        onClick={() => setQuickPost(prev => ({
-                          ...prev,
-                          selectedPlatforms: { ...prev.selectedPlatforms, [p.key]: !prev.selectedPlatforms[p.key] }
-                        }))}
-                        disabled={!connectedChannels[p.key]}
-                        className={`transition-all ${quickPost.selectedPlatforms[p.key] && connectedChannels[p.key] ? p.color : 'text-gray-300 opacity-50'} ${!connectedChannels[p.key] ? 'cursor-not-allowed' : 'hover:scale-110'}`}
-                        title={connectedChannels[p.key] ? `Post to ${p.key}.` : `${p.key} not connected.`}
-                      >
-                        <p.icon className="w-5 h-5" />
-                      </button>
+
+          <div className="flex flex-col lg:flex-row">
+            {/* Editor Area */}
+            <div className="flex-1 p-8 border-r border-gray-100">
+              <div className="space-y-6">
+                <div className="relative">
+                  <textarea
+                    value={quickPost.message}
+                    onChange={(e) => setQuickPost(prev => ({ ...prev, message: e.target.value }))}
+                    placeholder="What would you like to share today?"
+                    rows={6}
+                    className="w-full p-0 border-0 bg-transparent text-lg text-gray-800 placeholder:text-gray-300 focus:ring-0 resize-none"
+                  />
+                  <div className="absolute top-0 right-0">
+                    {/* Optional corner actions */}
+                  </div>
+                </div>
+
+                {/* Media Gallery */}
+                {mediaFiles.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 animate-in fade-in duration-300">
+                    {mediaFiles.map((src, idx) => (
+                      <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-200 aspect-video bg-gray-100">
+                        <img src={src} alt="Upload" className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => removeMedia(idx)}
+                          className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Toolbar */}
+                <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-gray-200 hover:border-indigo-200 font-medium text-sm"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      <span>Add Photo/Video</span>
+                    </button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleFileSelect}
+                    />
+                  </div>
+                  <span className={`text-xs font-medium ${quickPost.message.length > 280 ? 'text-red-500' : 'text-gray-400'}`}>
+                    {quickPost.message.length} / 280 chars
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Preview Area */}
+            <div className="w-full lg:w-96 bg-gray-50/50 p-8 flex flex-col">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+                <Zap className="w-3 h-3" />
+                Live Preview
+              </h3>
+
+              <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm mb-auto">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                    {user?.name?.charAt(0) || 'U'}
+                  </div>
+                  <div>
+                    <div className="font-bold text-gray-900 text-sm">{user?.name || 'Company Name'}</div>
+                    <div className="text-xs text-gray-400">Just now · <Globe className="w-3 h-3 inline ml-1" /></div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-4">
+                  <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                    {quickPost.message || <span className="text-gray-300 italic">Your caption will appear here...</span>}
+                  </p>
+                  {mediaFiles.length > 0 && (
+                    <div className="rounded-xl overflow-hidden border border-gray-100">
+                      <img src={mediaFiles[0]} className="w-full h-auto object-cover max-h-48" alt="Preview" />
+                      {mediaFiles.length > 1 && (
+                        <div className="bg-gray-100 py-2 text-center text-xs text-gray-500 font-medium border-t border-gray-100">
+                          + {mediaFiles.length - 1} more images
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-gray-400 px-2 pt-2 border-t border-gray-50">
+                  <div className="h-2 w-16 bg-gray-100 rounded-full"></div>
+                  <div className="flex gap-2">
+                    <div className="h-4 w-4 bg-gray-100 rounded"></div>
+                    <div className="h-4 w-4 bg-gray-100 rounded"></div>
                   </div>
                 </div>
               </div>
-              <div className="lg:w-48 flex flex-col justify-end">
-                <button
-                  onClick={handleQuickPost}
-                  disabled={isPosting || !quickPost.message.trim()}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:bg-gray-400 flex items-center justify-center gap-2"
-                >
-                  {isPosting ? 'Posting...' : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      Post Now
-                    </>
-                  )}
-                </button>
-              </div>
+
+              <button
+                onClick={handleQuickPost}
+                disabled={isPosting || (!quickPost.message.trim() && mediaFiles.length === 0)}
+                className="w-full mt-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:translate-y-[-1px] transition-all disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isPosting ? 'Publishing...' : (
+                  <>
+                    <Send className="w-5 h-5" />
+                    Publish Post
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </section>
@@ -349,6 +494,19 @@ function CampaignsPage() {
                   </div>
                 </div>
 
+                {/* Facebook Help */}
+                <div className="bg-blue-50 p-4 rounded-lg text-xs text-blue-800 space-y-2 border border-blue-100">
+                  <p className="font-bold flex items-center gap-2">
+                    <Facebook className="w-3 h-3" />
+                    How to get Facebook API keys?
+                  </p>
+                  <ol className="list-decimal pl-4 space-y-1">
+                    <li>Go to <a href="https://developers.facebook.com/apps/" target="_blank" rel="noreferrer" className="underline font-semibold hover:text-blue-600">Meta for Developers</a> and create an app.</li>
+                    <li>Add "Facebook Login" and "Instagram Graph API" products to your app.</li>
+                    <li>In "Tools" &gt; "Graph API Explorer", generate an User Access Token.</li>
+                  </ol>
+                </div>
+
                 <div className="p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-center gap-2 mb-3">
                     <Twitter className="w-5 h-5 text-gray-800" />
@@ -376,6 +534,21 @@ function CampaignsPage() {
                       className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                     />
                   </div>
+                </div>
+
+                {/* Twitter Help */}
+                <div className="bg-gray-50 p-4 rounded-lg text-xs text-gray-800 space-y-2 border border-gray-200">
+                  <p className="font-bold flex items-center gap-2">
+                    <Twitter className="w-3 h-3" />
+                    How to get X (Twitter) API keys?
+                  </p>
+                  <ol className="list-decimal pl-4 space-y-1">
+                    <li>Go to <a href="https://developer.twitter.com/en/portal/dashboard" target="_blank" rel="noreferrer" className="underline font-semibold hover:text-blue-500">Twitter Developer Portal</a>.</li>
+                    <li>Create a Project and an App within it.</li>
+                    <li>Navigate to "Keys and Tokens" tab.</li>
+                    <li>Generate "API Key and Secret" and "Access Token and Secret".</li>
+                    <li>Make sure to enable "Read and Write" permissions in "User authentication settings".</li>
+                  </ol>
                 </div>
 
                 <button

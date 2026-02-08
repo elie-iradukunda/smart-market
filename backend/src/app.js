@@ -80,7 +80,8 @@ app.use((req, res, next) => {
 
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files (uploaded images)
+// Serve static files (uploaded images) - Check both root uploads and public/uploads
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
 
 // Direct campaign route (before other routes)

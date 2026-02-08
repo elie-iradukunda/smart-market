@@ -81,6 +81,13 @@ export const routes = [
   // Shared Order View (accessible via direct link, e.g. from Order Lists)
   { path: '/orders/:id', element: <OrderDetailPage /> },
 
+  // Direct access routes (for shorter URLs or legacy links)
+  { path: '/crm/customers', element: <CustomersPage /> },
+  { path: '/crm/customers/:id', element: <CustomerDetailPage /> },
+  { path: '/crm/leads', element: <LeadsPage /> },
+  { path: '/crm/leads/:id', element: <LeadDetailPage /> },
+  { path: '/crm/quotes', element: <QuotesPage /> },
+
   // Nested routes under dashboards
 
   // ADMIN nested routes (role_id: 1)
@@ -101,6 +108,7 @@ export const routes = [
   { path: '/dashboard/admin/production/work-orders', element: <WorkOrdersBoardPage /> },
   { path: '/dashboard/admin/inventory/materials', element: <MaterialsPage /> },
   { path: '/dashboard/admin/inventory/materials/:sku', element: <MaterialDetailPage /> },
+  { path: '/dashboard/admin/inventory/products', element: <ProductsPage /> },
   { path: '/dashboard/admin/ai/overview', element: <AiOverviewPage /> },
   { path: '/dashboard/admin/design/hub', element: <DesignManagementPage /> },
   { path: '/dashboard/admin/design/studio', element: <DesignStudioPage /> },

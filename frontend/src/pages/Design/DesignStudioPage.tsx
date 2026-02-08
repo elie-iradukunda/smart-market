@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { toast } from 'react-toastify'
-import { createDesign, fetchDesign, updateDesign, uploadProductImage, fetchMaterials } from '@/api/apiClient'
+import { createDesign, fetchDesign, updateDesign, uploadProductImage, fetchMaterials, getImageUrl } from '@/api/apiClient'
 import { getAuthUser } from '@/utils/apiClient'
 
 export default function DesignStudioPage() {
@@ -82,12 +82,20 @@ export default function DesignStudioPage() {
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
+            // Local preview for immediate feedback
+            const localUrl = URL.createObjectURL(file);
+            setDesign(prev => ({
+                ...prev,
+                previewUrl: localUrl
+            }));
+
             try {
                 const uploadRes = await uploadProductImage(file)
+                const remoteUrl = uploadRes.imageUrl || uploadRes.url;
                 setDesign(prev => ({
                     ...prev,
-                    previewUrl: uploadRes.url,
-                    preview_url: uploadRes.url
+                    previewUrl: remoteUrl, // Update with permanent URL
+                    preview_url: remoteUrl
                 }))
                 toast.success('Design file uploaded and saved')
             } catch (err) {
@@ -184,9 +192,13 @@ export default function DesignStudioPage() {
                             </div>
 
                             <div className="flex-1 flex items-center justify-center p-8 bg-[#f8f9fa] relative group">
-                                {design.previewUrl ? (
+                                {design.previewUrl || design.preview_url ? (
                                     <div className="relative shadow-2xl rounded-lg overflow-hidden border-4 border-white max-w-full">
-                                        <img src={design.previewUrl || design.preview_url} alt="Design Preview" className="max-h-[400px] object-contain" />
+                                        <img
+                                            src={getImageUrl(design.previewUrl || design.preview_url)}
+                                            alt="Design Preview"
+                                            className="max-h-[400px] object-contain"
+                                        />
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                                             <button className="p-3 bg-white text-gray-900 rounded-full hover:scale-110 transition-transform shadow-lg"><Eye className="w-5 h-5" /></button>
                                             <label className="p-3 bg-white text-gray-900 rounded-full hover:scale-110 transition-transform shadow-lg cursor-pointer">

@@ -1,11 +1,11 @@
 // @ts-nocheck
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-    LayoutDashboard, 
-    Users, 
-    ShoppingCart, 
-    Megaphone, 
+import {
+    LayoutDashboard,
+    Users,
+    ShoppingCart,
+    Megaphone,
     LogOut,
     Briefcase,
     Menu // Added Menu icon
@@ -37,7 +37,7 @@ export default function SalesTopNav({ onMenuClick }: SalesTopNavProps) {
             {/* Top Header */}
             <header className="bg-black text-white shadow-xl sticky top-0 z-30 h-16 border-b border-white/10">
                 <div className="mx-auto h-full px-4 lg:px-8 flex items-center justify-between">
-                    
+
                     {/* Left Section: Brand & Mobile Menu Toggle */}
                     <div className="flex items-center gap-2 sm:gap-4">
                         {/* RESTORED: Menu button to trigger the Sidebar on mobile */}
@@ -50,11 +50,11 @@ export default function SalesTopNav({ onMenuClick }: SalesTopNavProps) {
                             <Menu size={22} />
                         </button>
 
-                        <div className="flex items-center gap-2">
-                            <div className="bg-blue-600 p-1.5 rounded-lg hidden xs:block">
-                                <Briefcase size={18} className="text-white" />
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            <div className="bg-blue-600 p-1 rounded sm:p-1.5 sm:rounded-lg">
+                                <Briefcase size={16} className="text-white sm:w-[18px]" />
                             </div>
-                            <span className="font-black tracking-tighter text-xl">TOPDESIGN</span>
+                            <span className="font-black tracking-tighter text-lg sm:text-xl">TOPDESIGN</span>
                         </div>
                     </div>
 
@@ -66,8 +66,8 @@ export default function SalesTopNav({ onMenuClick }: SalesTopNavProps) {
                                 to={link.path}
                                 className={({ isActive }) => `
                                     flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all
-                                    ${isActive 
-                                        ? 'bg-white text-black' 
+                                    ${isActive
+                                        ? 'bg-white text-black'
                                         : 'text-slate-400 hover:text-white hover:bg-white/5'}
                                 `}
                             >
@@ -78,20 +78,21 @@ export default function SalesTopNav({ onMenuClick }: SalesTopNavProps) {
                     </nav>
 
                     {/* Right Actions */}
-                    <div className="flex items-center gap-4 sm:gap-6">
+                    <div className="flex items-center gap-2 sm:gap-6">
                         <div className="hidden md:flex flex-col items-end leading-none">
                             <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">Sales Pro</span>
                             <span className="text-sm font-bold mt-1 text-slate-200">{user?.name || 'User'}</span>
                         </div>
-                        
+
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs font-black transition-all shadow-lg shadow-red-900/20"
+                            className="flex items-center gap-1.5 sm:gap-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded px-2 rounded-lg text-[10px] sm:text-xs font-black transition-all shadow-lg shadow-red-900/20"
                         >
-                            <LogOut size={14} />
+                            <LogOut size={12} className="sm:w-3.5" />
                             <span className="hidden xs:inline">LOGOUT</span>
                         </button>
                     </div>
+
                 </div>
             </header>
 

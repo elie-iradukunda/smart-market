@@ -1,13 +1,13 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchPOSSales, createCustomer, createPOSSale, fetchCustomers, fetchMaterials } from '@/api/apiClient';
+import { fetchPOSSales, createCustomer, fetchCustomers } from '@/api/apiClient';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import RevenueOverview from '../modules/dashboards/components/RevenueOverview';
 import {
   User, Calendar, CreditCard, Download, AlertTriangle, Loader, Package,
   TrendingUp, Users, FileText, MessageSquare, Target, ArrowRight,
-  DollarSign, ShoppingCart, Zap, BarChart3, Plus, Search
+  DollarSign, Zap, BarChart3, Search
 } from 'lucide-react';
 
 export default function SalesDashboard() {
@@ -30,19 +30,9 @@ export default function SalesDashboard() {
   const [customerStatus, setCustomerStatus] = useState<string | null>(null);
   const [customerError, setCustomerError] = useState<string | null>(null);
 
-  const [posForm, setPosForm] = useState({
-    customer_id: '',
-  });
-  const [posItems, setPosItems] = useState(
-    Array.from({ length: 5 }).map(() => ({ material_id: '', quantity: '1', price: '' }))
-  );
-  const [posStatus, setPosStatus] = useState<string | null>(null);
-  const [posSubmitError, setPosSubmitError] = useState<string | null>(null);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [customers, setCustomers] = useState<any[]>([]);
-  const [materials, setMaterials] = useState<any[]>([]);
   const [loadingLookup, setLoadingLookup] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
 
@@ -115,10 +105,9 @@ export default function SalesDashboard() {
       try {
         setLoadingLookup(true);
         setLookupError(null);
-        const [cust, mats] = await Promise.all([fetchCustomers(), fetchMaterials()]);
+        const cust = await fetchCustomers();
         if (!mounted) return;
         setCustomers(cust || []);
-        setMaterials(mats || []);
       } catch (err: any) {
         if (!mounted) return;
         setLookupError(err.message || 'Failed to load POS dropdown data.');
@@ -209,44 +198,6 @@ export default function SalesDashboard() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePosSubmit = async (e) => {
-    e.preventDefault();
-    setPosStatus(null);
-    setPosSubmitError(null);
-    try {
-      setIsSubmitting(true);
-      const activeItems = posItems
-        .map((row) => ({
-          material_id: row.material_id,
-          quantity: Number(row.quantity || '0'),
-          price: Number(row.price || '0'),
-        }))
-        .filter((row) => row.material_id && row.quantity > 0 && row.price >= 0);
-
-      if (activeItems.length === 0) {
-        throw new Error('Please add at least one line item.');
-      }
-
-      const total = activeItems.reduce((acc, row) => acc + row.quantity * row.price, 0);
-      const payload = {
-        customer_id: posForm.customer_id ? Number(posForm.customer_id) : undefined,
-        total,
-        items: activeItems.map((row) => ({
-          item_id: Number(row.material_id),
-          quantity: row.quantity,
-          price: row.price,
-        })),
-      };
-      const res = await createPOSSale(payload);
-      setPosStatus(`Sale recorded successfully!`);
-      setPosForm({ customer_id: '' });
-      setPosItems(Array.from({ length: 5 }).map(() => ({ material_id: '', quantity: '1', price: '' })));
-    } catch (err: any) {
-      setPosSubmitError(err.message || 'Failed to record POS sale.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <DashboardLayout>
@@ -265,8 +216,8 @@ export default function SalesDashboard() {
                 Manage leads, generate quotes, and process daily transactions.
               </p>
               <div className="flex gap-3 pt-4">
-                <Link to="/crm/leads" className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all">Manage Leads</Link>
-                <Link to="/crm/quotes" className="bg-white text-slate-900 border border-slate-200 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all">New Quote</Link>
+                <Link to="/dashboard/sales/crm/leads" className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all">Manage Leads</Link>
+                <Link to="/dashboard/sales/crm/quotes" className="bg-white text-slate-900 border border-slate-200 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all">New Quote</Link>
               </div>
             </div>
 
@@ -289,9 +240,9 @@ export default function SalesDashboard() {
               {/* CRM Actions */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { label: 'Capture Lead', icon: Target, path: '/crm/leads', color: 'bg-blue-600', text: 'text-blue-600', bg: 'bg-blue-50' },
-                  { label: 'Draft Quote', icon: FileText, path: '/crm/quotes', color: 'bg-indigo-600', text: 'text-indigo-600', bg: 'bg-indigo-50' },
-                  { label: 'Marketing', icon: Zap, path: '/marketing/campaigns', color: 'bg-amber-600', text: 'text-amber-600', bg: 'bg-amber-50' },
+                  { label: 'Capture Lead', icon: Target, path: '/dashboard/sales/crm/leads', color: 'bg-blue-600', text: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Draft Quote', icon: FileText, path: '/dashboard/sales/crm/quotes', color: 'bg-indigo-600', text: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { label: 'Marketing', icon: Zap, path: '/dashboard/sales/marketing/campaigns', color: 'bg-amber-600', text: 'text-amber-600', bg: 'bg-amber-50' },
                 ].map((card, i) => (
                   <Link key={i} to={card.path} className="group rounded-3xl border border-slate-200 bg-white p-6 hover:border-indigo-200 transition-all">
                     <div className={`h-12 w-12 rounded-2xl ${card.bg} ${card.text} flex items-center justify-center mb-4 transition-transform`}>
@@ -355,8 +306,8 @@ export default function SalesDashboard() {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
+                <div className="overflow-x-auto scrollbar-thin">
+                  <table className="min-w-[700px] w-full text-left">
                     <thead className="bg-slate-50 text-[10px] font-bold uppercase text-slate-500 tracking-widest border-b border-slate-100">
                       <tr>
                         <th className="px-8 py-4">Status</th>
@@ -390,67 +341,6 @@ export default function SalesDashboard() {
             </div>
 
             <div className="lg:col-span-4 space-y-8">
-
-              {/* Express Checkout */}
-              <div className="rounded-3xl border border-slate-200 bg-white p-8">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">
-                    <Plus size={20} />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">Express Checkout.</h3>
-                </div>
-                <form onSubmit={handlePosSubmit} className="space-y-4">
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <select
-                      className="w-full rounded-xl bg-slate-50 border border-slate-100 pl-12 py-3 text-sm font-bold text-slate-700 focus:ring-1 focus:ring-indigo-500 transition-all outline-none appearance-none"
-                      value={posForm.customer_id}
-                      onChange={(e) => setPosForm({ ...posForm, customer_id: e.target.value })}
-                    >
-                      <option value="">Walk-in Customer</option>
-                      {customers.map((c) => (
-                        <option key={c.id} value={String(c.id)}>{c.name || `Customer ${c.id}`}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
-                    {posItems.map((row, index) => (
-                      <div key={index} className="flex gap-2">
-                        <select
-                          className="flex-1 rounded-lg bg-slate-50 border border-slate-100 px-3 py-2 text-xs font-bold focus:ring-1 focus:ring-indigo-500"
-                          value={row.material_id}
-                          onChange={(e) => {
-                            const next = [...posItems];
-                            next[index].material_id = e.target.value;
-                            setPosItems(next);
-                          }}
-                        >
-                          <option value="">Item...</option>
-                          {materials.map(m => (
-                            <option key={m.id} value={m.id}>{m.name}</option>
-                          ))}
-                        </select>
-                        <input
-                          type="text"
-                          placeholder="Price"
-                          className="w-20 rounded-lg bg-slate-50 border border-slate-100 px-3 py-2 text-xs font-bold text-center focus:ring-1 focus:ring-indigo-500"
-                          value={row.price}
-                          onChange={(e) => {
-                            const next = [...posItems];
-                            next[index].price = e.target.value;
-                            setPosItems(next);
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <button className="w-full bg-slate-900 text-white rounded-xl py-3.5 font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition-all">
-                    Generate Receipt.
-                  </button>
-                </form>
-              </div>
 
               {/* Quick Registration */}
               <div className="rounded-3xl bg-indigo-600 p-8 text-white border border-indigo-700 shadow-lg shadow-indigo-100">

@@ -1,13 +1,13 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchLeads, createLead, fetchMaterials, createCustomer } from '../../api/apiClient';
+import { fetchLeads, createLead, createCustomer } from '../../api/apiClient';
 import { toast } from 'react-toastify';
 import { Eye, Plus, X } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default function LeadsPage() {
-  const [leads, setLeads] = useState([]);
+  const [leads, setLeads] = useState([]); // List of recent leads
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -63,7 +63,7 @@ export default function LeadsPage() {
       const uiChannel = newLead.channel || 'Walk-in';
       let source = 'web';
       let channel = 'web';
-      
+
       switch (uiChannel) {
         case 'Walk-in': source = 'walkin'; channel = 'web'; break;
         case 'Phone': source = 'phone'; channel = 'web'; break;
@@ -99,6 +99,7 @@ export default function LeadsPage() {
       await createLead({
         customer_id: createdCustomer.id,
         channel,
+        status: 'New',
         items,
       });
 
@@ -129,35 +130,36 @@ export default function LeadsPage() {
     <DashboardLayout>
       <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl space-y-6">
-          
+
           {/* Header Section */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">Leads Management</h1>
-              <p className="text-sm text-slate-500 mt-1">Track and manage customer inquiries across all channels.</p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
+            <div className="relative z-10">
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Leads Management</h1>
+              <p className="text-sm text-slate-500 mt-1 font-medium italic">Track and manage customer inquiries.</p>
             </div>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition duration-150"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-8 py-4 text-sm font-bold text-white shadow-xl shadow-blue-100 hover:bg-blue-700 transition duration-150 relative z-10"
             >
               <Plus size={18} />
               Add New Lead
             </button>
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-blue-50 opacity-50" />
           </div>
 
           {/* Table Card */}
           <div className="rounded-3xl border border-slate-200 bg-white shadow-xl overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <h2 className="text-lg font-semibold text-slate-800">Recent Leads</h2>
-              <div className="flex gap-2">
-                <span className="text-xs font-medium text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
-                  Total: {leads.length}
-                </span>
-              </div>
+            <div className="p-6 sm:p-8 border-b border-slate-100 flex items-center justify-between bg-white">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                Recent Leads
+              </h2>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                {leads.length} Records
+              </span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <div className="overflow-x-auto scrollbar-thin">
+              <table className="min-w-[700px] divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-6 py-4 text-left font-semibold text-slate-700">Customer</th>
@@ -174,7 +176,7 @@ export default function LeadsPage() {
                     <tr key={lead.id} className="hover:bg-slate-50 transition">
                       <td className="px-6 py-4">
                         <div className="font-medium text-slate-900">{lead.customer_name || 'Unknown'}</div>
-                        <div className="text-xs text-slate-500">{lead.company || 'No company'}</div>
+                        <div className="text-xs text-slate-500">{lead.customer_company || lead.company || 'No company'}</div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
@@ -240,7 +242,7 @@ export default function LeadsPage() {
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleCreateLead} className="p-6 space-y-6 max-h-[85vh] overflow-y-auto">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1">
@@ -281,7 +283,19 @@ export default function LeadsPage() {
                     onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
                   />
                 </div>
+
                 <div className="sm:col-span-2 space-y-1">
+                  <label className="text-xs font-bold text-slate-700 uppercase">Address</label>
+                  <input
+                    type="text"
+                    placeholder="Full street address..."
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none transition"
+                    value={newLead.address}
+                    onChange={(e) => setNewLead({ ...newLead, address: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 uppercase">Lead Channel</label>
                   <select
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none transition"

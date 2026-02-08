@@ -1,19 +1,14 @@
 import pool from './src/config/database.js';
-try {
-  const [invoices] = await pool.execute('DESCRIBE invoices');
-  console.log('--- INVOICES ---');
-  invoices.forEach(c => console.log(c.Field, c.Type));
-  
-  const [orders] = await pool.execute('DESCRIBE orders');
-  console.log('\n--- ORDERS ---');
-  orders.forEach(c => console.log(c.Field, c.Type));
-  
-  const [customers] = await pool.execute('DESCRIBE customers');
-  console.log('\n--- CUSTOMERS ---');
-  customers.forEach(c => console.log(c.Field, c.Type));
 
-  process.exit(0);
-} catch (err) {
-  console.error(err);
-  process.exit(1);
+async function checkCols() {
+    try {
+        const [rows, fields] = await pool.execute('SELECT * FROM customers LIMIT 1');
+        console.log('Columns in customers table:', fields.map(f => f.name));
+        process.exit(0);
+    } catch (err) {
+        console.error('Error:', err);
+        process.exit(1);
+    }
 }
+
+checkCols();

@@ -19,13 +19,25 @@ export const createDesign = async (req, res) => {
 
 export const getDesigns = async (req, res) => {
     try {
-        console.log('GET /api/designs requested by user:', req.user.id);
-        const [designs] = await pool.execute(`
+        console.log('GET /api/designs requested');
+        
+        let query = `
             SELECT d.*, u.name as designer_name 
             FROM designs d 
-            LEFT JOIN users u ON d.created_by = u.id 
-            ORDER BY d.created_at DESC
-        `);
+            LEFT JOIN users u ON d.created_by = u.id
+        `;
+        let params = [];
+
+        // If user is authenticated and is admin/staff, show all. 
+        // Otherwise, show only published designs.
+        // req.user might be undefined if called from a public route.
+        if (!req.user || (req.user.role_id !== 1 && req.user.role_id !== 2 && req.user.role_id !== 3)) {
+            query += ' WHERE d.status = "published"';
+        }
+
+        query += ' ORDER BY d.created_at DESC';
+        
+        const [designs] = await pool.execute(query, params);
         console.log(`Found ${designs.length} designs`);
         res.json(designs || []);
     } catch (error) {
@@ -46,6 +58,11 @@ export const getDesign = async (req, res) => {
         
         if (design.length === 0) {
             return res.status(404).json({ error: 'Design not found' });
+        }
+        
+        // If guest and design is not published, forbid access
+        if (!req.user && design[0].status !== 'published') {
+            return res.status(403).json({ error: 'Unauthorized access to unpublished design' });
         }
         
         res.json(design[0]);

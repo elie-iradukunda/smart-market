@@ -15,7 +15,7 @@ export const getLeads = async (req, res) => {
     // but mysql2 usually handles numbers correctly. However, to be absolutely safe against 'LIMIT '50'' syntax error,
     // we pass them as numbers.
     const [leads] = await pool.execute(
-      'SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id ORDER BY l.id DESC LIMIT ? OFFSET ?',
+      'SELECT l.*, c.name as customer_name, c.company, c.email as customer_email, c.phone as customer_phone FROM leads l LEFT JOIN customers c ON l.customer_id = c.id ORDER BY l.id DESC LIMIT ? OFFSET ?',
       [limit, offset]
     );
 
@@ -36,7 +36,7 @@ export const getLeads = async (req, res) => {
 
 export const getLead = async (req, res) => {
   try {
-    const [leads] = await pool.execute('SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id WHERE l.id = ?', [req.params.id]);
+    const [leads] = await pool.execute('SELECT l.*, c.name as customer_name, c.company, c.email as customer_email, c.phone as customer_phone FROM leads l LEFT JOIN customers c ON l.customer_id = c.id WHERE l.id = ?', [req.params.id]);
     if (leads.length === 0) return res.status(404).json({ error: 'Lead not found' });
     res.json(leads[0]);
   } catch (error) {
@@ -46,7 +46,7 @@ export const getLead = async (req, res) => {
 
 export const getLeadsByCustomer = async (req, res) => {
   try {
-    const [leads] = await pool.execute('SELECT l.*, c.name as customer_name FROM leads l LEFT JOIN customers c ON l.customer_id = c.id WHERE l.customer_id = ?', [req.params.customerId]);
+    const [leads] = await pool.execute('SELECT l.*, c.name as customer_name, c.company, c.email as customer_email, c.phone as customer_phone FROM leads l LEFT JOIN customers c ON l.customer_id = c.id WHERE l.customer_id = ?', [req.params.customerId]);
     res.json(leads);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch customer leads' });
@@ -62,6 +62,7 @@ export const createLead = async (req, res) => {
     );
     res.status(201).json({ id: result.insertId, customer_id, channel, status: status || 'new' });
   } catch (error) {
+    console.error('Create lead error:', error);
     res.status(500).json({ error: 'Failed to create lead' });
   }
 };

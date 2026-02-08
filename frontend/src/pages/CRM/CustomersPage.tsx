@@ -37,7 +37,7 @@ export default function CustomersPage() {
   }, []);
 
   const handleView = (id) => {
-    navigate(`/crm/customers/${id}`);
+    navigate(`./${id}`);
   };
 
   const filteredCustomers = customers.filter(customer =>
@@ -50,12 +50,12 @@ export default function CustomersPage() {
     <DashboardLayout>
       <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl space-y-6">
-          
+
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
               Customer Directory
             </h1>
-            
+
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
@@ -150,7 +150,7 @@ export default function CustomersPage() {
                 </tbody>
               </table>
             </div>
-            
+
             <div className="p-4 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center">
               Total Records: {filteredCustomers.length}
             </div>

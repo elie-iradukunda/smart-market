@@ -1,16 +1,13 @@
-import { Check, ArrowRight, ShoppingCart, Share2, Printer, Shirt, Image, PenTool, FileText, Megaphone, Palette, Scissors } from 'lucide-react'
+import { Check, ArrowRight, ShoppingCart, Share2, Printer, Shirt, Image, PenTool, FileText, Megaphone, Palette, Scissors, Sparkles, Box, Zap, Globe } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import Button from '@/components/ui/Button'
-import Card from '@/components/ui/Card'
+import { getImageUrl } from '@/api/apiClient'
 
-// Currency configuration - Rwandan Franc (RWF)
 const CURRENCY = {
-  symbol: 'RF', // Rwandan Franc symbol
-  code: 'RWF', // Currency code
+  symbol: 'RF',
+  code: 'RWF',
 }
 
-// Business Services
 const services = [
   {
     id: 'banner-printing',
@@ -24,7 +21,7 @@ const services = [
   },
   {
     id: 'garment-branding',
-    name: 'T-Shirt & Garment Printing',
+    name: 'T-Shirt & Garment Branding',
     icon: Shirt,
     description: 'Custom t-shirts, hoodies, and apparel printing with vinyl, heat transfer, or screen printing',
     startingPrice: 18000,
@@ -43,16 +40,6 @@ const services = [
     category: 'Signage',
   },
   {
-    id: 'digital-printing',
-    name: 'Digital Printing',
-    icon: Image,
-    description: 'High-resolution digital printing for flyers, posters, business cards, and marketing materials',
-    startingPrice: 500,
-    priceNote: 'Per page from',
-    features: ['High resolution', 'Quick turnaround', 'Multiple paper types', 'Full color'],
-    category: 'Printing',
-  },
-  {
     id: 'graphic-design',
     name: 'Graphic Design Services',
     icon: PenTool,
@@ -63,16 +50,6 @@ const services = [
     category: 'Design',
   },
   {
-    id: 'business-cards',
-    name: 'Business Cards',
-    icon: FileText,
-    description: 'Premium business cards with various finishes, materials, and design options',
-    startingPrice: 60000,
-    priceNote: 'Per 100 cards',
-    features: ['Premium finishes', 'Multiple sizes', 'Quick delivery', 'Design templates'],
-    category: 'Printing',
-  },
-  {
     id: 'signage',
     name: 'Custom Signage',
     icon: Megaphone,
@@ -81,16 +58,6 @@ const services = [
     priceNote: 'Starting from',
     features: ['Indoor/Outdoor', 'Illuminated options', 'Custom sizes', 'Installation service'],
     category: 'Signage',
-  },
-  {
-    id: 'embroidery',
-    name: 'Embroidery Services',
-    icon: Palette,
-    description: 'Professional embroidery on caps, jackets, bags, and corporate apparel',
-    startingPrice: 24000,
-    priceNote: 'Per item from',
-    features: ['All fabric types', 'Custom logos', 'Bulk pricing', 'Quick turnaround'],
-    category: 'Apparel',
   },
   {
     id: 'large-format',
@@ -108,7 +75,7 @@ const plans = [
   {
     name: 'Starter',
     price: 60000,
-    period: '/month',
+    period: '/mo',
     description: 'Perfect for small businesses getting started',
     features: [
       'Up to 5 users',
@@ -119,11 +86,13 @@ const plans = [
       'Mobile app access',
     ],
     popular: false,
+    color: 'bg-white',
+    textColor: 'text-indigo-950'
   },
   {
     name: 'Professional',
     price: 180000,
-    period: '/month',
+    period: '/mo',
     description: 'Ideal for growing teams and businesses',
     features: [
       'Up to 25 users',
@@ -136,6 +105,8 @@ const plans = [
       'Custom integrations',
     ],
     popular: true,
+    color: 'bg-indigo-600',
+    textColor: 'text-white'
   },
   {
     name: 'Enterprise',
@@ -150,10 +121,11 @@ const plans = [
       '24/7 phone support',
       'Unlimited storage',
       'Custom SLA',
-      'On-premise deployment option',
       'White-label solution',
     ],
     popular: false,
+    color: 'bg-white',
+    textColor: 'text-indigo-950'
   },
 ]
 
@@ -162,8 +134,7 @@ export default function PricingPage() {
   const navigate = useNavigate()
 
   const handleOrder = (serviceId: string) => {
-    // Navigate to order page with service parameter
-    navigate(`/order?service=${serviceId}`)
+    navigate(`/contact?service=${serviceId}`)
   }
 
   const handleShare = async (serviceId: string, serviceName: string) => {
@@ -178,264 +149,220 @@ export default function PricingPage() {
           url: url,
         })
       } catch (err) {
-        // User cancelled or error occurred
         console.log('Share cancelled')
       }
     } else {
-      // Fallback: Copy to clipboard
       try {
         await navigator.clipboard.writeText(url)
         setShareService(serviceId)
         setTimeout(() => setShareService(null), 2000)
       } catch (err) {
-        // Fallback: Show URL in alert
         alert(`Share this link: ${url}`)
       }
     }
   }
 
   return (
-    <div className="bg-white">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-24 sm:pt-32 pb-4 sm:pb-6">
-        <div className="container-professional">
-          <div className="mx-auto max-w-2xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
-              Simple, transparent pricing
-            </h1>
-          </div>
+    <div className="flex flex-col bg-slate-50 min-h-screen overflow-hidden">
+      {/* SECTION 1: PREMIUM HERO */}
+      <section className="relative pt-40 pb-56 flex items-center justify-center overflow-hidden bg-indigo-950">
+        <div className="absolute inset-0 z-0">
+          <img
+            src={getImageUrl('/uploads/six.png')}
+            className="w-full h-full object-cover animate-ken-burns opacity-30 mix-blend-overlay scale-110"
+            alt="Pricing Background"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-950 via-indigo-950/80 to-slate-50" />
         </div>
-      </div>
 
-      {/* Services Section */}
-      <div className="pt-8 sm:pt-10 pb-16 sm:pb-24 bg-gray-50">
-        <div className="container-professional">
-          <div className="mx-auto max-w-2xl text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Our Services
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
-              Professional printing and design services to meet all your business needs
-            </p>
-          </div>
-          <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((service) => {
-              const Icon = service.icon
-              return (
-                <Card key={service.id} hover className="flex flex-col group">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600 to-secondary-600 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                      <Icon className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary-600 transition-colors">
-                          {service.name}
-                        </h3>
-                      </div>
-                      <span className="inline-block mt-1 text-xs font-medium text-primary-600 bg-primary-50 px-2 py-1 rounded">
-                        {service.category}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-4 flex-grow">{service.description}</p>
-                  
-                  <div className="mb-4 pb-4 border-b border-gray-100">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-bold text-gray-900">
-                        {typeof service.startingPrice === 'number' && service.startingPrice < 1000
-                          ? `${CURRENCY.symbol} ${service.startingPrice.toLocaleString('en-RW')}`
-                          : `${CURRENCY.symbol} ${service.startingPrice.toLocaleString('en-RW')}`}
-                      </span>
-                      {service.priceNote && (
-                        <span className="text-xs text-gray-500">{service.priceNote}</span>
-                      )}
-                    </div>
-                    <ul className="mt-3 space-y-2">
-                      {service.features.slice(0, 2).map((feature, idx) => (
-                        <li key={idx} className="flex items-center text-xs text-gray-600">
-                          <Check className="h-3 w-3 text-primary-600 mr-2 flex-shrink-0" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      size="md"
-                      variant="primary"
-                      className="flex-1 group/btn"
-                      onClick={() => handleOrder(service.id)}
-                    >
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      Order Now
-                    </Button>
-                    <Button
-                      size="md"
-                      variant="outline"
-                      className="px-3"
-                      onClick={() => handleShare(service.id, service.name)}
-                      title="Share service"
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {shareService === service.id && (
-                    <p className="mt-2 text-xs text-green-600 text-center">Link copied to clipboard!</p>
-                  )}
-                </Card>
-              )
-            })}
-          </div>
+        <div className="absolute inset-0 flex items-center justify-center z-0 opacity-[0.03] pointer-events-none select-none overflow-hidden text-white font-black whitespace-nowrap animate-drift text-[25vw] tracking-tighter">
+          TRANSPARENT VALUE • SCALE • GROWTH • SUCCESS
         </div>
-      </div>
 
-      {/* Pricing Cards / Subscription Plans */}
-      <div className="py-24 sm:py-32">
-        <div className="container-professional">
-          <div className="mx-auto max-w-2xl text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Subscription Plans
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
-              Choose the perfect plan for your business. All plans include a 14-day free trial.
-            </p>
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] animate-blob" />
+          <div className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[120px] animate-blob animation-delay-2000" />
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 text-center space-y-8 animate-fade-in-up">
+          <div className="inline-flex items-center gap-2 px-6 py-2 bg-indigo-600/20 backdrop-blur-md rounded-full border border-white/10 shadow-xl">
+            <Zap className="w-4 h-4 text-indigo-400 animate-pulse" />
+            <span className="text-sm font-bold text-white tracking-widest uppercase italic">Investment in Impact</span>
           </div>
-          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-3">
-            {plans.map((plan) => (
-              <Card
-                key={plan.name}
-                hover
-                className={`relative flex flex-col ${
-                  plan.popular ? 'ring-2 ring-primary-600 shadow-premium' : ''
-                }`}
+
+          <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter leading-none">
+            Simple. <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-white to-indigo-300">Transparent.</span>
+          </h1>
+
+          <p className="text-xl text-blue-100/70 max-w-3xl mx-auto font-medium leading-relaxed">
+            Scalable solutions for Rwandan visionaries. From boutique design to enterprise-wide infrastructure.
+          </p>
+        </div>
+      </section>
+
+      {/* SECTION 2: SERVICE PRICING GRID */}
+      <section className="relative -mt-24 z-20 pb-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {services.map((service, i) => (
+              <div
+                key={service.id}
+                className="bg-white/80 backdrop-blur-2xl rounded-[3rem] p-10 shadow-premium border border-indigo-100/20 group hover:translate-y-[-8px] transition-all duration-500 animate-fade-in-up"
+                style={{ animationDelay: `${i * 100}ms` }}
               >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="inline-flex items-center rounded-full bg-primary-600 px-3 py-1 text-xs font-semibold text-white">
-                      Most Popular
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 transform group-hover:rotate-6 transition-transform">
+                      <service.icon size={28} className="text-white" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 bg-indigo-50 px-3 py-1 rounded-full">
+                      {service.category}
                     </span>
                   </div>
-                )}
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900">{plan.name}</h3>
-                  <p className="mt-2 text-sm text-gray-600">{plan.description}</p>
-                  <div className="mt-6 flex items-baseline">
-                    {plan.price === 'Custom' ? (
-                      <span className="text-5xl font-bold tracking-tight text-gray-900">
-                        {plan.price}
-                      </span>
-                    ) : (
-                      <>
-                        <span className="text-5xl font-bold tracking-tight text-gray-900">
-                          {typeof plan.price === 'number' ? `${CURRENCY.symbol} ${plan.price.toLocaleString('en-RW')}` : plan.price}
-                        </span>
-                        {plan.period && (
-                          <span className="ml-1 text-xl font-semibold text-gray-500">
-                            {plan.period}
-                          </span>
-                        )}
-                      </>
-                    )}
+
+                  <div>
+                    <h3 className="text-2xl font-black text-indigo-950 uppercase tracking-tighter italic">{service.name}</h3>
+                    <p className="text-sm text-slate-500 font-medium mt-2 line-clamp-2">{service.description}</p>
                   </div>
-                  <ul className="mt-8 space-y-4">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start">
-                        <Check className="h-5 w-5 text-primary-600 mr-3 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">{feature}</span>
+
+                  <div className="py-6 border-y border-slate-100 flex flex-col items-baseline gap-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{service.priceNote}</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-indigo-950">{CURRENCY.symbol} {service.startingPrice.toLocaleString('en-RW')}</span>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-3">
+                    {service.features.slice(0, 3).map((f, idx) => (
+                      <li key={idx} className="flex items-center gap-3 text-xs font-bold text-slate-600 uppercase tracking-tight">
+                        <Check className="text-indigo-600" size={14} />
+                        {f}
                       </li>
                     ))}
                   </ul>
-                </div>
-                <div className="mt-10">
-                  <Button
-                    size="lg"
-                    variant={plan.popular ? 'primary' : 'outline'}
-                    className="w-full group"
-                  >
-                    {plan.price === 'Custom' ? 'Contact Sales' : 'Start Free Trial'}
-                    {plan.price !== 'Custom' && (
-                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                    )}
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      {/* FAQ Section */}
-      <div className="bg-gray-50 py-24 sm:py-32">
-        <div className="container-professional">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Frequently asked questions
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
-              Everything you need to know about our pricing plans.
-            </p>
-          </div>
-          <div className="mx-auto mt-16 max-w-3xl space-y-8">
-            {[
-              {
-                question: 'Can I change plans later?',
-                answer:
-                  'Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately, and we\'ll prorate any billing adjustments.',
-              },
-              {
-                question: 'What payment methods do you accept?',
-                answer:
-                  'We accept all major credit cards, bank transfers, and PayPal. Enterprise customers can also arrange invoicing.',
-              },
-              {
-                question: 'Is there a setup fee?',
-                answer:
-                  'No setup fees for any plan. You only pay the monthly or annual subscription fee.',
-              },
-              {
-                question: 'Do you offer discounts for annual plans?',
-                answer:
-                  'Yes! Save 20% when you pay annually. Contact us for enterprise pricing with additional discounts.',
-              },
-            ].map((faq, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
-                <p className="mt-2 text-sm text-gray-600">{faq.answer}</p>
+                  <button
+                    onClick={() => handleOrder(service.id)}
+                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95"
+                  >
+                    Get Quote
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* CTA Section */}
-      <div className="bg-gradient-to-r from-primary-600 to-secondary-600 py-16 sm:py-24">
-        <div className="container-professional">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Ready to get started?
-            </h2>
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary-50">
-              Join thousands of businesses using TOP Design to streamline their operations.
-            </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Link to="/login">
-                <Button size="lg" variant="secondary" className="bg-white text-primary-600 hover:bg-gray-100">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link to="/contact">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                  Contact Sales
-                </Button>
-              </Link>
-            </div>
+      {/* SECTION 3: SUBSCRIPTION PLANS */}
+      <section className="py-24 bg-indigo-950 relative overflow-hidden">
+        {/* Blob Inner */}
+        <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] -ml-64 -mb-64" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-20 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic">Software <span className="text-indigo-400">Ecosystem.</span></h2>
+            <p className="text-indigo-200/50 font-medium max-w-2xl mx-auto uppercase tracking-widest text-xs">Unlock your studio's full potential with our business management suite.</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {plans.map((plan, i) => (
+              <div
+                key={plan.name}
+                className={`${plan.color} ${plan.textColor} p-12 rounded-[3.5rem] relative overflow-hidden group border border-white/10 shadow-2xl transition-all duration-500 hover:scale-[1.02]`}
+              >
+                {plan.popular && (
+                  <div className="absolute top-6 right-6">
+                    <span className="px-4 py-1.5 bg-white text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl animate-pulse">
+                      Most Scalable
+                    </span>
+                  </div>
+                )}
+
+                <div className="space-y-8">
+                  <div className="space-y-2">
+                    <h3 className="text-3xl font-black tracking-tighter uppercase italic">{plan.name}</h3>
+                    <p className="opacity-60 text-sm font-medium">{plan.description}</p>
+                  </div>
+
+                  <div className="flex items-baseline">
+                    <span className="text-6xl font-black tracking-tighter">
+                      {typeof plan.price === 'number' ? `${CURRENCY.symbol}${plan.price.toLocaleString('en-RW')}` : plan.price}
+                    </span>
+                    <span className="text-lg font-bold opacity-50 ml-2">{plan.period}</span>
+                  </div>
+
+                  <div className="h-[1px] w-full bg-current opacity-10" />
+
+                  <ul className="space-y-5">
+                    {plan.features.map((f, idx) => (
+                      <li key={idx} className="flex items-center gap-4 text-sm font-bold tracking-tight">
+                        <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${plan.popular ? 'bg-white/20' : 'bg-indigo-50'}`}>
+                          <Check size={12} className={plan.popular ? 'text-white' : 'text-indigo-600'} />
+                        </div>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button className={`w-full py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl active:scale-95 ${plan.popular
+                      ? 'bg-white text-indigo-600 hover:bg-indigo-50'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
+                    }`}>
+                    {plan.price === 'Custom' ? 'Connect with Sales' : 'Initiate 14-Day Cycle'}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* SECTION 4: FAQ SECTION */}
+      <section className="py-24 bg-white">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center mb-16 space-y-2">
+            <h2 className="text-4xl font-black text-indigo-950 tracking-tighter uppercase leading-tight italic">Clear Answers.</h2>
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Everything you need to know about our value proposition.</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            {[
+              { q: 'Can I scale my plan later?', a: 'Absolute flexibility. Upgrade or downgrade as your production demands shift. Changes take effect on the next billing cycle.' },
+              { q: 'What payment methods do you accept in Rwanda?', a: 'We accept Mobile Money (MoMo), Bank Transfers, and all major credit cards. Enterprise billing available for institutional clients.' },
+              { q: 'Is there a setup fee?', a: 'Zero. We focus on value from day one. Your only investment is the recurring subscription or project fee.' },
+              { q: 'Do you offer bulk design discounts?', a: 'Yes. For high-volume design needs or nationwide branding rollouts, we provide custom strategic alliance pricing.' }
+            ].map((faq, i) => (
+              <div key={i} className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 hover:border-indigo-100 transition-all group">
+                <h4 className="text-lg font-black text-indigo-950 uppercase tracking-tighter mb-4 flex items-center gap-3">
+                  <div className="w-1.5 h-6 bg-indigo-600 rounded-full" />
+                  {faq.q}
+                </h4>
+                <p className="text-slate-600 font-medium leading-relaxed pl-4.5">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="py-24 bg-indigo-50 border-t border-indigo-100">
+        <div className="max-w-7xl mx-auto px-4 text-center space-y-12">
+          <div className="space-y-6">
+            <h2 className="text-5xl md:text-7xl font-black text-indigo-950 tracking-tighter uppercase leading-none">Ready to <br /><span className="text-indigo-600 italic">Dominate?</span></h2>
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Join Rwanda's fastest growing brands powered by TOP Design.</p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <Link to="/contact" className="px-12 py-6 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:scale-105 transition-all shadow-2xl shadow-indigo-200">
+              Start Project
+            </Link>
+            <Link to="/about" className="px-12 py-6 bg-white text-indigo-950 rounded-2xl font-black text-lg border border-slate-200 hover:bg-slate-50 transition-all">
+              View Pedigree
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
-

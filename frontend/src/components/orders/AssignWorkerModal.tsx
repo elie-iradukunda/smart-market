@@ -19,6 +19,7 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
     const [selectedWorker, setSelectedWorker] = useState(currentAssignee?.id || null)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    const [taskInstructions, setTaskInstructions] = useState<string>('')
 
     useEffect(() => {
         loadWorkers()
@@ -39,7 +40,7 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
 
             const data = await response.json()
             // Filter for staff role (role_id: 3)
-            const staffMembers = data.filter(user => user.role_id === 3)
+            const staffMembers = data.filter((user: any) => user.role_id === 3)
             setWorkers(staffMembers)
         } catch (err) {
             console.error('Failed to load workers:', err)
@@ -65,7 +66,8 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    assigned_to: selectedWorker
+                    assigned_to: selectedWorker,
+                    notes: taskInstructions
                 })
             })
 
@@ -86,17 +88,30 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="relative w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
                 {/* Header */}
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-2xl font-black text-slate-900">Assign Worker</h2>
-                        <p className="text-sm text-slate-600">Select a team member for Order #{orderId}</p>
+                <div className="mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 className="text-2xl font-black text-slate-900">Assign Worker</h2>
+                            <p className="text-sm text-slate-600">Select a team member for Order #{orderId}</p>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
+                        >
+                            <X size={20} />
+                        </button>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
-                    >
-                        <X size={20} />
-                    </button>
+
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Task Instructions / Notes</label>
+                        <textarea
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-400"
+                            rows={3}
+                            placeholder="Describe what needs to be done..."
+                            value={taskInstructions}
+                            onChange={(e) => setTaskInstructions(e.target.value)}
+                        />
+                    </div>
                 </div>
 
                 {/* Workers List */}

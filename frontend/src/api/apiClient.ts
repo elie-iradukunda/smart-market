@@ -209,7 +209,7 @@ export async function fetchLeads(page = 1, limit = 50) {
     rawId: lead.id,
     customer_name: lead.customer_name || 'Unknown',
     name: lead.customer_name || 'Unknown',
-    company: lead.company || null,
+    company: lead.company || lead.customer_company || null,
     channel: lead.channel,
     status: lead.status || 'New',
     owner: lead.owner_name || 'Unassigned',
@@ -1252,13 +1252,17 @@ export async function fetchRolePermissions(roleId: number | string) {
 }
 
 // Orders list for OrdersPage (mapped from backend orders API)
-export async function fetchOrders() {
+export async function fetchOrders(customerId?: number | string) {
   const token = getAuthToken()
   if (!token) {
     throw new Error('Not authenticated')
   }
 
-  const res = await fetch(`${API_BASE}/orders`, {
+  const url = customerId
+    ? `${API_BASE}/orders?customer_id=${customerId}`
+    : `${API_BASE}/orders`
+
+  const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -2443,6 +2447,25 @@ export async function updateProduct(id: number | string, payload: any) {
   return data
 }
 
+export async function approveProduct(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/products/${id}/approve`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Failed to approve product')
+  }
+  return data
+}
+
 export async function deleteProduct(id: number | string) {
   const token = getAuthToken()
   if (!token) throw new Error('Not authenticated')
@@ -2505,11 +2528,12 @@ export async function createDesign(payload: any) {
 
 export async function fetchDesigns() {
   const token = getAuthToken()
-  if (!token) throw new Error('Not authenticated')
+  const headers: HeadersInit = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
 
-  const res = await fetch(`${API_BASE}/designs`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
+  const res = await fetch(`${API_BASE}/designs`, { headers })
 
   const data = await res.json().catch(() => ([]))
   if (!res.ok) throw new Error(data.message || 'Failed to fetch designs')
@@ -2518,11 +2542,12 @@ export async function fetchDesigns() {
 
 export async function fetchDesign(id: string | number) {
   const token = getAuthToken()
-  if (!token) throw new Error('Not authenticated')
+  const headers: HeadersInit = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
 
-  const res = await fetch(`${API_BASE}/designs/${id}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
+  const res = await fetch(`${API_BASE}/designs/${id}`, { headers })
 
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.message || 'Failed to fetch design')

@@ -92,8 +92,8 @@ export const approveQuote = async (req, res) => {
 
     // Create order from this approved quote
     const [orderResult] = await pool.execute(
-      'INSERT INTO orders (quote_id, customer_id, status, balance) VALUES (?, ?, "design", ?)',
-      [id, quote[0].customer_id, quote[0].total_amount]
+      'INSERT INTO orders (quote_id, customer_id, status, balance, total_amount) VALUES (?, ?, "design", ?, ?)',
+      [id, quote[0].customer_id, quote[0].total_amount, quote[0].total_amount]
     );
 
 
@@ -286,9 +286,20 @@ export const getOrders = async (req, res) => {
       whereClause = `WHERE o.customer_id IN (${customerIds})`;
     }
 
+    // Explicit customer_id filter (query param)
+    const { customer_id } = req.query;
+    if (customer_id) {
+      whereClause = whereClause ? `${whereClause} AND o.customer_id = ?` : 'WHERE o.customer_id = ?';
+      params.push(customer_id);
+    }
+
+
     const [orders] = await pool.execute(`
-      SELECT o.*, c.name as customer_name, q.total_amount,
-             i.id as invoice_id, i.status as invoice_status
+      SELECT o.*, 
+             c.name as customer_name, 
+             i.id as invoice_id, 
+             i.status as invoice_status,
+             COALESCE(NULLIF(q.total_amount, 0), NULLIF(o.total_amount, 0), o.balance) as total_amount
       FROM orders o 
       JOIN customers c ON o.customer_id = c.id 
       LEFT JOIN quotes q ON o.quote_id = q.id

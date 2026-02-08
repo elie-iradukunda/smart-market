@@ -26,7 +26,7 @@ router.get('/leads', async (req, res) => {
     // Get paginated leads
     // Order by id DESC as fallback (created_at may not exist in all database versions)
     const [leads] = await pool.execute(
-      `SELECT l.*, c.name as customer_name, c.email as customer_email, c.phone as customer_phone 
+      `SELECT l.*, c.name as customer_name, c.company, c.email as customer_email, c.phone as customer_phone 
        FROM leads l 
        LEFT JOIN customers c ON l.customer_id = c.id 
        ORDER BY l.id DESC 

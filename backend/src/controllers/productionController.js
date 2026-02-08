@@ -137,6 +137,10 @@ export const getWorkOrder = async (req, res) => {
     if (roleName === 'technician' && workOrder[0].assigned_to !== userId) {
       return res.status(403).json({ error: 'You do not have permission to view this work order' });
     }
+
+    // Fetch items from quote_items to provide description
+    const [items] = await pool.execute('SELECT description, quantity FROM quote_items WHERE quote_id = ?', [workOrder[0].quote_id]);
+    workOrder[0].items = items;
     
     res.json(workOrder[0]);
   } catch (error) {

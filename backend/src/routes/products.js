@@ -4,7 +4,8 @@ import {
   getProduct, 
   createProduct, 
   updateProduct, 
-  deleteProduct 
+  deleteProduct,
+  approveProduct
 } from '../controllers/productController.js';
 import { authenticateToken } from '../middleware/auth.js';
 // import rbacMiddleware from '../../middleware/rbac.js'; // Optional: Add RBAC later
@@ -19,6 +20,7 @@ router.get('/:id', getProduct);
 // For now, allowing any authenticated user to manage products, or we can restrict to admin
 router.post('/', authenticateToken, createProduct);
 router.put('/:id', authenticateToken, updateProduct);
+router.put('/:id/approve', authenticateToken, approveProduct);
 router.delete('/:id', authenticateToken, deleteProduct);
 
 export default router;

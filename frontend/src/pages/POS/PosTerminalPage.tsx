@@ -1,8 +1,8 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Trash2, ShoppingCart, Search, User, UserPlus, X, FileText, Send, Check } from 'lucide-react';
+import { Plus, Minus, Trash2, ShoppingCart, Search, User, UserPlus, X, FileText, Send, Check, Package } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { fetchProducts, createPOSSale, fetchCustomers, createCustomer, createInvoice, recordPayment } from '@/api/apiClient';
+import { fetchProducts, createPOSSale, fetchCustomers, createCustomer, createInvoice, recordPayment, getImageUrl } from '@/api/apiClient';
 
 export default function POSTerminalPage() {
   const [cartItems, setCartItems] = useState([]);
@@ -314,16 +314,32 @@ export default function POSTerminalPage() {
                         className="w-full rounded-lg border border-slate-200 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
                       />
                     </div>
-                    <div className="max-h-32 overflow-y-auto space-y-1">
-                      {filteredCustomers.slice(0, 3).map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => setSelectedCustomer(c)}
-                          className="w-full text-left rounded-lg border border-slate-100 p-3 hover:bg-slate-50 text-sm font-bold text-slate-700 transition"
-                        >
-                          {c.name} — {c.phone}
-                        </button>
-                      ))}
+                    <div className="max-h-48 overflow-y-auto space-y-1">
+                      {filteredCustomers.length > 0 ? (
+                        filteredCustomers.slice(0, 5).map((c) => (
+                          <button
+                            key={c.id}
+                            onClick={() => setSelectedCustomer(c)}
+                            className="w-full text-left rounded-lg border border-slate-100 p-3 hover:bg-slate-50 text-sm font-bold text-slate-700 transition flex items-center justify-between group"
+                          >
+                            <span>{c.name} — {c.phone}</span>
+                            <Check className="h-4 w-4 text-green-500 opacity-0 group-hover:opacity-100" />
+                          </button>
+                        ))
+                      ) : (
+                        customerSearchQuery && (
+                          <button
+                            onClick={() => {
+                              setNewCustomer({ ...newCustomer, name: customerSearchQuery });
+                              setShowCustomerForm(true);
+                            }}
+                            className="w-full text-center rounded-lg border border-dashed border-slate-300 p-4 hover:bg-slate-50 text-sm font-bold text-blue-600 transition"
+                          >
+                            <UserPlus className="h-4 w-4 inline mr-2" />
+                            Register "{customerSearchQuery}" as New Customer
+                          </button>
+                        )
+                      )}
                     </div>
                   </div>
                 )}
@@ -344,17 +360,43 @@ export default function POSTerminalPage() {
                 {loading ? (
                   <div className="py-12 text-center text-slate-400 font-bold">Loading Products...</div>
                 ) : (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {filteredProducts.map((p) => (
                       <button
                         key={p.id}
                         onClick={() => handleAddProduct(p)}
                         disabled={!selectedCustomer}
-                        className="group flex flex-col items-start rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-blue-500 disabled:opacity-40"
+                        className="group flex flex-col items-stretch rounded-2xl border border-slate-100 bg-white overflow-hidden transition-all hover:shadow-xl hover:border-blue-500 disabled:opacity-40 text-left"
                       >
-                        <span className="text-xs font-bold text-slate-400 uppercase">{p.category || 'Item'}</span>
-                        <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600">{p.name || p.sku}</span>
-                        <p className="mt-2 text-lg font-black text-slate-900">RF {Number(p.price || 0).toLocaleString()}</p>
+                        <div className="aspect-[16/9] bg-slate-50 relative overflow-hidden">
+                          {p.image ? (
+                            <img
+                              src={getImageUrl(p.image)}
+                              alt={p.name}
+                              className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                              <Package size={32} strokeWidth={1} />
+                            </div>
+                          )}
+                          <div className="absolute top-2 left-2 px-2 py-0.5 bg-white/90 backdrop-blur rounded text-[8px] font-black uppercase tracking-widest text-slate-500 shadow-sm border border-white/50">
+                            {p.category || 'Item'}
+                          </div>
+                        </div>
+                        <div className="p-4 flex flex-col flex-1">
+                          <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 line-clamp-1">{p.name || p.sku}</span>
+                          <p className="text-[10px] text-slate-400 font-medium line-clamp-2 mt-1 mb-3 flex-1 h-8">{p.description || 'Professional grade product/service catalog item.'}</p>
+                          <div className="flex items-center justify-between mt-auto">
+                            <div>
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Price</p>
+                              <p className="text-lg font-black text-slate-900 tracking-tight">RF {Number(p.price || 0).toLocaleString()}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                              <Plus size={20} />
+                            </div>
+                          </div>
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -461,7 +503,7 @@ export default function POSTerminalPage() {
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl shadow-2xl max-w-xl w-full p-10 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-2 bg-blue-500" />
-            
+
             <div className="flex justify-between items-start mb-8">
               <div>
                 <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mb-4">

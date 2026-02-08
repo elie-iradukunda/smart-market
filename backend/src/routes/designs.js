@@ -1,16 +1,19 @@
 import express from 'express';
 import { createDesign, getDesigns, getDesign, updateDesign, deleteDesign, approveDesign } from '../controllers/designController.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, optionalAuthenticateToken } from '../middleware/auth.js';
 
 import rbacMiddleware from '../../middleware/rbac.js';
 
 const router = express.Router();
 
-// All design routes require authentication and RBAC
+// Publicly accessible routes with optional authentication 
+// (Admins can see more if logged in, but guests can see published designs)
+router.get('/designs', optionalAuthenticateToken, getDesigns);
+router.get('/designs/:id', optionalAuthenticateToken, getDesign);
+
+// Protected routes (Require login and RBAC)
 router.use(authenticateToken, rbacMiddleware);
 
-router.get('/designs', getDesigns);
-router.get('/designs/:id', getDesign);
 router.post('/designs', createDesign);
 router.put('/designs/:id', updateDesign);
 router.put('/designs/:id/approve', approveDesign);

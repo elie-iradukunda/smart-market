@@ -28,6 +28,33 @@ export const authenticateToken = async (req, res, next) => {
   }
 };
 
+export const optionalAuthenticateToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const [users] = await pool.execute(
+      'SELECT u.id, u.name, u.email, u.role_id, r.name as role FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ? AND u.status = "active"', 
+      [decoded.userId]
+    );
+    
+    if (users.length > 0) {
+      req.user = users[0];
+    }
+    next();
+  } catch (error) {
+    // If token is invalid, we still allow access as a guest, but we could also throw an error.
+    // Usually optional auth means "if token is there, it MUST be valid".
+    // But for simplicity let's just proceed as guest.
+    next();
+  }
+};
+
 // Legacy permission check (deprecated - use RBAC middleware instead)
 export const checkPermission = (permission) => {
   return async (req, res, next) => {

@@ -1,25 +1,25 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  fetchQuotes, 
-  createQuote, 
-  approveQuote, 
-  fetchCustomers, 
-  fetchLead, 
-  fetchLeads 
+import {
+  fetchQuotes,
+  createQuote,
+  approveQuote,
+  fetchCustomers,
+  fetchLead,
+  fetchLeads
 } from '../../api/apiClient';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getAuthUser } from '@/utils/apiClient';
-import { 
-  Search, 
-  Loader2, 
-  DollarSign, 
-  Users, 
-  CheckCircle, 
-  Clock, 
-  XCircle, 
-  FileText, 
+import {
+  Search,
+  Loader2,
+  DollarSign,
+  Users,
+  CheckCircle,
+  Clock,
+  XCircle,
+  FileText,
   User,
   ArrowRight
 } from 'lucide-react';
@@ -84,7 +84,7 @@ export default function QuotesPage() {
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    
+
     const loadInitialData = async () => {
       try {
         const [quotesData, customersData, leadsData] = await Promise.all([
@@ -218,9 +218,9 @@ export default function QuotesPage() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl space-y-6">
-          
+      <div className="min-h-screen bg-slate-50 px-3 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-4 sm:space-y-6">
+
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Customer Quotes</h1>
             <div className="relative">
@@ -235,7 +235,7 @@ export default function QuotesPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
             <div className="flex flex-wrap items-center gap-4 mb-6">
               <div className="flex-1 min-w-[240px]">
                 <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Select Customer</label>
@@ -371,41 +371,44 @@ export default function QuotesPage() {
               </div>
             )}
 
-            <div className="grid lg:grid-cols-[1fr,350px] gap-8">
-              <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="bg-slate-50/50 border-b border-slate-100">
-                      <th className="px-6 py-4 text-left font-bold text-slate-500 uppercase text-[10px] tracking-wider">ID</th>
-                      <th className="px-6 py-4 text-left font-bold text-slate-500 uppercase text-[10px] tracking-wider">Customer</th>
-                      <th className="px-6 py-4 text-right font-bold text-slate-500 uppercase text-[10px] tracking-wider">Value (RWF)</th>
-                      <th className="px-6 py-4 text-center font-bold text-slate-500 uppercase text-[10px] tracking-wider">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {loading ? (
-                      <tr>
-                        <td colSpan={4} className="px-6 py-12 text-center text-slate-400 font-medium italic">Synchronizing with server...</td>
+            <div className="grid lg:grid-cols-[1fr,350px] gap-6 lg:gap-8">
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-slate-900 px-1">Recent Quotes</h3>
+                <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white scrollbar-thin">
+                  <table className="min-w-[600px] text-sm">
+                    <thead>
+                      <tr className="bg-slate-50/50 border-b border-slate-100">
+                        <th className="px-6 py-4 text-left font-bold text-slate-500 uppercase text-[10px] tracking-wider">ID</th>
+                        <th className="px-6 py-4 text-left font-bold text-slate-500 uppercase text-[10px] tracking-wider">Customer</th>
+                        <th className="px-6 py-4 text-right font-bold text-slate-500 uppercase text-[10px] tracking-wider">Value (RWF)</th>
+                        <th className="px-6 py-4 text-center font-bold text-slate-500 uppercase text-[10px] tracking-wider">Status</th>
                       </tr>
-                    ) : filteredQuotes.map(q => (
-                      <tr 
-                        key={q.id} 
-                        onClick={() => setSelectedQuote(q)}
-                        className={`cursor-pointer transition-all hover:bg-blue-50/50 ${selectedQuote?.id === q.id ? 'bg-blue-50/80 ring-1 ring-inset ring-blue-100' : ''}`}
-                      >
-                        <td className="px-6 py-4 font-bold text-slate-900">{q.id}</td>
-                        <td className="px-6 py-4 font-medium text-slate-700">{q.customerName}</td>
-                        <td className="px-6 py-4 text-right font-bold text-blue-600">
-                          {q.value ? q.value.toLocaleString() : '0'}
-                        </td>
-                        <td className="px-6 py-4 text-center">{getStatusTag(q.status)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {loading ? (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-12 text-center text-slate-400 font-medium italic">Synchronizing with server...</td>
+                        </tr>
+                      ) : filteredQuotes.map(q => (
+                        <tr
+                          key={q.id}
+                          onClick={() => setSelectedQuote(q)}
+                          className={`cursor-pointer transition-all hover:bg-blue-50/50 ${selectedQuote?.id === q.id ? 'bg-blue-50/80 ring-1 ring-inset ring-blue-100' : ''}`}
+                        >
+                          <td className="px-6 py-4 font-bold text-slate-900">{q.id}</td>
+                          <td className="px-6 py-4 font-medium text-slate-700">{q.customerName}</td>
+                          <td className="px-6 py-4 text-right font-bold text-blue-600">
+                            {q.value ? q.value.toLocaleString() : '0'}
+                          </td>
+                          <td className="px-6 py-4 text-center">{getStatusTag(q.status)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-6">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 sm:p-6">
                 {!selectedQuote ? (
                   <div className="flex h-full flex-col items-center justify-center text-center opacity-60">
                     <FileText size={48} className="mb-4 text-slate-300" />
