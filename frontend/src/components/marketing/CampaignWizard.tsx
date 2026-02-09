@@ -96,7 +96,7 @@ export default function CampaignWizard({ onClose, onSuccess, connectedChannels, 
             channel: 'Meta',
             budget: '500000',
             message: 'We are thrilled to announce the launch of our newest collection! Check it out now.',
-            hashtags: '#NewLaunch #Innovation #SmartMarket'
+            hashtags: '#NewLaunch #Innovation #TopDesign'
         },
         {
             id: 'sale',

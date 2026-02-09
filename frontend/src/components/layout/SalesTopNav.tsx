@@ -5,7 +5,6 @@ import {
     LayoutDashboard,
     Users,
     ShoppingCart,
-    Megaphone,
     LogOut,
     Briefcase,
     Menu // Added Menu icon
@@ -16,7 +15,6 @@ const NAV_LINKS = [
     { path: '/dashboard/sales', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/dashboard/sales/crm/leads', label: 'Leads', icon: Users },
     { path: '/dashboard/sales/orders', label: 'Orders', icon: ShoppingCart },
-    { path: '/dashboard/sales/marketing/campaigns', label: 'Marketing', icon: Megaphone },
 ];
 
 interface SalesTopNavProps {

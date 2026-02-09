@@ -86,7 +86,7 @@ export default function WorkOrdersBoardPage() {
     const getStageColor = (stage) => {
         switch ((stage || '').toLowerCase()) {
             case 'design':
-                return 'bg-purple-100 text-purple-800 border-purple-200 capitalize';
+                return 'bg-blue-100 text-blue-800 border-blue-200 capitalize';
             case 'print':
             case 'prepress':
                 return 'bg-blue-100 text-blue-600 border-blue-200 capitalize';
@@ -151,7 +151,7 @@ export default function WorkOrdersBoardPage() {
 
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-                            Work Orders
+                            Work Order Assignments
                         </h1>
                         <div className="flex items-center gap-3">
                             {currentUser && (
@@ -187,86 +187,96 @@ export default function WorkOrdersBoardPage() {
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto scrollbar-thin">
-                            <table className="min-w-[800px] text-left text-sm border-collapse">
-                                <thead>
-                                    <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                        <th className="px-6 py-3">ID</th>
-                                        <th className="px-6 py-3">Customer</th>
-                                        <th className="px-6 py-3">Stage</th>
-                                        <th className="px-6 py-3">Technician</th>
-                                        <th className="px-6 py-3 text-right">Priority</th>
-                                        <th className="px-6 py-3 text-center">Actions</th>
-                                    </tr>
-                                </thead>
-
-                                {error ? (
-                                    <tbody>
-                                        <tr>
-                                            <td colSpan={6} className="p-4 text-sm text-red-600 bg-red-50 text-center font-bold">
-                                                Error: {error}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                ) : loading ? (
-                                    <tbody>
-                                        <tr>
-                                            <td colSpan={6} className="p-8 text-center text-slate-400 font-bold italic">
-                                                Loading...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                ) : (
-                                    <tbody className="divide-y divide-slate-50">
-                                        {filteredWorkOrders.map((wo, index) => {
-                                            const isAssignedToMe = Number(wo.assigned_to) === Number(currentUser?.id);
-                                            const canClick = isAdmin || isAssignedToMe;
-
-                                            return (
-                                                <tr
-                                                    key={wo.id || index}
-                                                    onClick={canClick ? () => navigate(`/orders/${wo.order_id || wo.order_number}`) : undefined}
-                                                    className={`transition-all hover:bg-slate-50 ${canClick ? 'cursor-pointer' : ''}`}
-                                                >
-                                                    <td className="px-6 py-4 text-slate-500 font-mono text-xs font-bold">
-                                                        {wo.id}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-slate-900 font-bold">
-                                                        {wo.customer || wo.customer_name || `Order #${wo.id}`}
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold border uppercase tracking-tighter ${getStageColor(wo.order_status || wo.stage || wo.status)}`}>
-                                                            {wo.order_status || wo.stage || wo.status || 'Pending'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-slate-700 font-medium">
-                                                        {wo.assigned_user_name || wo.technician || '—'}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right font-bold">
-                                                        <span className={wo.priority === 'High' ? 'text-red-600' : wo.priority === 'Medium' ? 'text-amber-600' : 'text-green-600'}>
-                                                            {wo.priority || 'Low'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-center space-x-2">
-                                                        <button
-                                                            onClick={(e) => handleViewQuoteClick(wo, e)}
-                                                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm active:scale-95"
-                                                        >
-                                                            <Eye size={14} />
-                                                            View
-                                                        </button>
-                                                        {isAdmin && (
-                                                            <button
-                                                                onClick={(e) => handleAssignClick(wo, e)}
-                                                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-all shadow-sm"
-                                                            >
-                                                                <UserPlus size={14} />
-                                                                Assign
-                                                            </button>
-                                                        )}
-                                                    </td>
+                                    <div className="overflow-x-auto scrollbar-thin">
+                                        <table className="min-w-[800px] text-left text-sm border-collapse">
+                                            <thead>
+                                                <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                    <th className="px-6 py-3">ID</th>
+                                                    <th className="px-6 py-3">Customer</th>
+                                                    <th className="px-6 py-3">Product</th>
+                                                    <th className="px-6 py-3">Main Status</th>
+                                                    <th className="px-6 py-3">Production Stage</th>
+                                                    <th className="px-6 py-3">Technician</th>
+                                                    <th className="px-6 py-3 text-right">Priority</th>
+                                                    <th className="px-6 py-3 text-center">Actions</th>
                                                 </tr>
-                                            );
+                                            </thead>
+
+                                            {error ? (
+                                                <tbody>
+                                                    <tr>
+                                                        <td colSpan={6} className="p-4 text-sm text-red-600 bg-red-50 text-center font-bold">
+                                                            Error: {error}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            ) : loading ? (
+                                                <tbody>
+                                                    <tr>
+                                                        <td colSpan={6} className="p-8 text-center text-slate-400 font-bold italic">
+                                                            Loading...
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            ) : (
+                                                <tbody className="divide-y divide-slate-50">
+                                                    {filteredWorkOrders.map((wo, index) => {
+                                                        const isAssignedToMe = Number(wo.assigned_to) === Number(currentUser?.id);
+                                                        const canClick = isAdmin || isAssignedToMe;
+
+                                                        return (
+                                                            <tr
+                                                                key={wo.id || index}
+                                                                onClick={() => navigate(`/dashboard/staff/production/work-orders/${wo.id}`)}
+                                                                className="transition-all hover:bg-slate-50 cursor-pointer"
+                                                            >
+                                                                <td className="px-6 py-4 text-slate-500 font-mono text-xs font-bold">
+                                                                    {wo.id}
+                                                                </td>
+                                                                <td className="px-6 py-4 text-slate-900 font-bold">
+                                                                    {wo.customer || wo.customer_name || `Order #${wo.id}`}
+                                                                </td>
+                                                                <td className="px-6 py-4 text-slate-600 font-medium">
+                                                                    {wo.product_name || 'N/A'}
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <span className="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold border uppercase tracking-tighter bg-slate-100 text-slate-700">
+                                                                        {wo.main_status || 'Pending'}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold border uppercase tracking-tighter ${getStageColor(wo.order_status || wo.stage)}`}>
+                                                                        {wo.order_status || wo.stage || 'Pending'}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-slate-700 font-medium">
+                                                                    {wo.assigned_user_name || wo.technician || '—'}
+                                                                </td>
+                                                                <td className="px-6 py-4 text-right font-bold">
+                                                                    <span className={wo.priority === 'High' ? 'text-red-600' : wo.priority === 'Medium' ? 'text-amber-600' : 'text-green-600'}>
+                                                                        {wo.priority || 'Low'}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-center space-x-2">
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/staff/production/work-orders/${wo.id}`); }}
+                                                                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+                                                                    >
+                                                                        <Eye size={14} />
+                                                                        View Details
+                                                                    </button>
+                                                                    {isAdmin && (
+                                                                        <button
+                                                                            onClick={(e) => handleAssignClick(wo, e)}
+                                                                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all shadow-sm active:scale-95"
+                                                                        >
+                                                                            <UserPlus size={14} />
+                                                                            Assign
+                                                                        </button>
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        );
                                         })}
                                     </tbody>
                                 )}

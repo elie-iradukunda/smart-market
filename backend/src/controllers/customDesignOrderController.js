@@ -349,9 +349,12 @@ export const updateCustomDesignOrderStatus = async (req, res) => {
                 
                 if (productionStage) {
                     woFields.push('stage = ?');
-                    // Map or use directly if valid enum stage
-                    const validStages = ['design', 'prepress', 'print', 'finishing', 'qa'];
-                    woParams.push(validStages.includes(productionStage) ? productionStage : 'design');
+                    // Align with frontend timeline: design, print, finish, ready, delivered
+                    const validStages = ['design', 'prepress', 'print', 'finish', 'finishing', 'qa', 'ready', 'delivered'];
+                    let normalizedStage = productionStage.toLowerCase();
+                    if (normalizedStage === 'finishing') normalizedStage = 'finish';
+                    
+                    woParams.push(validStages.includes(normalizedStage) ? normalizedStage : normalizedStage);
                 }
 
                 if (woFields.length > 0) {
@@ -364,8 +367,11 @@ export const updateCustomDesignOrderStatus = async (req, res) => {
             } else {
                 // Create new work order
                 const stage = productionStage || 'design';
-                const validStages = ['design', 'prepress', 'print', 'finishing', 'qa'];
-                const finalStage = validStages.includes(stage) ? stage : 'design';
+                const validStages = ['design', 'prepress', 'print', 'finish', 'finishing', 'qa', 'ready', 'delivered'];
+                let normalizedStage = stage.toLowerCase();
+                if (normalizedStage === 'finishing') normalizedStage = 'finish';
+                
+                const finalStage = normalizedStage;
                 
                 await pool.execute(
                     'INSERT INTO work_orders (custom_design_order_id, assigned_to, stage, started_at) VALUES (?, ?, ?, NOW())',

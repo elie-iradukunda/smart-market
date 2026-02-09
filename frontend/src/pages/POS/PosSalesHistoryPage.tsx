@@ -325,8 +325,8 @@ export default function PosSalesHistoryPage() {
                                                             key={page}
                                                             onClick={() => goToPage(page)}
                                                             className={`px-3 py-1 rounded-lg text-sm font-medium transition ${currentPage === page
-                                                                    ? 'bg-purple-600 text-white'
-                                                                    : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                                ? 'bg-purple-600 text-white'
+                                                                : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                                                                 }`}
                                                         >
                                                             {page}
@@ -442,7 +442,7 @@ export default function PosSalesHistoryPage() {
                             {/* Footer */}
                             <div className="text-center text-xs text-gray-500 pt-4 border-t border-gray-100">
                                 <p>Thank you for your business!</p>
-                                <p className="mt-1">Smart Market POS System</p>
+                                <p className="mt-1">TOP Design POS System</p>
                             </div>
                         </div>
                     </div>

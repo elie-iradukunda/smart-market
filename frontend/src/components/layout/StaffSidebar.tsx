@@ -39,7 +39,7 @@ const sidebarItems = [
 
 
   {
-    label: 'Work Orders',
+    label: 'Work Order Assignments',
     path: '/dashboard/staff/production/work-orders',
     icon: ClipboardList,
   },
@@ -94,11 +94,11 @@ const StaffSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
         {/* Brand Logo */}
         <div className="flex h-20 shrink-0 items-center px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800 text-white shadow-lg shadow-slate-100">
-              <Wrench size={20} />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-100">
+              <Palette size={20} />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-bold text-slate-900 leading-tight">SmartMarket</span>
+              <span className="text-lg font-bold text-slate-900 leading-tight">TOP Design</span>
               <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Staff Portal</span>
             </div>
           </div>
@@ -113,15 +113,15 @@ const StaffSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
                   <button
                     onClick={() => toggleExpand(item.label)}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${expandedItems.includes(item.label)
-                      ? 'text-slate-900 bg-slate-100/50'
-                      : 'text-slate-600 hover:bg-slate-50'
+                      ? 'text-blue-900 bg-blue-50'
+                      : 'text-slate-600 hover:bg-blue-50/50'
                       }`}
                   >
                     <div className="flex items-center gap-3">
-                      <item.icon size={18} className={expandedItems.includes(item.label) ? 'text-slate-900' : 'text-slate-500'} />
+                      <item.icon size={18} className={expandedItems.includes(item.label) ? 'text-blue-600' : 'text-slate-500'} />
                       <span>{item.label}</span>
                     </div>
-                    {expandedItems.includes(item.label) ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
+                    {expandedItems.includes(item.label) ? <ChevronDown size={14} className="text-blue-400" /> : <ChevronRight size={14} className="text-slate-400" />}
                   </button>
 
                   <div className={`space-y-1 overflow-hidden transition-all duration-300 ${expandedItems.includes(item.label) ? 'max-h-60 opacity-100 mt-1 pb-1' : 'max-h-0 opacity-0'}`}>
@@ -131,8 +131,8 @@ const StaffSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
                         to={child.path!}
                         onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
                         className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ml-8 transition-colors ${isActive(child.path)
-                          ? 'bg-slate-800 text-white'
-                          : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                          ? 'bg-blue-600 text-white'
+                          : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50/50'
                           }`}
                       >
                         <span>{child.label}</span>
@@ -145,8 +145,8 @@ const StaffSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
                   to={item.path!}
                   onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
                   className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${isActive(item.path)
-                    ? 'bg-slate-800 text-white shadow-md shadow-slate-100'
-                    : 'text-slate-600 hover:bg-slate-50'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
+                    : 'text-slate-600 hover:bg-blue-50/50'
                     }`}
                 >
                   <item.icon size={18} className={isActive(item.path) ? 'text-white' : 'text-slate-500'} />
@@ -158,14 +158,14 @@ const StaffSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
         </nav>
 
         {/* Footer / User Profile */}
-        <div className="shrink-0 p-4 border-t border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-3 rounded-xl bg-white p-3 border border-slate-200/60 shadow-sm mb-3">
-            <div className="h-9 w-9 rounded-lg bg-slate-800 flex items-center justify-center text-white font-bold text-sm">
+        <div className="shrink-0 p-4 border-t border-blue-50 bg-blue-50/10">
+          <div className="flex items-center gap-3 rounded-xl bg-white p-3 border border-blue-100/60 shadow-sm mb-3">
+            <div className="h-9 w-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
               {user?.name?.charAt(0).toUpperCase() || 'O'}
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm font-semibold text-slate-900">{user?.name || 'Operations'}</p>
-              <p className="truncate text-[10px] text-slate-500 uppercase tracking-tighter">Back Office</p>
+              <p className="truncate text-sm font-semibold text-blue-900">{user?.name || 'Operations'}</p>
+              <p className="truncate text-[10px] text-blue-500 uppercase tracking-tighter">Back Office</p>
             </div>
           </div>
 

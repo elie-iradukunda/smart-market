@@ -43,11 +43,6 @@ import AccountsPage from '../pages/Finance/AccountsPage';
 import JournalEntriesPage from '../pages/Finance/JournalEntriesPage';
 import JournalEntryDetailPage from '../pages/Finance/JournalEntryDetailPage';
 
-import CampaignsPage from '../pages/Marketing/CampaignsPage';
-import CampaignDetailPage from '../pages/Marketing/CampaignDetailPage';
-import AdPerformancePage from '../pages/Marketing/AdPerformancePage';
-import AdsManagementPage from '../pages/Marketing/AdsManagementPage';
-
 import InboxPage from '../pages/Communications/InboxPage';
 import ConversationDetailPage from '../pages/Communications/ConversationDetailPage';
 
@@ -133,10 +128,6 @@ export const routes = [
   { path: '/dashboard/sales/orders/:id', element: <OrderDetailPage /> },
   { path: '/dashboard/sales/pos/terminal', element: <POSTerminalPage /> },
   { path: '/dashboard/sales/pos/sales-history', element: <PosSalesHistoryPage /> },
-  { path: '/dashboard/sales/marketing/campaigns', element: <CampaignsPage /> },
-  { path: '/dashboard/sales/marketing/campaigns/:id', element: <CampaignDetailPage /> },
-  { path: '/dashboard/sales/marketing/ad-performance', element: <AdPerformancePage /> },
-  { path: '/dashboard/sales/marketing/ads', element: <AdsManagementPage /> },
   { path: '/dashboard/sales/communications/inbox', element: <InboxPage /> },
   { path: '/dashboard/sales/communications/conversations/:id', element: <ConversationDetailPage /> },
 

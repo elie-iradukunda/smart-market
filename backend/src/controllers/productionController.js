@@ -3,12 +3,26 @@ import emailService from '../services/emailService.js';
 
 export const createWorkOrder = async (req, res) => {
   try {
-    const { order_id, stage, assigned_to } = req.body;
-    
-    // Check if order exists
-    const [order] = await pool.execute('SELECT id FROM orders WHERE id = ?', [order_id]);
-    if (order.length === 0) {
-      return res.status(404).json({ error: 'Order not found' });
+    let { order_id, stage, assigned_to } = req.body;
+    let custom_design_order_id = null;
+    let standard_order_id = null;
+
+    if (order_id && order_id.toString().startsWith('CD-')) {
+        custom_design_order_id = order_id.split('-')[1];
+    } else if (order_id) {
+        // Check if it's a standard order ID
+        const [order] = await pool.execute('SELECT id FROM orders WHERE id = ?', [order_id]);
+        if (order.length > 0) {
+            standard_order_id = order_id;
+        } else {
+            // Fallback: check if it's a numeric ID for a custom design
+            const [cdo] = await pool.execute('SELECT id FROM custom_design_orders WHERE id = ?', [order_id]);
+            if (cdo.length > 0) {
+                custom_design_order_id = order_id;
+            } else {
+                return res.status(404).json({ error: 'Order not found' });
+            }
+        }
     }
     
     // Check if user exists
@@ -18,18 +32,26 @@ export const createWorkOrder = async (req, res) => {
     }
     
     const [result] = await pool.execute(
-      'INSERT INTO work_orders (order_id, stage, assigned_to) VALUES (?, ?, ?)',
-      [order_id, stage, assigned_to]
+      'INSERT INTO work_orders (order_id, custom_design_order_id, stage, assigned_to) VALUES (?, ?, ?, ?)',
+      [standard_order_id, custom_design_order_id, stage, assigned_to]
     );
     
     // Send work order assignment email to technician
     const [technicianData] = await pool.execute('SELECT email, name FROM users WHERE id = ?', [assigned_to]);
-    const [orderData] = await pool.execute(`
-      SELECT o.id, c.name as customer_name 
-      FROM orders o 
-      JOIN customers c ON o.customer_id = c.id 
-      WHERE o.id = ?
-    `, [order_id]);
+    
+    let customer_name = 'Unknown';
+    if (standard_order_id) {
+        const [orderData] = await pool.execute(`
+          SELECT c.name as customer_name 
+          FROM orders o 
+          JOIN customers c ON o.customer_id = c.id 
+          WHERE o.id = ?
+        `, [standard_order_id]);
+        customer_name = orderData[0]?.customer_name || 'Unknown';
+    } else if (custom_design_order_id) {
+        const [cdoData] = await pool.execute('SELECT customer_name FROM custom_design_orders WHERE id = ?', [custom_design_order_id]);
+        customer_name = cdoData[0]?.customer_name || 'Unknown';
+    }
     
     if (technicianData.length > 0 && technicianData[0].email) {
       try {
@@ -38,7 +60,7 @@ export const createWorkOrder = async (req, res) => {
           order_id: order_id,
           stage: stage,
           technician_name: technicianData[0].name,
-          customer_name: orderData[0]?.customer_name || 'Unknown'
+          customer_name: customer_name
         });
         console.log(`Work order assignment email sent to ${technicianData[0].email}`);
       } catch (emailError) {
@@ -71,7 +93,17 @@ export const getWorkOrders = async (req, res) => {
         u.name as assigned_user_name,
         COALESCE(CAST(o.id AS CHAR), CONCAT('CD-', cdo.id)) as order_number,
         COALESCE(o.due_date, cdo.created_at) as due_date,
-        COALESCE(o.status, cdo.status) as order_status,
+        CASE 
+          WHEN wo.custom_design_order_id IS NOT NULL THEN 
+            CASE 
+              WHEN cdo.status = 'completed' THEN 'delivered'
+              WHEN wo.stage IS NOT NULL AND wo.stage != '' THEN wo.stage
+              ELSE 'design'
+            END
+          ELSE o.status 
+        END as order_status,
+        COALESCE(o.status, cdo.status) as main_status,
+        COALESCE(cdo.product_type, 'Standard Order') as product_name,
         COALESCE(o.total_amount, cdo.estimated_price) as total_amount,
         COALESCE(o.created_at, cdo.created_at) as order_created_at,
         COALESCE(c.name, cdo.customer_name) as customer_name,
@@ -86,10 +118,10 @@ export const getWorkOrders = async (req, res) => {
     let whereClauses = [];
     let params = [];
     
-    // If user is a technician, only show work orders assigned to them
-    if (roleName === 'technician' || roleName === 'staff') {
-      whereClauses.push('wo.assigned_to = ?');
-      params.push(userId);
+    // If not managerial, only show *assigned* work orders (assignments only)
+    const isManagerial = [1, 2, 4, 5, 7].includes(req.user.role_id);
+    if (!isManagerial) {
+      whereClauses.push('wo.assigned_to IS NOT NULL');
     }
 
     const { order_id } = req.query;
@@ -131,15 +163,22 @@ export const getWorkOrder = async (req, res) => {
     
     const roleName = userRoleData[0]?.name?.toLowerCase() || '';
     
-    console.log('Fetching work order:', id, 'User:', userId);
-    
     const [workOrder] = await pool.execute(`
       SELECT 
         wo.*,
         u.name as assigned_user_name,
         u.email as assigned_user_email,
         COALESCE(CAST(o.id AS CHAR), CONCAT('CD-', cdo.id)) as order_number,
-        COALESCE(o.status, cdo.status) as order_status,
+        CASE 
+          WHEN wo.custom_design_order_id IS NOT NULL THEN 
+            CASE 
+              WHEN cdo.status = 'completed' THEN 'delivered'
+              WHEN wo.stage IS NOT NULL AND wo.stage != '' THEN wo.stage
+              ELSE 'design'
+            END
+          ELSE o.status 
+        END as order_status,
+        COALESCE(o.status, cdo.status) as main_status,
         o.quote_id,
         COALESCE(c.name, cdo.customer_name) as customer_name,
         COALESCE(c.email, cdo.customer_email) as customer_email,
@@ -182,11 +221,10 @@ export const getWorkOrder = async (req, res) => {
     // To be safe, let's use a broader check: if not admin/owner/manager, ensure assignment.
     
     const isManagerial = [1, 2, 4, 5, 7].includes(req.user.role_id);
-    // 1=Owner, 2=SysAdmin, 4=Controller, 5=Reception, 7=Prod Manager
-    // If not managerial, strict assignment check:
+    // If not managerial, strict check: can view any *assigned* order, but not unassigned ones
     if (!isManagerial) {
-        if (Number(workOrder[0].assigned_to) !== Number(userId)) {
-             return res.status(403).json({ error: 'You do not have permission to view this work order' });
+        if (!workOrder[0].assigned_to) {
+             return res.status(403).json({ error: 'You do not have permission to view unassigned work orders' });
         }
     }
 
@@ -205,6 +243,17 @@ export const updateWorkOrder = async (req, res) => {
   try {
     const { id } = req.params;
     const { started_at, ended_at, notes, assigned_to, stage } = req.body;
+    const userId = req.user.id;
+    const userRole = req.user.role_id;
+
+    // Permission check: Only managerial or the assigned user can update
+    const isManagerial = [1, 2, 4, 5, 7].includes(userRole);
+    if (!isManagerial) {
+        const [currentWo] = await pool.execute('SELECT assigned_to FROM work_orders WHERE id = ?', [id]);
+        if (currentWo.length === 0 || Number(currentWo[0].assigned_to) !== Number(userId)) {
+            return res.status(403).json({ error: 'You can only update work orders assigned to you' });
+        }
+    }
 
     // Dynamic update query
     const fields = [];
@@ -314,11 +363,13 @@ export const updateOrderStatus = async (req, res) => {
 
     // Map production stages to main order statuses
     let mainOrderStatus = status;
-    const productionStages = ['print', 'finish', 'design', 'prepress', 'qa', 'finishing'];
+    const productionStages = ['print', 'finish', 'design', 'prepress', 'qa', 'finishing', 'ready', 'delivered'];
     
-    if (productionStages.includes(status)) {
-        if (status === 'design') mainOrderStatus = 'pending';
-        else mainOrderStatus = 'processing';
+    if (productionStages.some(s => s.toLowerCase() === status.toLowerCase())) {
+        if (['design', 'prepress'].includes(status.toLowerCase())) mainOrderStatus = 'pending';
+        else if (['print', 'finish', 'finishing', 'qa'].includes(status.toLowerCase())) mainOrderStatus = 'processing';
+        else if (status.toLowerCase() === 'ready') mainOrderStatus = 'ready';
+        else if (status.toLowerCase() === 'delivered') mainOrderStatus = 'delivered';
     }
 
     if (isCustomDesign) {
@@ -371,7 +422,16 @@ export const updateOrderStatus = async (req, res) => {
           console.log('=== ASSIGNMENT CHECK PASSED ===');
       }
 
-      await pool.execute('UPDATE custom_design_orders SET status = ?, updated_at = NOW() WHERE id = ?', [mainOrderStatus, numericId]);
+      // Map mainOrderStatus to valid CDO status strings
+      let cdoStatus = mainOrderStatus;
+      const lowerStatus = status.toLowerCase();
+      if (['processing', 'print', 'finish', 'finishing', 'prepress', 'qa', 'design'].includes(lowerStatus)) {
+          cdoStatus = 'in_production';
+      } else if (['ready', 'delivered', 'completed'].includes(lowerStatus)) {
+          cdoStatus = 'completed';
+      }
+
+      await pool.execute('UPDATE custom_design_orders SET status = ?, production_stage = ?, updated_at = NOW() WHERE id = ?', [cdoStatus, status, numericId]);
       
       // Update linked work order if exists
       await pool.execute('UPDATE work_orders SET stage = ? WHERE custom_design_order_id = ?', [status, numericId]);
@@ -409,7 +469,16 @@ export const updateOrderStatus = async (req, res) => {
            // Process as custom design
            isCustomDesign = true;
            numericId = id;
-           await pool.execute('UPDATE custom_design_orders SET status = ?, updated_at = NOW() WHERE id = ?', [mainOrderStatus, numericId]);
+           // Process as custom design
+           isCustomDesign = true;
+           numericId = id;
+           let cdoStatus = mainOrderStatus;
+           if (['processing', 'print', 'finish', 'finishing', 'prepress', 'qa', 'design'].includes(status.toLowerCase())) {
+               cdoStatus = 'in_production';
+           } else if (['ready', 'delivered', 'completed'].includes(status.toLowerCase())) {
+               cdoStatus = 'completed';
+           }
+           await pool.execute('UPDATE custom_design_orders SET status = ?, production_stage = ?, updated_at = NOW() WHERE id = ?', [cdoStatus, status, numericId]);
            await pool.execute('UPDATE work_orders SET stage = ? WHERE custom_design_order_id = ?', [status, numericId]);
            return res.json({ message: 'Custom design order status updated' });
         }

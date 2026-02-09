@@ -80,12 +80,6 @@ const sidebarItems = [
         ]
     },
     {
-        label: 'Marketing',
-        path: '/dashboard/sales/marketing/campaigns',
-        icon: Monitor,
-    },
-
-    {
         label: 'Settings',
         path: '/dashboard/admin/system-settings',
         icon: Settings,

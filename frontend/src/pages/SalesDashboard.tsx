@@ -7,7 +7,7 @@ import RevenueOverview from '../modules/dashboards/components/RevenueOverview';
 import {
   User, Calendar, CreditCard, Download, AlertTriangle, Loader, Package,
   TrendingUp, Users, FileText, MessageSquare, Target, ArrowRight,
-  DollarSign, Zap, BarChart3, Search
+  DollarSign, BarChart3, Search
 } from 'lucide-react';
 
 export default function SalesDashboard() {
@@ -242,7 +242,6 @@ export default function SalesDashboard() {
                 {[
                   { label: 'Capture Lead', icon: Target, path: '/dashboard/sales/crm/leads', color: 'bg-blue-600', text: 'text-blue-600', bg: 'bg-blue-50' },
                   { label: 'Draft Quote', icon: FileText, path: '/dashboard/sales/crm/quotes', color: 'bg-indigo-600', text: 'text-indigo-600', bg: 'bg-indigo-50' },
-                  { label: 'Marketing', icon: Zap, path: '/dashboard/sales/marketing/campaigns', color: 'bg-amber-600', text: 'text-amber-600', bg: 'bg-amber-50' },
                 ].map((card, i) => (
                   <Link key={i} to={card.path} className="group rounded-3xl border border-slate-200 bg-white p-6 hover:border-indigo-200 transition-all">
                     <div className={`h-12 w-12 rounded-2xl ${card.bg} ${card.text} flex items-center justify-center mb-4 transition-transform`}>

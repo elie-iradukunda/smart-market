@@ -195,7 +195,7 @@ export default function WorkOrderDetailPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center p-10">
-          <Loader2 className="h-6 w-6 animate-spin mr-2 text-purple-500" />
+          <Loader2 className="h-6 w-6 animate-spin mr-2 text-blue-500" />
           <p className="text-base text-gray-500">Loading work order details...</p>
         </div>
       </DashboardLayout>
@@ -217,30 +217,30 @@ export default function WorkOrderDetailPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header Card */}
-        <div className="rounded-3xl border border-purple-100 bg-white p-8 shadow-xl">
+        <div className="rounded-3xl border border-blue-100 bg-white p-8 shadow-xl">
           <button
-            onClick={() => navigate('/production/work-orders')}
-            className="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-800 mb-4"
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 mb-4"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Work Orders
           </button>
 
-          <p className="text-sm font-semibold uppercase tracking-wider text-purple-700">
+          <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">
             <FileText className="inline h-4 w-4 mr-2" />
             Production Detail
           </p>
           <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900 flex flex-wrap items-center gap-2">
-            Work Order
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">#{workOrder.id}</span>
+            {workOrder.product_type || workOrder.product_name || 'Work Order'}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">#{workOrder.id}</span>
             <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-bold border ml-3 ${getStatusColor(workOrder.order_status)}`}>
               {workOrder.order_status || 'Pending'}
             </span>
           </h1>
           <div className="mt-4 bg-gray-50/50 p-4 rounded-xl border border-gray-100 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-purple-100 p-2 rounded-lg">
-                <User className="w-5 h-5 text-purple-600" />
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <User className="w-5 h-5 text-blue-600" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Customer</p>
@@ -251,19 +251,19 @@ export default function WorkOrderDetailPage() {
             <div className="flex flex-wrap gap-4 text-sm text-gray-600">
               {workOrder.customer_email && (
                 <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
-                  <Mail className="w-4 h-4 text-purple-400" />
+                  <Mail className="w-4 h-4 text-blue-400" />
                   {workOrder.customer_email}
                 </div>
               )}
               {workOrder.customer_phone && (
                 <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
-                  <Phone className="w-4 h-4 text-purple-400" />
+                  <Phone className="w-4 h-4 text-blue-400" />
                   {workOrder.customer_phone}
                 </div>
               )}
               {workOrder.customer_address && (
                 <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
-                  <MapPin className="w-4 h-4 text-purple-400" />
+                  <MapPin className="w-4 h-4 text-blue-400" />
                   {workOrder.customer_address}
                 </div>
               )}
@@ -274,7 +274,7 @@ export default function WorkOrderDetailPage() {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Stage */}
             <div className="flex items-center space-x-3 rounded-xl border border-gray-100 bg-gray-50/70 p-4 shadow-sm">
-              <Tag className="h-5 w-5 text-purple-500" />
+              <Tag className="h-5 w-5 text-blue-500" />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Current Stage</p>
                 <p className="mt-0.5 text-base font-bold text-gray-900">{workOrder.stage || 'N/A'}</p>
@@ -283,7 +283,7 @@ export default function WorkOrderDetailPage() {
 
             {/* Assigned To */}
             <div className="flex items-center space-x-3 rounded-xl border border-gray-100 bg-gray-50/70 p-4 shadow-sm">
-              <User className="h-5 w-5 text-teal-500" />
+              <User className="h-5 w-5 text-cyan-600" />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Assigned To</p>
                 <p className="mt-0.5 text-base font-bold text-gray-900">{workOrder.assigned_user_name || 'Production Team'}</p>
@@ -298,13 +298,22 @@ export default function WorkOrderDetailPage() {
                 <p className="mt-0.5 text-base font-bold text-gray-900">#{workOrder.order_number}</p>
               </div>
             </div>
+
+            {/* Main Status */}
+            <div className="flex items-center space-x-3 rounded-xl border border-gray-100 bg-gray-50/70 p-4 shadow-sm">
+              <Clock className="h-5 w-5 text-amber-500" />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Business Status</p>
+                <p className="mt-0.5 text-base font-bold text-gray-900 capitalize">{workOrder.main_status || 'Pending'}</p>
+              </div>
+            </div>
           </div>
 
           {/* Production Timeline */}
           <div className="mt-6 bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-6">
               <p className="text-lg font-bold text-gray-900 flex items-center">
-                <Clock className="h-5 w-5 mr-2 text-purple-600" />
+                <Clock className="h-5 w-5 mr-2 text-blue-600" />
                 Production Timeline
               </p>
               {(() => {
@@ -324,7 +333,7 @@ export default function WorkOrderDetailPage() {
                     type="button"
                     onClick={handleAdvanceStage}
                     disabled={!canAdvance || saving}
-                    className={`inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${canAdvance ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-400'}`}
+                    className={`inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${canAdvance ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400'}`}
                     title={!hasPermission ? 'Only assigned staff or admin can update status' : (isAtReady && !isAdmin ? 'Only admin can mark as Delivered' : '')}
                   >
                     {saving ? (
@@ -347,7 +356,7 @@ export default function WorkOrderDetailPage() {
               </div>
             )}
 
-            <ol className="relative border-l border-purple-200 space-y-8 ml-3">
+            <ol className="relative border-l border-blue-200 space-y-8 ml-3">
               {stages.map((stage, index) => {
                 const statusCode = (workOrder.order_status || '').toLowerCase()
                 const currentStageIndex = Math.max(stageStatusCodes.indexOf(statusCode), 0)
@@ -356,12 +365,12 @@ export default function WorkOrderDetailPage() {
 
                 return (
                   <li key={stage} className={`ml-6 ${isCompleted ? 'opacity-100' : isActive ? 'opacity-100' : 'opacity-60'}`}>
-                    <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white ${isCompleted ? 'bg-green-500' : isActive ? 'bg-purple-600 animate-pulse' : 'bg-gray-300'}`}>
+                    <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white ${isCompleted ? 'bg-green-500' : isActive ? 'bg-blue-600 animate-pulse' : 'bg-gray-300'}`}>
                       {isCompleted && <CheckCircle className="w-3 h-3 text-white" />}
                     </span>
-                    <h3 className={`font-semibold ${isCompleted ? 'text-gray-700' : isActive ? 'text-purple-600 text-lg' : 'text-gray-400'}`}>
+                    <h3 className={`font-semibold ${isCompleted ? 'text-gray-700' : isActive ? 'text-blue-600 text-lg' : 'text-gray-400'}`}>
                       {stage}
-                      {isActive && <span className="ml-2 text-xs font-normal bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">CURRENT</span>}
+                      {isActive && <span className="ml-2 text-xs font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">CURRENT</span>}
                     </h3>
                     <p className="text-xs text-gray-500 mt-0.5">{isCompleted ? 'Completed' : isActive ? 'In progress' : 'Upcoming'}</p>
                   </li>
@@ -372,9 +381,9 @@ export default function WorkOrderDetailPage() {
 
           {/* Job Instructions / Custom Design Details */}
           <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-gray-100">
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-purple-600" />
+                <FileText className="h-5 w-5 text-blue-600" />
                 Job Instructions
               </h3>
             </div>
@@ -382,8 +391,8 @@ export default function WorkOrderDetailPage() {
               {workOrder.is_custom_design ? (
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-purple-50 p-3 rounded-2xl border border-purple-100 text-center">
-                      <p className="text-[10px] text-purple-600 font-bold uppercase mb-1">Product</p>
+                    <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100 text-center">
+                      <p className="text-[10px] text-blue-600 font-bold uppercase mb-1">Product</p>
                       <p className="text-sm font-bold text-gray-900 capitalize">{workOrder.product_type}</p>
                     </div>
                     <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100 text-center">
@@ -505,7 +514,7 @@ export default function WorkOrderDetailPage() {
                 <button
                   onClick={handleMarkComplete}
                   disabled={saving}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg"
                 >
                   {saving ? (
                     <>
@@ -527,7 +536,7 @@ export default function WorkOrderDetailPage() {
         {quoteItems.length > 0 && (
           <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-xl">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              <Package className="inline h-5 w-5 mr-2 text-purple-600" />
+              <Package className="inline h-5 w-5 mr-2 text-blue-600" />
               Materials for this Job
             </h2>
             <p className="text-sm text-gray-700 mb-4">
@@ -535,17 +544,17 @@ export default function WorkOrderDetailPage() {
             </p>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
-                <thead className="bg-purple-50 border-b border-purple-200">
+                <thead className="bg-blue-50 border-b border-blue-200">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-purple-700">Description</th>
-                    <th className="px-4 py-3 text-right font-semibold text-purple-700">Planned Qty</th>
-                    <th className="px-4 py-3 text-right font-semibold text-purple-700">Unit Price</th>
-                    <th className="px-4 py-3 text-right font-semibold text-purple-700">Subtotal</th>
+                    <th className="px-4 py-3 text-left font-semibold text-blue-700">Description</th>
+                    <th className="px-4 py-3 text-right font-semibold text-blue-700">Planned Qty</th>
+                    <th className="px-4 py-3 text-right font-semibold text-blue-700">Unit Price</th>
+                    <th className="px-4 py-3 text-right font-semibold text-blue-700">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {quoteItems.map((row, index) => (
-                    <tr key={row.id || index} className="hover:bg-purple-50/30">
+                    <tr key={row.id || index} className="hover:bg-blue-50/30">
                       <td className="px-4 py-3 text-gray-900">{row.description}</td>
                       <td className="px-4 py-3 text-right text-gray-800">{row.quantity}</td>
                       <td className="px-4 py-3 text-right text-gray-700 font-mono">{formatCurrency(row.unit_price)}</td>
@@ -562,7 +571,7 @@ export default function WorkOrderDetailPage() {
         {workOrder.notes && (
           <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-xl">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              <FileText className="inline h-5 w-5 mr-2 text-purple-600" />
+              <FileText className="inline h-5 w-5 mr-2 text-blue-600" />
               Notes
             </h2>
             <p className="text-gray-700 whitespace-pre-wrap">{workOrder.notes}</p>

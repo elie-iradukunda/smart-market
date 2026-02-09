@@ -41,11 +41,11 @@ export default function ClientTopNav({ onMenuClick }: ClientTopNavProps) {
                     </button>
 
                     <div className="flex items-center gap-3 lg:hidden">
-                        <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
-                            <User size={18} />
+                        <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+                            <Palette size={18} />
                         </div>
                         <span className="font-bold tracking-tight text-slate-900">
-                            SmartMarket
+                            TOP Design
                         </span>
                     </div>
                 </div>
@@ -54,7 +54,7 @@ export default function ClientTopNav({ onMenuClick }: ClientTopNavProps) {
                 <div className="flex items-center gap-4 shrink-0">
                     <Link
                         to="/cart"
-                        className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors"
+                        className="relative p-2 text-slate-400 hover:text-blue-600 transition-colors"
                         title="View Cart"
                     >
                         <ShoppingCart size={20} />

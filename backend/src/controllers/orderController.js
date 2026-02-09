@@ -343,9 +343,20 @@ export const getOrder = async (req, res) => {
         return res.status(404).json({ error: 'Custom design order not found' });
       }
 
+      // Map stage for the frontend timeline: Design, Print, Finish, Ready, Delivered
+      let currentStatus = rows[0].status;
+      if (currentStatus === 'in_production' || currentStatus === 'paid') {
+          currentStatus = rows[0].production_stage || 'design';
+      } else if (currentStatus === 'completed') {
+          currentStatus = 'delivered';
+      } else if (currentStatus === 'pending' || currentStatus === 'approved' || currentStatus === 'payment_pending') {
+          currentStatus = 'design';
+      }
+
       // Add a compatible structure for OrderDetailPage
       const orderData = {
         ...rows[0],
+        status: currentStatus,
         total_amount: rows[0].estimated_price,
         balance: rows[0].estimated_price,
         is_custom_design: true,

@@ -64,16 +64,16 @@ export default function CustomerDetailPage() {
             <div className="flex-1 min-w-0">
               <button
                 onClick={() => navigate(-1)}
-                className="mb-6 flex items-center gap-2 text-slate-400 hover:text-indigo-600 transition-colors group"
+                className="mb-6 flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors group"
               >
                 <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
                 <span className="text-xs font-bold uppercase tracking-widest">Go Back</span>
               </button>
 
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Customer profile</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">Customer profile</p>
               {loading ? (
                 <div className="mt-3 flex items-center gap-3">
-                  <Loader className="animate-spin text-indigo-600" size={24} />
+                  <Loader className="animate-spin text-blue-600" size={24} />
                   <h1 className="text-2xl sm:text-3xl font-semibold text-slate-400">Loading...</h1>
                 </div>
               ) : error ? (
@@ -193,10 +193,10 @@ export default function CustomerDetailPage() {
                                 </span>
                               </td>
                               <td className="px-8 py-4 text-right font-bold text-slate-900">
-                                {Number(order.total_amount || 0).toLocaleString()}
+                                {Number(order.total || 0).toLocaleString()} RF
                               </td>
                               <td className="px-8 py-4 text-slate-400 font-medium">
-                                {new Date(order.created_at).toLocaleDateString()}
+                                {order.eta ? new Date(order.eta).toLocaleDateString() : 'N/A'}
                               </td>
                             </tr>
                           ))}
@@ -209,18 +209,18 @@ export default function CustomerDetailPage() {
 
               {/* Right: AI insights */}
               <div className="space-y-6">
-                <div className="rounded-3xl border border-indigo-100 bg-indigo-50/50 p-8 shadow-sm">
+                <div className="rounded-3xl border border-blue-100 bg-blue-50/50 p-8 shadow-sm">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-indigo-600 border border-indigo-100">
+                    <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-blue-600 border border-blue-100">
                       <Clock size={20} />
                     </div>
-                    <h2 className="text-lg font-bold text-indigo-900">AI Intelligence</h2>
+                    <h2 className="text-lg font-bold text-blue-900">AI Intelligence</h2>
                   </div>
 
                   {aiChurn || aiSegment ? (
                     <div className="space-y-4">
                       {aiChurn && (
-                        <div className="rounded-2xl bg-white px-5 py-4 border border-indigo-100 shadow-sm">
+                        <div className="rounded-2xl bg-white px-5 py-4 border border-blue-100 shadow-sm">
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Churn Risk Score</p>
                           <div className="flex items-center justify-between">
                             <p className="text-2xl font-black text-slate-900">
@@ -231,15 +231,15 @@ export default function CustomerDetailPage() {
                         </div>
                       )}
                       {aiSegment && (
-                        <div className="rounded-2xl bg-white px-5 py-4 border border-indigo-100 shadow-sm">
+                        <div className="rounded-2xl bg-white px-5 py-4 border border-blue-100 shadow-sm">
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Market Segment</p>
-                          <p className="text-xl font-bold text-indigo-700">{aiSegment.predicted_value}</p>
+                          <p className="text-xl font-bold text-blue-700">{aiSegment.predicted_value}</p>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="bg-white/50 rounded-2xl p-4 border border-indigo-100/50 text-center">
-                      <p className="text-sm text-indigo-600/70 font-medium italic">Generating insights...</p>
+                    <div className="bg-white/50 rounded-2xl p-4 border border-blue-100/50 text-center">
+                      <p className="text-sm text-blue-600/70 font-medium italic">Generating insights...</p>
                     </div>
                   )}
                 </div>

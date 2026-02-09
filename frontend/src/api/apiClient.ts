@@ -1285,11 +1285,12 @@ export async function fetchOrders(customerId?: number | string) {
 
   // Map backend orders to UI shape expected by OrdersPage
   return orders.map((o: any) => ({
+    ...o,
     id: o.id,
-    customer: o.customer_name,
-    total: o.total_amount || o.balance || 0,
+    customer: o.customer_name || o.customer || 'Unknown',
+    total: parseFloat(o.total_amount || o.total || o.balance || 0),
     status: o.status,
-    paymentStatus: o.invoice_status || 'unbilled',
+    paymentStatus: o.invoice_status || o.payment_status || 'unbilled',
     eta: o.eta || o.created_at,
   }))
 }

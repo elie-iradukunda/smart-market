@@ -70,7 +70,7 @@ const ClientSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                 <div className="flex h-20 shrink-0 items-center px-6">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-100">
-                            <Package size={20} />
+                            <Palette size={20} />
                         </div>
                         <div className="flex flex-col">
                             <span className="text-lg font-bold text-slate-900 leading-tight">TOP Design</span>
@@ -95,7 +95,7 @@ const ClientSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                                 to={item.path!}
                                 onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
                                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${isActive(item.path)
-                                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
+                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
                                     : 'text-slate-600 hover:bg-slate-50'
                                     }`}
                             >
@@ -120,7 +120,7 @@ const ClientSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isO
                 {/* Footer / User Profile */}
                 <div className="shrink-0 p-4 border-t border-slate-100 bg-slate-50/50">
                     <div className="flex items-center gap-3 rounded-xl bg-white p-3 border border-slate-200/60 shadow-sm mb-3">
-                        <div className="h-9 w-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                        <div className="h-9 w-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
                             {user?.name?.charAt(0).toUpperCase() || 'C'}
                         </div>
                         <div className="flex-1 overflow-hidden">

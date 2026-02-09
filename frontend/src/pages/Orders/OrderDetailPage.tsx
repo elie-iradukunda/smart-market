@@ -178,7 +178,7 @@ export default function OrderDetailPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center p-10">
-          <div className="animate-spin mr-3 text-indigo-600">🌀</div>
+          <div className="animate-spin mr-3 text-blue-600">🌀</div>
           <p className="text-lg text-gray-600">Loading Order Details...</p>
         </div>
       </DashboardLayout>
@@ -205,28 +205,28 @@ export default function OrderDetailPage() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 px-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-blue-50/50 px-4 py-8">
         <div className="max-w-7xl mx-auto space-y-6">
 
           {/* Back Button */}
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-800 mb-4"
+            className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 mb-4"
           >
             <ArrowLeft className="h-4 w-4" />
             Back
           </button>
 
           {/* Header Card */}
-          <div className="bg-white rounded-3xl shadow-xl p-8 border border-purple-100">
+          <div className="bg-white rounded-3xl shadow-xl p-8 border border-blue-100">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wider text-purple-700">
+                <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">
                   <Package className="inline h-4 w-4 mr-2" />
                   Order Details
                 </p>
                 <h1 className="mt-2 text-4xl font-extrabold text-gray-900">
-                  Order <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">#{id}</span>
+                  Order <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">#{id}</span>
                 </h1>
                 <div className="mt-4 space-y-2">
                   <p className="text-lg text-gray-800 flex items-center">
@@ -259,7 +259,7 @@ export default function OrderDetailPage() {
                       <Clock className="h-4 w-4 mr-1" />
                       Due Date
                     </p>
-                    <p className="mt-1 text-lg font-bold text-gray-900">{new Date(order.due_date).toLocaleDateString()}</p>
+                    <p className="mt-1 text-lg font-bold text-gray-900">{order.due_date ? new Date(order.due_date).toLocaleDateString() : 'N/A'}</p>
                   </div>
                 )}
               </div>
@@ -273,7 +273,7 @@ export default function OrderDetailPage() {
               <div className="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
                 <div className="flex items-center justify-between mb-6">
                   <p className="text-lg font-bold text-gray-900 flex items-center">
-                    <Truck className="h-5 w-5 mr-2 text-purple-600" />
+                    <Truck className="h-5 w-5 mr-2 text-blue-600" />
                     Production Timeline
                   </p>
                   {(() => {
@@ -291,7 +291,7 @@ export default function OrderDetailPage() {
                         type="button"
                         onClick={handleAdvanceStage}
                         disabled={!canAdvance}
-                        className={`inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${canAdvance ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-400'}`}
+                        className={`inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${canAdvance ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400'}`}
                         title={!hasPermission ? 'Only assigned staff or admin can update status' : (isAtReady && !canMarkDelivered ? 'Only Reception or Owner can mark as Delivered' : '')}
                       >
                         {isCompleted ? 'Completed' : isAtReady ? 'Mark as Delivered' : 'Mark Next Step Done'}
@@ -299,19 +299,19 @@ export default function OrderDetailPage() {
                     )
                   })()}
                 </div>
-                <ol className="relative border-l border-purple-200 space-y-8 ml-3">
+                <ol className="relative border-l border-blue-200 space-y-8 ml-3">
                   {stages.map((stage, index) => {
                     const isCompleted = index < currentStageIndex
                     const isActive = index === currentStageIndex
 
                     return (
                       <li key={stage} className={`ml-6 ${isCompleted ? 'opacity-100' : isActive ? 'opacity-100' : 'opacity-60'}`}>
-                        <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white ${isCompleted ? 'bg-green-500' : isActive ? 'bg-purple-600 animate-pulse' : 'bg-gray-300'}`}>
+                        <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white ${isCompleted ? 'bg-green-500' : isActive ? 'bg-blue-600 animate-pulse' : 'bg-gray-300'}`}>
                           {isCompleted && <CheckCircle className="w-3 h-3 text-white" />}
                         </span>
-                        <h3 className={`font-semibold ${isCompleted ? 'text-gray-700' : isActive ? 'text-purple-600 text-lg' : 'text-gray-400'}`}>
+                        <h3 className={`font-semibold ${isCompleted ? 'text-gray-700' : isActive ? 'text-blue-600 text-lg' : 'text-gray-400'}`}>
                           {stage}
-                          {isActive && <span className="ml-2 text-xs font-normal bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">CURRENT</span>}
+                          {isActive && <span className="ml-2 text-xs font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">CURRENT</span>}
                         </h3>
                         <p className="text-xs text-gray-500 mt-0.5">{isCompleted ? 'Completed' : isActive ? 'In progress' : 'Upcoming'}</p>
                       </li>
@@ -399,7 +399,7 @@ export default function OrderDetailPage() {
                 {/* Order Info */}
                 <div>
                   <p className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                    <Package className="h-5 w-5 mr-2 text-purple-600" />
+                    <Package className="h-5 w-5 mr-2 text-blue-600" />
                     Order Summary
                   </p>
                   <div className="space-y-3">
@@ -417,7 +417,7 @@ export default function OrderDetailPage() {
                       <div className="flex items-center justify-between py-2 border-b border-gray-100">
                         <span className="text-sm text-gray-600">Created</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {new Date(order.created_at).toLocaleDateString()}
+                          {order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}
                         </span>
                       </div>
                     )}
@@ -425,7 +425,7 @@ export default function OrderDetailPage() {
                       <div className="flex items-center justify-between py-2 border-b border-gray-100">
                         <span className="text-sm text-gray-600">Due Date</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {new Date(order.due_date).toLocaleDateString()}
+                          {order.due_date ? new Date(order.due_date).toLocaleDateString() : 'N/A'}
                         </span>
                       </div>
                     )}
@@ -435,7 +435,7 @@ export default function OrderDetailPage() {
                 {/* Customer Info */}
                 <div>
                   <p className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                    <User className="h-5 w-5 mr-2 text-purple-600" />
+                    <User className="h-5 w-5 mr-2 text-blue-600" />
                     Customer Details
                   </p>
                   <div className="space-y-3">
@@ -467,13 +467,13 @@ export default function OrderDetailPage() {
                 {/* Financial Info */}
                 <div>
                   <p className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                    <DollarSign className="h-5 w-5 mr-2 text-purple-600" />
+                    <DollarSign className="h-5 w-5 mr-2 text-blue-600" />
                     Financial Info
                   </p>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between py-2 border-b border-gray-100">
                       <span className="text-sm text-gray-600">Order Total</span>
-                      <span className="text-lg font-extrabold text-purple-700">{formatCurrency(total)}</span>
+                      <span className="text-lg font-extrabold text-blue-700">{formatCurrency(total)}</span>
                     </div>
                     <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-amber-50 border border-amber-200">
                       <span className="text-sm text-amber-700 font-bold">Balance Due</span>

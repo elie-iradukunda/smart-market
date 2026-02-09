@@ -8,7 +8,6 @@ import {
     ChevronDown,
     ChevronRight,
     LogOut,
-    Megaphone,
     Receipt,
     Wallet,
     Briefcase,
@@ -40,14 +39,6 @@ const sidebarItems = [
             { label: 'Leads', path: '/dashboard/sales/crm/leads', icon: Users },
             { label: 'All Customers', path: '/dashboard/sales/crm/customers', icon: Users },
             { label: 'Quotes', path: '/dashboard/sales/crm/quotes', icon: Briefcase },
-        ]
-    },
-    {
-        label: 'Marketing',
-        icon: Megaphone,
-        children: [
-            { label: 'Campaigns', path: '/dashboard/sales/marketing/campaigns', icon: Megaphone },
-            { label: 'Ads', path: '/dashboard/sales/marketing/ads', icon: Megaphone },
         ]
     },
     {
@@ -99,10 +90,10 @@ const SalesSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOp
                 <div className="flex h-20 shrink-0 items-center px-6">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-100">
-                            <Briefcase size={20} />
+                            <Palette size={20} />
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-lg font-bold text-slate-900 leading-tight">SmartMarket</span>
+                            <span className="text-lg font-bold text-slate-900 leading-tight">TOP Design</span>
                             <span className="text-[10px] font-medium text-blue-600 uppercase tracking-wider">Sales Portal</span>
                         </div>
                     </div>

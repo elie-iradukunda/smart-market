@@ -38,21 +38,27 @@ export default function EcommerceNavbar() {
         { name: 'Contact Us', path: '/contact' },
     ]
 
+    const isHomePage = location.pathname === '/'
+
     return (
-        <nav className={`fixed top-0 inset-x-0 z-[100] transition-all duration-500 ${scrolled
-            ? 'bg-white/80 backdrop-blur-2xl border-b border-indigo-100/20 py-3 shadow-premium'
+        <nav className={`fixed top-0 inset-x-0 z-[100] transition-all duration-500 ${scrolled || !isHomePage
+            ? 'bg-white/80 backdrop-blur-2xl border-b border-blue-100/20 py-3 shadow-premium'
             : 'bg-transparent py-5'
             }`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between">
                     {/* Logo */}
                     <Link to="/" className="group flex items-center gap-3">
-                        <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 transition-all shadow-lg shadow-indigo-200">
+                        <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 transition-all shadow-lg shadow-blue-500/20">
                             <Box className="w-6 h-6 text-white" />
                         </div>
                         <div className="flex flex-col -space-y-1">
-                            <span className="text-xl font-black text-indigo-950 tracking-tighter shrink-0">TOP <span className="text-indigo-600 italic">Design</span></span>
-                            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-indigo-400 shrink-0">Creative Agency</span>
+                            <span className={`text-xl font-black tracking-tighter shrink-0 transition-colors ${scrolled || !isHomePage ? 'text-blue-950' : 'text-white'}`}>
+                                TOP <span className="text-blue-500 italic">Design</span>
+                            </span>
+                            <span className={`text-[8px] font-black uppercase tracking-[0.2em] shrink-0 transition-colors ${scrolled || !isHomePage ? 'text-blue-400' : 'text-blue-200'}`}>
+                                Creative Agency
+                            </span>
                         </div>
                     </Link>
 
@@ -62,11 +68,13 @@ export default function EcommerceNavbar() {
                             <Link
                                 key={link.name}
                                 to={link.path}
-                                className={`text-sm font-bold uppercase tracking-widest transition-all relative group whitespace-nowrap ${isActive(link.path) ? 'text-indigo-600' : (scrolled ? 'text-slate-500' : 'text-slate-400') + ' hover:text-indigo-600'
+                                className={`text-sm font-bold uppercase tracking-widest transition-all relative group whitespace-nowrap ${isActive(link.path)
+                                    ? 'text-blue-500'
+                                    : (scrolled || !isHomePage ? 'text-slate-500' : 'text-blue-50/90') + ' hover:text-blue-400'
                                     }`}
                             >
                                 {link.name}
-                                <span className={`absolute -bottom-2 left-0 h-1 bg-indigo-600 rounded-full transition-all duration-300 ${isActive(link.path) ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+                                <span className={`absolute -bottom-2 left-0 h-1 bg-blue-500 rounded-full transition-all duration-300 ${isActive(link.path) ? 'w-full' : 'w-0 group-hover:w-full'}`} />
                             </Link>
                         ))}
                     </div>
@@ -76,11 +84,11 @@ export default function EcommerceNavbar() {
                         {/* Cart - Always visible but smaller on mobile */}
                         <Link
                             to="/cart"
-                            className="relative p-2 sm:p-2.5 bg-indigo-50/50 hover:bg-indigo-100 rounded-2xl transition-all group shrink-0"
+                            className="relative p-2 sm:p-2.5 bg-blue-50/50 hover:bg-blue-100 rounded-2xl transition-all group shrink-0"
                         >
-                            <ShoppingCart className="w-5 h-5 text-indigo-600" />
+                            <ShoppingCart className="w-5 h-5 text-blue-600" />
                             {cartCount > 0 && (
-                                <span className="absolute -top-1 -right-1 min-w-[18px] h-4.5 px-1 bg-indigo-600 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                                <span className="absolute -top-1 -right-1 min-w-[18px] h-4.5 px-1 bg-blue-600 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-lg animate-pulse">
                                     {cartCount}
                                 </span>
                             )}
@@ -89,29 +97,29 @@ export default function EcommerceNavbar() {
                         {/* Desktop Auth / Dashboard (Hidden on Mobile) */}
                         <div className="hidden lg:flex items-center gap-3">
                             {isAuthenticated ? (
-                                <div className="flex items-center gap-3 ml-2 pl-3 border-l border-slate-200">
+                                <div className={`flex items-center gap-3 ml-2 pl-3 border-l ${scrolled || !isHomePage ? 'border-slate-200' : 'border-white/20'}`}>
                                     <Link
                                         to="/client"
-                                        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm transition-all shadow-md shadow-indigo-100 hover:scale-105"
+                                        className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-2xl font-bold text-sm transition-all shadow-md shadow-blue-500/20 hover:scale-105"
                                     >
                                         <LayoutDashboard className="w-4 h-4" />
                                         <span>Dashboard</span>
                                     </Link>
                                     <button
                                         onClick={handleLogout}
-                                        className="p-2.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-2xl transition-all"
+                                        className={`p-2.5 rounded-2xl transition-all ${scrolled || !isHomePage ? 'text-slate-400 hover:bg-red-50 hover:text-red-500' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
                                     >
                                         <LogOut className="w-5 h-5" />
                                     </button>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-4 ml-4">
-                                    <Link to="/shop/login" className={`text-sm font-bold transition-colors uppercase tracking-widest ${scrolled ? 'text-slate-500' : 'text-white'} hover:text-indigo-400`}>
+                                    <Link to="/shop/login" className={`text-sm font-bold transition-colors uppercase tracking-widest ${scrolled || !isHomePage ? 'text-slate-500 hover:text-blue-600' : 'text-white hover:text-blue-300'}`}>
                                         Login
                                     </Link>
                                     <Link
                                         to="/shop/register"
-                                        className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95"
+                                        className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-blue-500/10 hover:scale-105 active:scale-95"
                                     >
                                         Join Now
                                     </Link>

@@ -58,9 +58,9 @@ export default function StaffDashboard() {
     }, [])
 
     const cards = [
-        { label: 'Active Tasks', value: stats.activeWorkOrders, icon: ClipboardList, color: 'text-indigo-600', bg: 'bg-indigo-50', link: '/dashboard/staff/tasks' },
-        { label: 'In Production', value: stats.ordersInProduction, icon: Factory, color: 'text-sky-600', bg: 'bg-sky-50', link: '/dashboard/staff/production/work-orders' },
-        { label: 'Completed Today', value: stats.completedToday, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', link: '/dashboard/staff/production/work-orders' }
+        { label: 'Active Tasks', value: stats.activeWorkOrders, icon: ClipboardList, color: 'text-blue-600', bg: 'bg-blue-50', link: '/dashboard/staff/tasks' },
+        { label: 'In Production', value: stats.ordersInProduction, icon: Factory, color: 'text-cyan-600', bg: 'bg-cyan-50', link: '/dashboard/staff/production/work-orders' },
+        { label: 'Completed Today', value: stats.completedToday, icon: CheckCircle2, color: 'text-blue-700', bg: 'bg-blue-100/50', link: '/dashboard/staff/production/work-orders' }
     ]
 
     return (
@@ -69,27 +69,27 @@ export default function StaffDashboard() {
                 <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 
                     {/* Hero / Header Section */}
-                    <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 p-8 shadow-2xl mb-8">
+                    <div className="relative overflow-hidden rounded-[2rem] bg-blue-950 p-8 shadow-2xl mb-8">
                         <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 blur-3xl opacity-20">
-                            <div className="h-64 w-64 rounded-full bg-indigo-500"></div>
+                            <div className="h-64 w-64 rounded-full bg-blue-500"></div>
                         </div>
                         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Live Operation Monitor</span>
+                                    <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.5)]"></span>
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-300">Live Operation Monitor</span>
                                 </div>
                                 <h1 className="text-3xl font-black text-white sm:text-4xl">Staff Operational Hub</h1>
-                                <p className="mt-2 max-w-xl text-sm text-slate-400">
+                                <p className="mt-2 max-w-xl text-sm text-blue-100/70">
                                     Track real-time production status, manage active tasks, and monitor raw materials.
                                 </p>
                             </div>
 
                             <div className="flex flex-wrap gap-2">
-                                <Link to="/dashboard/staff/tasks" className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20">
+                                <Link to="/dashboard/staff/tasks" className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
                                     <ClipboardList size={16} /> My Tasks
                                 </Link>
-                                <Link to="/dashboard/staff/production/work-orders" className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20">
+                                <Link to="/dashboard/staff/production/work-orders" className="flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-3 text-sm font-bold text-white hover:bg-cyan-700 transition-all shadow-lg shadow-cyan-500/20">
                                     <Factory size={16} /> Production Management
                                 </Link>
                             </div>
@@ -99,12 +99,12 @@ export default function StaffDashboard() {
                     {/* Quick Stats Grid */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
                         {cards.map((card, i) => (
-                            <Link to={card.link} key={i} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 block">
+                            <Link to={card.link} key={i} className="group relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 block">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">{card.label}</p>
                                         {loading ? (
-                                            <div className="h-8 w-16 animate-pulse bg-slate-100 rounded-lg"></div>
+                                            <div className="h-8 w-16 animate-pulse bg-blue-50 rounded-lg"></div>
                                         ) : (
                                             <p className="text-3xl font-black text-slate-900">{card.value}</p>
                                         )}
@@ -113,7 +113,7 @@ export default function StaffDashboard() {
                                         <card.icon size={24} />
                                     </div>
                                 </div>
-                                <div className="mt-4 flex items-center gap-1 text-[10px] font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
+                                <div className="mt-4 flex items-center gap-1 text-[10px] font-bold text-slate-400 group-hover:text-blue-600 transition-colors">
                                     VIEW DETAILS <ArrowRight size={10} />
                                 </div>
                             </Link>
@@ -123,11 +123,11 @@ export default function StaffDashboard() {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                         {/* Left: Pipeline */}
                         <div className="lg:col-span-12 space-y-8">
-                            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                                <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between bg-slate-50/50">
+                            <div className="rounded-3xl border border-blue-100 bg-white shadow-sm overflow-hidden">
+                                <div className="border-b border-blue-50 px-6 py-4 flex items-center justify-between bg-blue-50/20">
                                     <div className="flex items-center gap-2">
-                                        <BarChart3 size={18} className="text-indigo-600" />
-                                        <h3 className="font-bold text-slate-900">Job Pipeline Status</h3>
+                                        <BarChart3 size={18} className="text-blue-600" />
+                                        <h3 className="font-bold text-blue-900">Job Pipeline Status</h3>
                                     </div>
                                 </div>
                                 <div className="p-2 bg-white">
@@ -144,8 +144,8 @@ export default function StaffDashboard() {
 
                             {/* Quick Access Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Link to="/dashboard/staff/inventory/materials" className="rounded-2xl border border-slate-200 bg-white p-6 flex items-center gap-4 hover:border-indigo-200 hover:shadow-md transition-all group">
-                                    <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                                <Link to="/dashboard/staff/inventory/materials" className="rounded-2xl border border-blue-100 bg-white p-6 flex items-center gap-4 hover:border-blue-200 hover:shadow-md transition-all group">
+                                    <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
                                         <Package size={20} />
                                     </div>
                                     <div>
@@ -153,8 +153,8 @@ export default function StaffDashboard() {
                                         <p className="text-xs text-slate-500">Track and manage raw material stock</p>
                                     </div>
                                 </Link>
-                                <Link to="/dashboard/staff/reports/operations" className="rounded-2xl border border-slate-200 bg-white p-6 flex items-center gap-4 hover:border-indigo-200 hover:shadow-md transition-all group">
-                                    <div className="h-12 w-12 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all">
+                                <Link to="/dashboard/staff/reports/operations" className="rounded-2xl border border-blue-100 bg-white p-6 flex items-center gap-4 hover:border-blue-200 hover:shadow-md transition-all group">
+                                    <div className="h-12 w-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center group-hover:bg-cyan-600 group-hover:text-white transition-all">
                                         <BarChart3 size={20} />
                                     </div>
                                     <div>

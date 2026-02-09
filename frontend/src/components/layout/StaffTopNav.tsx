@@ -39,15 +39,15 @@ export default function StaffTopNav({ onMenuClick }: StaffTopNavProps) {
           </button>
           <div className="flex items-center gap-2.5 sm:gap-3">
             <div className="relative">
-              <div className="absolute inset-0 bg-blue-400/30 rounded-full blur-md"></div>
+              <div className="absolute inset-0 bg-blue-600/20 rounded-full blur-lg"></div>
               <span className="relative inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center
-               justify-center rounded-full bg-black text-xs sm:text-sm font-bold text-white shadow-lg ring-2 ring-white/20">
+               justify-center rounded-full bg-blue-600 text-xs sm:text-sm font-bold text-white shadow-lg ring-2 ring-white/20">
                 STA
               </span>
             </div>
             <div className="leading-tight hidden sm:block">
-              <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-slate-200/90 font-medium">Role</p>
-              <p className="text-xs sm:text-sm font-bold text-white">Admin</p>
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Role</p>
+              <p className="text-xs sm:text-sm font-bold text-blue-900">Operations</p>
             </div>
           </div>
 

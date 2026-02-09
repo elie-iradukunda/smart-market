@@ -143,21 +143,21 @@ export default function MyTasksPage() {
                                     key={tab.key}
                                     onClick={() => setFilter(tab.key)}
                                     className={`px-4 py-3 text-sm font-bold transition-all relative ${filter === tab.key
-                                        ? 'text-indigo-600'
+                                        ? 'text-blue-600'
                                         : 'text-slate-600 hover:text-slate-900'
                                         }`}
                                 >
                                     {tab.label}
                                     {tab.count > 0 && (
                                         <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${filter === tab.key
-                                            ? 'bg-indigo-100 text-indigo-700'
+                                            ? 'bg-blue-100 text-blue-700'
                                             : 'bg-slate-100 text-slate-600'
                                             }`}>
                                             {tab.count}
                                         </span>
                                     )}
                                     {filter === tab.key && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"></div>
+                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
                                     )}
                                 </button>
                             ))}
@@ -168,7 +168,7 @@ export default function MyTasksPage() {
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
                             <div className="text-center">
-                                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
+                                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
                                 <p className="mt-4 text-slate-600">Loading your tasks...</p>
                             </div>
                         </div>
@@ -230,7 +230,7 @@ export default function MyTasksPage() {
                                         <div className="flex flex-col gap-2">
                                             <Link
                                                 to={`/dashboard/staff/production/work-orders/${task.work_order_id}`}
-                                                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all"
+                                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all"
                                             >
                                                 View Details
                                                 <ArrowRight size={16} />

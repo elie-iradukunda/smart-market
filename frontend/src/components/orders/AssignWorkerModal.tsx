@@ -4,7 +4,7 @@ import { User, X, Check, Loader2 } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { getAuthUser } from '@/utils/apiClient'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
 interface AssignWorkerModalProps {
     orderId: number
@@ -31,7 +31,7 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
         try {
             setLoading(true)
             const token = localStorage.getItem('auth_token')
-            const response = await fetch(`${API_BASE}/users`, {
+            const response = await fetch(`${API_BASE}/auth/users`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -40,9 +40,9 @@ export default function AssignWorkerModal({ orderId, currentAssignee, onClose, o
             if (!response.ok) throw new Error('Failed to load workers')
 
             const data = await response.json()
-            // Filter for staff/technician roles (role_id: 3 is the primary consolidated staff role)
-            const staffMembers = data.filter((user: any) => user.role_id === 3)
-            setWorkers(staffMembers)
+            // Filter for users with the 'Staff' role (ID: 3)
+            const staffMembers = data.filter((user: any) => Number(user.role_id) === 3);
+            setWorkers(staffMembers);
         } catch (err) {
             console.error('Failed to load workers:', err)
         } finally {
