@@ -1128,6 +1128,24 @@ export async function createUser(payload: any) {
 }
 
 // Admin: update user
+export async function fetchUser(id: number | string) {
+  const token = getAuthToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/auth/users/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to fetch user')
+  }
+
+  return res.json()
+}
+
 export async function updateUser(id: number | string, payload: any) {
   const token = getAuthToken()
   if (!token) throw new Error('Not authenticated')

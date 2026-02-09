@@ -12,7 +12,8 @@ import {
   CreditCard,
   BarChart3,
   Wrench,
-  Palette
+  Palette,
+  Settings
 } from 'lucide-react'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
 
@@ -52,6 +53,11 @@ const sidebarItems = [
     label: 'Reports',
     path: '/dashboard/staff/reports/operations',
     icon: BarChart3,
+  },
+  {
+    label: 'Settings',
+    path: '/dashboard/settings',
+    icon: Settings,
   },
 ]
 

@@ -172,5 +172,6 @@ export const routes = [
 
   // Account (available to all authenticated users - outside dashboard hierarchy)
   { path: '/account/change-password', element: <ChangePasswordPage /> },
+  { path: '/dashboard/settings', element: <SystemSettingsPage /> },
   { path: '/custom-order', element: <CustomDesignOrderPage /> },
 ];

@@ -81,7 +81,7 @@ const sidebarItems = [
     },
     {
         label: 'Settings',
-        path: '/dashboard/admin/system-settings',
+        path: '/dashboard/settings',
         icon: Settings,
     },
 ]

@@ -7,9 +7,11 @@ import {
     FileText,
     LogOut,
     User,
+    Palette,
     ChevronDown,
     ChevronRight,
-    Package
+    Package,
+    Settings
 } from 'lucide-react'
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
 
@@ -33,6 +35,11 @@ const sidebarItems = [
         label: 'My Files',
         path: '/client/files',
         icon: Package,
+    },
+    {
+        label: 'Settings',
+        path: '/dashboard/settings',
+        icon: Settings,
     },
 ]
 

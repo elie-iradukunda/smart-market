@@ -11,7 +11,8 @@ import {
     Receipt,
     Wallet,
     Briefcase,
-    Palette
+    Palette,
+    Settings
 } from 'lucide-react'
 
 import { clearAuth, getAuthUser } from '@/utils/apiClient'
@@ -46,8 +47,11 @@ const sidebarItems = [
         path: '/dashboard/admin/design/order',
         icon: Palette,
     },
-
-
+    {
+        label: 'Settings',
+        path: '/dashboard/settings',
+        icon: Settings,
+    },
 ]
 
 const SalesSidebar = ({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (isOpen: boolean) => void }) => {

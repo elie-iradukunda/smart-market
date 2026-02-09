@@ -90,14 +90,15 @@ export default function WorkOrderDetailPage() {
   }, [id])
 
   const stages = ['Design', 'Print', 'Finish', 'Ready', 'Delivered']
-  const stageStatusCodes = ['design', 'print', 'finish', 'ready', 'delivered']
+  const stageStatusCodes = ['design', 'print', 'finish', 'ready', 'delivered', 'completed']
 
   const handleAdvanceStage = async () => {
     if (!workOrder) return
-    const statusCode = (workOrder.order_status || '').toLowerCase()
-    const currentStageIndex = Math.max(stageStatusCodes.indexOf(statusCode), 0)
+    const statusCode = (workOrder.stage || workOrder.order_status || '').toLowerCase()
+    const currentStatus = (workOrder.status === 'completed' || workOrder.main_status === 'completed') ? 'completed' : statusCode
+    const currentStageIndex = Math.max(stageStatusCodes.indexOf(currentStatus), 0)
 
-    if (currentStageIndex >= stageStatusCodes.length - 1) return
+    if (currentStageIndex >= stages.length) return
 
     const nextStatus = stageStatusCodes[currentStageIndex + 1]
     setSaving(true)
@@ -317,10 +318,11 @@ export default function WorkOrderDetailPage() {
                 Production Timeline
               </p>
               {(() => {
-                const statusCode = (workOrder.stage || workOrder.order_status || '').toLowerCase()
-                const currentStageIndex = Math.max(stageStatusCodes.indexOf(statusCode), 0)
-                const isAtReady = statusCode === 'ready'
-                const isCompleted = currentStageIndex >= stages.length - 1
+                const rawStatus = (workOrder.stage || workOrder.order_status || '').toLowerCase()
+                const currentStatus = (workOrder.status === 'completed' || workOrder.main_status === 'completed') ? 'completed' : rawStatus
+                const currentStageIndex = Math.max(stageStatusCodes.indexOf(currentStatus), 0)
+                const isAtReady = currentStatus === 'ready'
+                const isCompleted = currentStageIndex >= stages.length
 
                 // Permission check: Admin or Assigned Staff
                 const isAssigned = workOrder.assigned_to && Number(workOrder.assigned_to) === Number(currentUser?.id)
@@ -358,21 +360,22 @@ export default function WorkOrderDetailPage() {
 
             <ol className="relative border-l border-blue-200 space-y-8 ml-3">
               {stages.map((stage, index) => {
-                const statusCode = (workOrder.order_status || '').toLowerCase()
-                const currentStageIndex = Math.max(stageStatusCodes.indexOf(statusCode), 0)
-                const isCompleted = index < currentStageIndex
+                const rawStatus = (workOrder.stage || workOrder.order_status || '').toLowerCase()
+                const currentStatus = (workOrder.status === 'completed' || workOrder.main_status === 'completed') ? 'completed' : rawStatus
+                const currentStageIndex = Math.max(stageStatusCodes.indexOf(currentStatus), 0)
+                const isDone = index < currentStageIndex
                 const isActive = index === currentStageIndex
 
                 return (
-                  <li key={stage} className={`ml-6 ${isCompleted ? 'opacity-100' : isActive ? 'opacity-100' : 'opacity-60'}`}>
-                    <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white ${isCompleted ? 'bg-green-500' : isActive ? 'bg-blue-600 animate-pulse' : 'bg-gray-300'}`}>
-                      {isCompleted && <CheckCircle className="w-3 h-3 text-white" />}
+                  <li key={stage} className={`ml-6 ${isDone ? 'opacity-100' : isActive ? 'opacity-100' : 'opacity-60'}`}>
+                    <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white ${isDone ? 'bg-green-500' : isActive ? 'bg-blue-600 animate-pulse' : 'bg-gray-300'}`}>
+                      {isDone && <CheckCircle className="w-3 h-3 text-white" />}
                     </span>
-                    <h3 className={`font-semibold ${isCompleted ? 'text-gray-700' : isActive ? 'text-blue-600 text-lg' : 'text-gray-400'}`}>
+                    <h3 className={`font-semibold ${isDone ? 'text-gray-700' : isActive ? 'text-blue-600 text-lg' : 'text-gray-400'}`}>
                       {stage}
                       {isActive && <span className="ml-2 text-xs font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">CURRENT</span>}
                     </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">{isCompleted ? 'Completed' : isActive ? 'In progress' : 'Upcoming'}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{isDone ? 'Completed' : isActive ? 'In progress' : 'Upcoming'}</p>
                   </li>
                 )
               })}

@@ -60,8 +60,8 @@ export default function CustomDesignOrderPage() {
     const [productTypes, setProductTypes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
-    // Form State
     const [formData, setFormData] = useState({
+        designTitle: '', // For staff to name the design template
         productType: 'signboard',
         width: '',
         height: '',
@@ -168,7 +168,12 @@ export default function CustomDesignOrderPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        // Validation
+        if (isStaff) {
+            handleStaffSave();
+            return;
+        }
+
+        // Validation for customers
         if (!formData.customerName || !formData.customerEmail || !formData.customerPhone) {
             toast.error('Please fill in all customer information fields')
             return
@@ -225,6 +230,50 @@ export default function CustomDesignOrderPage() {
         }
     }
 
+    const handleStaffSave = async () => {
+        if (!formData.designTitle) {
+            toast.error('Please enter a name for this design item')
+            return
+        }
+
+        setIsSubmitting(true)
+
+        try {
+            const token = localStorage.getItem('auth_token')
+            const response = await fetch('http://localhost:3000/api/designs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    title: formData.designTitle,
+                    description: `${formData.designDescription}\n\nCustomized Text: ${formData.textContent}\nBG: ${formData.bgColor}, Text: ${formData.textColor}`,
+                    category: selectedProduct.name,
+                    width: formData.width || 0,
+                    height: formData.height || 0,
+                    material: 'Custom Studio Configuration',
+                    colors: `${formData.bgColor} / ${formData.textColor}`,
+                    price: estimatedPrice,
+                    status: 'draft' // Staff saves as draft first
+                }),
+            })
+
+            if (response.ok) {
+                toast.success('Design saved and listed in Management Hub!')
+                setIsSubmitted(true)
+            } else {
+                const errorData = await response.json()
+                toast.error(errorData.error || 'Failed to save design')
+            }
+        } catch (error) {
+            console.error('Staff design save error:', error)
+            toast.error('Error saving design to portal')
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
 
     // Determine which layout to use
     const PageWrapper = isStaff ? DashboardLayout : EcommerceLayout
@@ -251,18 +300,21 @@ export default function CustomDesignOrderPage() {
                         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle2 className="w-10 h-10 text-green-600" />
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Received!</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            {isStaff ? 'Design Listed!' : 'Order Received!'}
+                        </h1>
                         <p className="text-gray-600 mb-8">
-                            Thank you, <span className="font-semibold">{formData.customerName || 'Value Customer'}</span>.
-                            Our designers are reviewing your order for a {selectedProduct?.name}.
-                            {formData.customerPhone && ` We'll contact you at ${formData.customerPhone} shortly.`}
+                            {isStaff
+                                ? `The design "${formData.designTitle}" has been saved to the Design Hub. You can now approve it to list it in the shop.`
+                                : `Thank you, ${formData.customerName || 'Value Customer'}. Our designers are reviewing your order for a ${selectedProduct?.name}.`
+                            }
                         </p>
                         <div className="space-y-4">
                             <Button className="w-full" onClick={() => setIsSubmitted(false)}>
-                                Place Another Order
+                                {isStaff ? 'Create New Design' : 'Place Another Order'}
                             </Button>
-                            <Link to={isStaff ? "/dashboard/admin" : "/"} className="block text-primary-600 font-medium hover:underline text-sm">
-                                Return to {isStaff ? "Dashboard" : "Home"}
+                            <Link to={isStaff ? "/dashboard/admin/design/hub" : "/"} className="block text-primary-600 font-medium hover:underline text-sm">
+                                Return to {isStaff ? "Design Hub" : "Home"}
                             </Link>
                         </div>
                     </Card>
@@ -632,32 +684,51 @@ export default function CustomDesignOrderPage() {
                                         <p className="text-[9px] text-white/30 font-bold uppercase tracking-widest pt-4 leading-relaxed">Final price validated after studio file review.</p>
                                     </div>
 
-                                    {/* Customer Inputs */}
-                                    <div className="space-y-4">
-                                        <div className="relative">
-                                            <User className="absolute left-5 top-5 w-5 h-5 text-white/20" />
-                                            <input type="text" name="customerName" value={formData.customerName} onChange={handleInputChange} placeholder="Your Full Name" className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-sm focus:ring-2 focus:ring-indigo-600 placeholder:text-white/20 transition-all" required />
+                                    {isStaff ? (
+                                        <div className="space-y-4">
+                                            <div className="relative">
+                                                <Palette className="absolute left-5 top-5 w-5 h-5 text-white/20" />
+                                                <input
+                                                    type="text"
+                                                    name="designTitle"
+                                                    value={formData.designTitle}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Design Internal Title (e.g. Shop Logo Red Blue)"
+                                                    className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-sm focus:ring-2 focus:ring-indigo-600 placeholder:text-white/20 transition-all"
+                                                    required
+                                                />
+                                            </div>
+                                            <p className="text-[10px] text-indigo-400 font-medium px-2 italic">
+                                                * This will be listed as a template for other customers.
+                                            </p>
                                         </div>
-                                        <div className="relative">
-                                            <Phone className="absolute left-5 top-5 w-5 h-5 text-white/20" />
-                                            <input type="tel" name="customerPhone" value={formData.customerPhone} onChange={handleInputChange} placeholder="Contact Number" className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-sm focus:ring-2 focus:ring-indigo-600 placeholder:text-white/20 transition-all" required />
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <div className="relative">
+                                                <User className="absolute left-5 top-5 w-5 h-5 text-white/20" />
+                                                <input type="text" name="customerName" value={formData.customerName} onChange={handleInputChange} placeholder="Your Full Name" className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-sm focus:ring-2 focus:ring-indigo-600 placeholder:text-white/20 transition-all" required />
+                                            </div>
+                                            <div className="relative">
+                                                <Phone className="absolute left-5 top-5 w-5 h-5 text-white/20" />
+                                                <input type="tel" name="customerPhone" value={formData.customerPhone} onChange={handleInputChange} placeholder="Contact Number" className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-sm focus:ring-2 focus:ring-indigo-600 placeholder:text-white/20 transition-all" required />
+                                            </div>
+                                            <div className="relative">
+                                                <Mail className="absolute left-5 top-5 w-5 h-5 text-white/20" />
+                                                <input type="email" name="customerEmail" value={formData.customerEmail} onChange={handleInputChange} placeholder="Email Address" className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-sm focus:ring-2 focus:ring-indigo-600 placeholder:text-white/20 transition-all" required />
+                                            </div>
+                                            <div className="relative">
+                                                <LocateFixed className="absolute left-5 top-5 w-5 h-5 text-white/20" />
+                                                <input type="text" name="customerLocation" value={formData.customerLocation} onChange={handleInputChange} placeholder="Project Location" className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-sm focus:ring-2 focus:ring-indigo-600 placeholder:text-white/20 transition-all" required />
+                                            </div>
                                         </div>
-                                        <div className="relative">
-                                            <Mail className="absolute left-5 top-5 w-5 h-5 text-white/20" />
-                                            <input type="email" name="customerEmail" value={formData.customerEmail} onChange={handleInputChange} placeholder="Email Address" className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-sm focus:ring-2 focus:ring-indigo-600 placeholder:text-white/20 transition-all" required />
-                                        </div>
-                                        <div className="relative">
-                                            <LocateFixed className="absolute left-5 top-5 w-5 h-5 text-white/20" />
-                                            <input type="text" name="customerLocation" value={formData.customerLocation} onChange={handleInputChange} placeholder="Project Location" className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-sm focus:ring-2 focus:ring-indigo-600 placeholder:text-white/20 transition-all" required />
-                                        </div>
-                                    </div>
+                                    )}
 
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
                                         className="w-full py-6 bg-white text-indigo-950 rounded-[2rem] font-black uppercase tracking-widest hover:bg-blue-50 transition-all shadow-2xl active:scale-95 disabled:opacity-50"
                                     >
-                                        {isSubmitting ? 'Initiating Studio...' : 'Finalize Request'}
+                                        {isSubmitting ? 'Processing...' : (isStaff ? 'Save & List as Design' : 'Finalize Request')}
                                     </button>
 
                                     <div className="flex items-center justify-center gap-3 py-2 opacity-40">

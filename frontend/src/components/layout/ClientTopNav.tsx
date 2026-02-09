@@ -8,7 +8,8 @@ import {
     User,
     LogOut,
     Bell,
-    ShoppingCart
+    ShoppingCart,
+    Palette
 } from 'lucide-react'
 
 interface ClientTopNavProps {

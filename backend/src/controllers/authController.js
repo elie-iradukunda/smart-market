@@ -156,30 +156,35 @@ export const updateUser = async (req, res) => {
     const { name, email, phone, role_id, status } = req.body;
     console.log('updateUser payload:', { id, name, email, phone, role_id, status })
 
-    const [existing] = await pool.execute('SELECT id FROM users WHERE id = ?', [id]);
+    const [existing] = await pool.execute('SELECT * FROM users WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
+    const user = existing[0];
 
     // Only run duplicate-check if email or phone has been provided
     if (email || phone) {
       const [duplicate] = await pool.execute(
         'SELECT id FROM users WHERE (email = ? OR phone = ?) AND id != ?',
-        [email || null, phone || null, id]
+        [email || user.email, phone || user.phone, id]
       );
       if (duplicate.length > 0) {
         return res.status(409).json({ error: 'User with this email or phone already exists' });
       }
     }
 
-    // Normalize status to match DB enum / conventions (e.g. "active", "inactive", "pending")
-    const normalizedStatus = (status || 'active').toString().toLowerCase();
+    // Use provided values or fall back to existing ones
+    const finalName = name !== undefined ? name : user.name;
+    const finalEmail = email !== undefined ? email : user.email;
+    const finalPhone = phone !== undefined ? phone : user.phone;
+    const finalRoleId = role_id !== undefined ? role_id : user.role_id;
+    const finalStatus = (status !== undefined ? status : user.status || 'active').toString().toLowerCase();
 
     await pool.execute(
       'UPDATE users SET name = ?, email = ?, phone = ?, role_id = ?, status = ? WHERE id = ?',
-      [name, email, phone, role_id, normalizedStatus, id]
+      [finalName, finalEmail, finalPhone, finalRoleId, finalStatus, id]
     );
-    res.json({ message: 'User updated' });
+    res.json({ message: 'User updated successfully' });
   } catch (error) {
     console.error('User update failed:', error);
     res.status(500).json({ error: 'User update failed' });
